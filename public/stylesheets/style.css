@@ -1,0 +1,316 @@
+:root {
+  --tu-green: #639a00;
+  --tu-hover: #404040;
+  --tu-active: #808080;
+}
+
+html,
+body {
+  font-family: "Roboto";
+  width: 100%;
+  height: calc(100% - 3rem);
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+}
+
+body {
+  padding-top: 3rem;
+}
+
+header {
+  text-align: center;
+  margin: auto;
+}
+
+main {
+  max-width: 60rem;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  margin: auto;
+  row-gap: 1rem;
+}
+
+main form {
+  width: 40rem;
+  border: 1px solid black;
+  border-radius: 0.25rem;
+  box-shadow: 2px 2px 1px black;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+main section text {
+  text-align: left;
+}
+
+a {
+  color: #00b7ff;
+}
+
+button {
+  background-color: var(--tu-green);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: var(--tu-hover);
+}
+
+button:active {
+  background-color: var(--tu-active);
+}
+
+dialog::backdrop {
+  backdrop-filter: blur(4px);
+}
+
+dialog form {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog form textarea {
+  resize: none;
+  width: 512px;
+  height: 256px;
+}
+
+.dialog-message {
+  font-size: 1.5rem;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+pre.inline {
+  border-radius: 2px;
+  background-color: lightgray;
+  display: inline;
+}
+
+.message-error {
+  color: crimson;
+}
+
+.message-success {
+  color: limegreen;
+}
+
+.message-info {
+  color: orange;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: start;
+}
+
+.dialog-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.dialog-buttons button {
+  min-width: 256px;
+}
+
+.hidden {
+  display: none;
+}
+
+.navigation-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3rem;
+
+  display: grid;
+  justify-items: end;
+  grid-template-columns: 7fr 1fr;
+  grid-template-areas: "navigation user";
+  background-color: black;
+  color: white;
+}
+
+.site-navigation {
+  grid-area: navigation;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.user-navigation {
+  grid-area: user;
+  width: 100%;
+}
+
+.user-navigation button {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+
+  line-height: 3rem;
+  height: 3rem;
+  color: white;
+}
+
+a.button-like {
+  display: block;
+
+  line-height: 3rem;
+  height: 3rem;
+  color: white;
+
+  width: 256px;
+
+  text-decoration: none;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+a.button-like:hover {
+  background: white;
+  color: black;
+}
+
+a.button-like i.fas {
+  font-size: 1.5em;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  float: left;
+  line-height: 3rem;
+}
+
+.video-button {
+  min-width: 256px;
+}
+
+button i.fas ~ text {
+  line-height: 2rem;
+}
+
+button i.fas {
+  font-size: 1.25em;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.user-navigation button i.fas {
+  font-size: 1.5em;
+  float: left;
+  line-height: 3rem;
+}
+
+.user-navigation button:hover {
+  background: white;
+  color: black;
+}
+
+.video-data {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 0.25rem;
+}
+
+#project-area {
+  width: 100%;
+  text-align: center;
+}
+
+#project-area table {
+  width: 100%;
+}
+
+#upload-area {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid black;
+  padding-top: 0.5rem;
+}
+
+#insert-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem;
+}
+
+label.fileinput {
+  background-color: var(--tu-green);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.25em 1em 0.25em 1em;
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+label.fileinput:hover {
+  background-color: var(--tu-hover);
+}
+
+label.fileinput:active {
+  background-color: var(--tu-active);
+}
+
+#insert-area input[type="file"] {
+  display: none;
+}
+
+.columns {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+.column {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.token-column {
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.account-actions button {
+  max-width: 50%;
+}
+
+td:hover {
+  background-color: #eeeeee;
+}
+
+.note-column {
+  min-width: 256px;
+}
+
+main.admin {
+  max-width: unset;
+}

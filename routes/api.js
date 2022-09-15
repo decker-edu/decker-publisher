@@ -1,0 +1,476 @@
+var express = require("express");
+var router = express.Router();
+var createError = require("http-errors");
+
+const fileUpload = require("express-fileupload");
+const validator = require("email-validator");
+const escape = require("escape-html");
+
+const argon2 = require("argon2");
+
+const db = require("../db");
+
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+
+const yauzl = require("yauzl");
+
+const cache = require("../cache");
+const Errors = require("../types/errors");
+const { default: getVideoDurationInSeconds } = require("get-video-duration");
+const Account = require("../types/account");
+
+function makeRandomString(length, characters) {
+  let result = "";
+  let options = characters
+    ? characters
+    : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let amount = options.length;
+  for (let i = 0; i < length; i++) {
+    result += options.charAt(Math.floor(Math.random() * amount));
+  }
+  return result;
+}
+
+function verifyUsername(string) {
+  let length = string.length;
+  let onlyletter = string.match(/[a-z]([a-z]|[0-9])+/gi);
+  return { length: length >= 4, format: onlyletter };
+}
+
+function verifyEmail(string, allowedOrigins) {
+  let format = validator.validate(string);
+  let origin = true;
+  if (allowedOrigins) {
+    origin = false;
+    for (let suffix of allowedOrigins) {
+      if (string.endsWith(suffix)) {
+        origin = true;
+        break;
+      }
+    }
+  }
+  return { format: format, origin: origin };
+}
+
+router.post("/login", function (req, res, next) {
+  cache.authenticate(req, (error, account) => {
+    if (error) {
+      console.error("[/login]", error);
+      return res
+        .status(400)
+        .json({
+          status: "error",
+          message: escape("Ungültige Benutzerdaten."),
+        })
+        .end();
+    }
+    req.session.user = account.id;
+    return res
+      .status(200)
+      .json({
+        status: "success",
+        message: escape("Login erfolgreich."),
+      })
+      .end();
+  });
+});
+
+router.post("/logout", function (req, res, next) {
+  delete req.session.user;
+  res.status(200).json({ status: "success", message: "Logout erfolgt." }).end();
+});
+
+router.post("/request", function (req, res, next) {
+  let user = req.body.requestUser;
+  let mail = req.body.requestMail;
+  let note = req.body.requestNote;
+  console.log(user, mail, note);
+  if (!user || !mail || !note) {
+    res
+      .status(400)
+      .json({
+        status: "error",
+        message: escape("Fehlerhafte Anfrage. Bitte alle Daten spezifizieren."),
+      })
+      .end();
+    return;
+  }
+  let verification = verifyUsername(user);
+  if (!verification.length) {
+    res
+      .status(400)
+      .json({
+        status: "error",
+        message: escape(
+          "Der Benutzername sollte mindestens 4 Zeichen beinhalten."
+        ),
+      })
+      .end();
+    return;
+  }
+  if (!verification.format) {
+    res
+      .status(400)
+      .json({
+        status: "error",
+        message: escape(
+          "Der Benutzername muss mit einem Buchstaben beginnen und darf nur Buchstaben oder Zahlen beinhalten."
+        ),
+      })
+      .end();
+    return;
+  }
+  let mailverification = verifyEmail(mail, ["tu-dortmund.de", "udo.edu"]);
+  if (!mailverification.format) {
+    return res
+      .status(400)
+      .json({
+        status: "error",
+        message: escape("Ungültig formatierte E-Mail Adresse."),
+      })
+      .end();
+  }
+  if (!mailverification.origin) {
+    return res
+      .status(400)
+      .json({
+        status: "error",
+        message: escape("Anmeldung nur mit einer tu-dortmund.de Adresse."),
+      })
+      .end();
+  }
+  db.transact("SELECT * FROM accounts where username = $1", [user]).then(
+    (result) => {
+      if (result.rows.length > 0) {
+        return res.status(400).json({
+          status: "error",
+          message: escape("Dieser Benutzername ist bereits reserviert."),
+        });
+      } else {
+        db.transact("SELECT * FROM account_requests WHERE username = $1", [
+          user,
+        ]).then((result) => {
+          if (result.rows.length > 0) {
+            return res.status(400).json({
+              status: "error",
+              message: escape("Dieser Benutzername ist bereits reserviert."),
+            });
+          } else {
+            let randomToken = makeRandomString(64);
+            db.transact(
+              "INSERT INTO account_requests (token, username, email, created, note) VALUES ($1, $2, $3, NOW(), $4)",
+              [randomToken, user, mail, note]
+            )
+              .then((result) => {
+                console.log(
+                  "[requests]",
+                  `${result.command} executed. ${result.rowCount} rows affected.`
+                );
+                return res
+                  .status(200)
+                  .json({
+                    status: "success",
+                    message: escape(
+                      "Anfrage wurde übermittelt, der Administrator wird Ihnen bald eine E-Mail senden."
+                    ),
+                  })
+                  .end();
+              })
+              .catch((error) => {
+                console.error("[ACCOUNT REQUEST] [DB ERROR]", error);
+                res.status(500).json({
+                  status: "error",
+                  message: "Interner Datenbankfehler",
+                });
+              });
+          }
+        });
+      }
+    }
+  );
+});
+
+router.post("/register", function (req, res, next) {
+  let username = req.body.username;
+  let email = req.body.email;
+  let token = req.body.token;
+  let password = req.body.password;
+
+  db.transact("SELECT username, email FROM account_requests WHERE token = $1", [
+    token,
+  ])
+    .then((result) => {
+      if (result.rows.length > 0) {
+        let entry = result.rows[0];
+        if (entry.username !== username || entry.email !== email) {
+          res
+            .status(400)
+            .json({
+              status: "error",
+              message: escape(
+                "Registrationsdaten stimmen nicht mit hinterlegten Daten überein."
+              ),
+            })
+            .end();
+          return false;
+        }
+        return true;
+      } else {
+        res
+          .status(400)
+          .json({
+            status: "error",
+            message: escape("Registrationstoken nicht gefunden."),
+          })
+          .end();
+        return false;
+      }
+    })
+    .then((success) => {
+      if (success) {
+        try {
+          argon2.hash(password).then((hash) => {
+            db.transact(
+              "INSERT INTO accounts(username, hash, email, created) VALUES ($1, $2, $3, NOW())",
+              [username, hash, email]
+            )
+              .then((result) => {
+                db.transact("DELETE FROM account_requests WHERE token = $1", [
+                  token,
+                ]);
+                let salt = makeRandomString(
+                  9,
+                  "abcdefghijklmnopqrstuvwxyz0123456789"
+                );
+                let shahash = crypto
+                  .createHash("sha256")
+                  .update(password + salt);
+                db.transact(
+                  "INSERT INTO feedback_accounts(username, hash, salt, email) VALUES ($1, $2, $3, $4)",
+                  [username, shahash, salt, email]
+                );
+                res
+                  .status(200)
+                  .json({
+                    status: "success",
+                    message: "Registration erfolgreich.",
+                  })
+                  .end();
+              })
+              .catch((error) => {
+                res
+                  .status(400)
+                  .json({
+                    status: "error",
+                    message: "Interner Datenbankfehler",
+                  })
+                  .end();
+              });
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    });
+});
+
+/* POST upload */
+router.post(
+  "/upload",
+  fileUpload({ debug: true }),
+  async function (req, res, next) {
+    cache.authenticate(req, (error, account) => {
+      if (error) {
+        res
+          .status(400)
+          .json({
+            status: "error",
+            message: "Sie haben keine Berechtigung dies zu tun.",
+          })
+          .end();
+      }
+      let file;
+      let uploadPath;
+      let projectName;
+      if (!req.files || Object.keys(req.files).length === 0) {
+        return res
+          .status(400)
+          .json({ status: "error", message: "Keine Datei empfangen." })
+          .end();
+      }
+
+      if (!req.body.projectName || req.body.projectName === "") {
+        return res
+          .status(400)
+          .json({ status: "error", message: "Kein Projektname empfangen." })
+          .end();
+      }
+
+      file = req.files.file;
+      projectName = req.body.projectName;
+
+      uploadPath =
+        __dirname + "/../uploads/" + account.username + "/" + file.name;
+
+      uploadPath = path.resolve(uploadPath);
+
+      console.log("[UPLOAD] Path:", uploadPath);
+
+      if (!fs.existsSync(path.dirname(uploadPath))) {
+        fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
+      }
+
+      file.mv(uploadPath, function (err) {
+        if (err) {
+          console.error(err);
+          return res
+            .status(500)
+            .json({
+              status: "error",
+              message: "Interner Fehler beim speichern der Datei.",
+            })
+            .end();
+        }
+        yauzl.open(uploadPath, { lazyEntries: true }, function (err, zipfile) {
+          let prefix = path.dirname(uploadPath) + "/";
+          function mkdirp(dir, cb) {
+            if (dir.startsWith("public")) {
+              dir = dir.replace(/public/, projectName);
+            }
+            if (dir === ".") return cb();
+            fs.stat(prefix + dir, function (err) {
+              if (err == null) return cb();
+              var parent = path.dirname(dir);
+              mkdirp(parent, function () {
+                console.log("[YAUZL] Creating Directory:", dir);
+                fs.mkdir(prefix + dir, cb);
+              });
+            });
+          }
+          if (err) {
+            console.error(err);
+            return;
+          }
+          zipfile.readEntry();
+          zipfile.on("entry", function (entry) {
+            if (/\/$/.test(entry.fileName)) {
+              mkdirp(entry.fileName, function () {
+                if (err) {
+                  console.error(err);
+                  return;
+                }
+                zipfile.readEntry();
+              });
+            } else {
+              mkdirp(path.dirname(entry.fileName), function () {
+                zipfile.openReadStream(entry, function (err, readStream) {
+                  if (err) throw err;
+                  readStream.on("end", function () {
+                    zipfile.readEntry();
+                  });
+                  let unpackTarget = prefix + entry.fileName;
+                  unpackTarget = unpackTarget.replace(/public/, projectName);
+                  let writeStream = fs.createWriteStream(unpackTarget);
+                  readStream.pipe(writeStream);
+                });
+              });
+            }
+          });
+        });
+        return res
+          .status(200)
+          .json({
+            status: "success",
+            message: "Datei erfolgreich hochgeladen.",
+          })
+          .end();
+      });
+    });
+  }
+);
+
+router.get("/video", (req, res, next) => {
+  let filepath = req.query.file;
+  if (!filepath || filepath === "" || /\.\.(\/|\\)/g.test(filepath)) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Fehlerhafte Anfrage." })
+      .end();
+  }
+  cache.authenticate(req, (error, account) => {
+    if (error) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Nutzerkonto nicht gefunden." })
+        .end();
+    }
+    if (account) {
+      let userdir = account.getUserDirectory();
+      userdir = path.resolve(userdir);
+      const fullpath = userdir + "/" + filepath;
+      const filename = path.basename(fullpath, path.extname(fullpath));
+      const dirname = path.dirname(fullpath);
+      const subtitles = filename + ".vtt";
+      const vttfile = `${dirname}/${subtitles}`;
+      let hasvtt = false;
+      console.log(vttfile);
+      if (fs.existsSync(vttfile)) {
+        hasvtt = true;
+      }
+      getVideoDurationInSeconds(fullpath).then((seconds) => {
+        return res
+          .status(200)
+          .json({ status: "success", data: { length: seconds, vtt: hasvtt } })
+          .end();
+      });
+    } else {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Interner Fehler." })
+        .end();
+    }
+  });
+});
+
+router.delete("/project", (req, res, next) => {
+  let projectname = req.body.name;
+  if (!projectname || /\.\.(\/|\\)/g.test(projectname)) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Fehlerhafte Anfrage." })
+      .end();
+  }
+  cache.authenticate(req, (error, account) => {
+    if (error) {
+      console.error(error);
+      return res
+        .status(403)
+        .json({
+          status: "error",
+          message: "Sie haben keine berechtigung dies zu tun.",
+        })
+        .end();
+    }
+    if (account) {
+      const userdir = global.rootDirectory + `/uploads/${account.username}/`;
+      const fullpath = userdir + projectname;
+      console.log(fullpath);
+      if (fs.existsSync(fullpath)) {
+        fs.rmSync(fullpath, { recursive: true, force: true });
+        return res
+          .status(200)
+          .json({ status: "success", message: "Projekt gelöscht." })
+          .end();
+      } else {
+        return res
+          .status(400)
+          .json({ status: "error", message: "Interner Fehler." })
+          .end();
+      }
+    }
+  });
+});
+
+module.exports = router;

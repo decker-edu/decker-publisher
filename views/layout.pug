@@ -1,0 +1,56 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='icon', type='image/png', href='/images/favicon.png')
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    //-
+      link(rel="preconnect", href="https://fonts.googleapis.com")
+      link(rel="preconnect", href="https://fonts.gstatic.com", crossorigin) 
+      link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Roboto&display=swap")
+      link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.15.4/css/all.css", integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm", crossorigin="anonymous")
+    link(rel="stylesheet", href="/stylesheets/fontawesome/css/all.css")
+    block styles
+    script(src="/javascripts/mouse.js")
+    script(src="/javascripts/login.js")
+    script(src="/javascripts/request.js")
+    block scripts
+
+  body
+    navigation.navigation-bar
+      div.site-navigation
+        if user
+          a.button-like(href="/home") 
+            i.fas.fa-home
+            text Übersicht 
+        if admin
+          a.button-like(href="/admin") 
+            i.fas.fa-cog
+            text Administration
+      div.user-navigation
+        if user
+          button.user-menu-button(onclick="openUserDialog()")
+            i.fas.fa-user
+            text= user.username
+        else
+          button.login-button(onclick="openLoginDialog()")
+            i.fas.fa-sign-in-alt
+            text Login
+    div.navigation-placeholder
+    block content
+    block stuff
+    if user
+      dialog#user-dialog
+        div#user-message.dialog-message
+        button.logout-button(onclick="asyncLogout()")
+          i.fas.fa-sign-out-alt
+          text Logout
+    else
+      dialog#login-dialog
+        div#login-message.dialog-message
+        form#login-form(action="" method="POST")
+          input#login-user(type="text", name="login-user", placeholder="Benutzername")
+          input#login-pass(type="password", name="login-pass", placeholder="Passwort")
+        div
+          button(type="button" onclick="asyncLogin()") Login
+          button(type="button" onclick="closeLoginDialog()") Abbrechen

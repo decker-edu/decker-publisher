@@ -1,0 +1,70 @@
+extends layout
+
+block styles
+  link(rel='stylesheet', href='/stylesheets/index.css')
+
+block content
+  header 
+    h1 Decker
+  main 
+    section.welcome
+      text
+        | Decker ist ein Softwarewerkzeug zum erstellen von interaktiven Webpräsentationen.
+        | Es ist verfügbar für alle verbreiteten Betriebssysteme.
+    section.downloads
+      div.windows-download
+        h2 Windows
+        a.button-link(href="/downloads/win/decker.msi") Decker für Windows
+      div.linux-download
+        h2 Linux
+        a.button-link(href="/downloads/linux/decker") Decker für Linux
+      div.mac.download
+        h2 Mac
+        a.button-link(href="/downloads/mac/Decker.pkg") Decker für MacOS
+    section.vscode
+      h2 Arbeiten mit Decker
+      text
+        | Decker besitzt als reines Softwarewerkzeug keine graphische Benutzerschnittstelle und
+        | wird stattdessen von anderen Programmen oder vom Benutzer aus der Kommandozeile aufgerufen.
+        | Wir empfehlen daher zum Arbeiten mit Decker den Editor 
+        a(href="https://code.visualstudio.com/") Visual Studio Code 
+        | zu verwenden. Für diesen Editor gibt es eigens entwickelte Erweiterungen die das einfache 
+        | und benutzerfreundliche Arbeiten mit Decker ermöglichen.
+      a.button-link(href="https://code.visualstudio.com/download") Download Visual Studio Code
+    section.hosting
+      h2 Präsentationen veröffentlichen
+      text
+        | Das präsentieren von Foliensätzen auf Ihrem eigenen Rechner kann von Decker selbst umgesetzt werden. 
+      text
+        | Möchten Sie jedoch auch nachträglich Ihre Präsentationen Ihrem Publikum zur Verfügung stellen 
+        | benötigen Sie eine Möglichkeit eine Webseite zu hosten.
+      text
+        | Deckerpräsentationen können z.B. in einem Moodle-Kurs integriert werden.
+      a.button-link(href="./") Anleitung in Arbeit
+    section.account
+      h2 Decker-Account
+      text
+        | Verschiedene Funktionen von Decker benötigen zusätzlich eine Form von Authentifizierung.
+        | Sie können hier einen Account für diese Funktionen beantragen.
+        | Zusätzlich können Sie mithilfe dieses Dienstes Ihre Präsentationen hochladen und hosten lassen.
+        | Ebenso bieten wir in diesem Dienst die Möglichkeit an in Kooperation mit 
+        a(href="https://amberscript.com") Amberscript 
+        | Videos mit Untertiteln zu versehen.
+      if user
+      else
+        button(onclick="openRequestDialog()") Account beantragen
+
+block stuff 
+  dialog#request-dialog
+    div#request-message.dialog-message
+    form#request-form(action="" method="POST")
+      label(for="request-user") Benutzername
+      input#request-user(required type="text", name="requestUser", placeholder="Benutzername")
+      label(for="request-mail") E-Mail Adresse
+      input#request-mail(required type="email", name="requestMail", placeholder="E-Mail")
+      label(for="request-note") Hinweise zum Antrag
+      textarea#request-note(name="requestNote", placeholder="Hinweise zum Antrag")
+      div.dialog-buttons
+        button(type="button" onclick="asyncRequest()") Absenden
+        button(type="button" onclick="closeRequestDialog()") Abbrechen
+

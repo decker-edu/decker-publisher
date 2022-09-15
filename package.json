@@ -1,0 +1,27 @@
+{
+  "name": "decker-publisher",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node --trace-warnings ./bin/www",
+    "test": "node --trace-warnings ./test.js",
+    "setup": "node --trace-warnings ./setup.js"
+  },
+  "dependencies": {
+    "argon2": "^0.28.7",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "email-validator": "^2.0.4",
+    "escape-html": "^1.0.3",
+    "express": "~4.16.1",
+    "express-fileupload": "^1.4.0",
+    "express-session": "^1.17.3",
+    "get-video-duration": "^4.1.0",
+    "http-errors": "~1.6.3",
+    "morgan": "~1.9.1",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.7.3",
+    "pug": "2.0.0-beta11",
+    "yauzl": "^2.10.0"
+  }
+}

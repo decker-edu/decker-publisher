@@ -1,0 +1,38 @@
+extends layout
+
+block scripts 
+  script(src="/javascripts/video.js")
+  script(src="/javascripts/amber.js")
+
+
+block content
+  header
+    h1 Video
+    h2= video.path
+  main
+    video(src= video.url)
+
+    if video.vtt
+        pre.vtt= video.vtt
+    else 
+        pre.vtt Keine Untertitel
+
+    button(onclick="openAmberDialog('"+video.path+"')") Untertitel generieren
+
+block stuff
+  dialog#amber-dialog
+    div#amber-message.dialog-message
+    div.video-data
+      label(for="video-filename") Dateiname
+      div#amber-filename
+      label(for="video-length") Video-Länge
+      div#amber-length
+      label(for="video-subtitles") Untertitel
+      div#amber-hasvtt
+    div.dialog-buttons
+      button(onclick="requestAmber()")
+        i.fas.fa-film
+        text Video an Amberscript senden
+      button(onclick="closeAmberDialog()")
+        i.fas.fa-ban
+        text Dialog schließen

@@ -1,0 +1,19 @@
+extends layout
+
+block scripts 
+  script(src="/javascripts/upload.js")
+  script(src="/javascripts/video.js")
+  script(src="/javascripts/project.js")
+
+block content
+  header
+    h1 Administration
+  main
+    div.columns
+      div.column
+        a(href="/admin/users") Benutzer verwalten 
+      div.column
+        a(href="admin/requests") Kontoanfragen verwalten
+
+
+block stuff

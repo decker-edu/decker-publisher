@@ -1,0 +1,23 @@
+extends layout
+
+block scripts
+  script(defer src="/javascripts/register.js")
+
+block content
+  header 
+    h1 Account Registrieren
+  main 
+    form
+      div#register-message
+      div.form-grid
+        text Benutzername
+        input#register-username(type="text", name="registerUsername", value= username, disabled)
+        text E-Mail
+        input#register-email(type="email", name="registerEmail", value= email, disabled)
+        text.hidden Token
+        input#register-token.hidden(type="text", name="registerToken", value= token, disabled)
+        text Passwort
+        input#register-password(type="password", name="registerPassword", placeholder="Passwort")
+        text Passwort wiederholen
+        input#register-repeat-password(type="password", name="registerRepeatPassword", placeholder="Passwort wiederholen")
+      button#register-button(type="button" onclick="asyncRegister()") Registrieren 
