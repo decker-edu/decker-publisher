@@ -8,7 +8,7 @@ block content
     h1 Decker
   main 
     section.welcome
-      text
+      p
         | Decker ist ein Softwarewerkzeug zum erstellen von interaktiven Webpräsentationen.
         | Es ist verfügbar für alle verbreiteten Betriebssysteme.
     section.downloads
@@ -23,7 +23,7 @@ block content
         a.button-link(href="/downloads/mac/Decker.pkg") Decker für MacOS
     section.vscode
       h2 Arbeiten mit Decker
-      text
+      p
         | Decker besitzt als reines Softwarewerkzeug keine graphische Benutzerschnittstelle und
         | wird stattdessen von anderen Programmen oder vom Benutzer aus der Kommandozeile aufgerufen.
         | Wir empfehlen daher zum Arbeiten mit Decker den Editor 
@@ -33,23 +33,22 @@ block content
       a.button-link(href="https://code.visualstudio.com/download") Download Visual Studio Code
     section.hosting
       h2 Präsentationen veröffentlichen
-      text
-        | Das präsentieren von Foliensätzen auf Ihrem eigenen Rechner kann von Decker selbst umgesetzt werden. 
-      text
-        | Möchten Sie jedoch auch nachträglich Ihre Präsentationen Ihrem Publikum zur Verfügung stellen 
-        | benötigen Sie eine Möglichkeit eine Webseite zu hosten.
-      text
-        | Deckerpräsentationen können z.B. in einem Moodle-Kurs integriert werden.
+      p
+        | Das Präsentieren von Foliensätzen auf Ihrem eigenen Rechner kann von Decker selbst umgesetzt werden. 
+      p 
+        | Möchten Sie jedoch auch nachträglich Ihre Präsentationen Ihrem Publikum zur Verfügung stellen, 
+        | benötigen Sie eine Möglichkeit eine Webseite zu hosten. Dies kann unter anderem auch im Moodle
+        | umgesetzt werden.
       a.button-link(href="./") Anleitung in Arbeit
     section.account
       h2 Decker-Account
-      text
-        | Verschiedene Funktionen von Decker benötigen zusätzlich eine Form von Authentifizierung.
-        | Sie können hier einen Account für diese Funktionen beantragen.
-        | Zusätzlich können Sie mithilfe dieses Dienstes Ihre Präsentationen hochladen und hosten lassen.
-        | Ebenso bieten wir in diesem Dienst die Möglichkeit an in Kooperation mit 
+      p
+        | Zum Verwalten der Fragen, die zu Ihren Präsentationen gestellt werden, müssen Sie sich als Autor*in Ihrer Präsentation identifizieren.
+        | Sie können hier ein Nutzerkonto für diese Funktion beantragen.
+        | Zusätzliche Angebote über diesen Dienst, wie das Bereitstellen Ihrer Folien im Universitätsnetz oder
+        | eine Möglichkeit Ihre mit Decker aufgenommenen Videos mithilfe des Dienstes von 
         a(href="https://amberscript.com") Amberscript 
-        | Videos mit Untertiteln zu versehen.
+        | auf Anfrage mit Untertiteln versehen zu können, sind in Arbeit.
       if user
       else
         button(onclick="openRequestDialog()") Account beantragen

@@ -91,3 +91,23 @@ function asyncLogout() {
       }
     });
 }
+
+let loginDialog = document.getElementById("login-dialog");
+if (loginDialog) {
+  loginDialog.addEventListener("keypress", (event) => {
+    console.log(event);
+    let usernameField = document.getElementById("login-user");
+    let passwordField = document.getElementById("login-pass");
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (document.activeElement && document.activeElement === usernameField) {
+        passwordField.focus();
+        return;
+      }
+      if (document.activeElement && document.activeElement === passwordField) {
+        asyncLogin();
+        return;
+      }
+    }
+  });
+}

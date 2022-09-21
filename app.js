@@ -11,6 +11,7 @@ const logger = require("morgan");
 const indexRouter = require("./routes/index");
 const apiRouter = require("./routes/api");
 const adminRouter = require("./routes/admin");
+const deckRouter = require("./routes/decks");
 
 const app = express();
 
@@ -35,7 +36,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
-app.use("/decks", express.static("uploads"));
 app.use(
   session({
     secret: config.session_secret,
@@ -53,6 +53,7 @@ app.use(
 app.use("/", indexRouter);
 app.use("/api", apiRouter);
 app.use("/admin", adminRouter);
+app.use("/decks", deckRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

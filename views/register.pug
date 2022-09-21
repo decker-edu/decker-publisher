@@ -7,17 +7,34 @@ block content
   header 
     h1 Account Registrieren
   main 
-    form
+    section
+      h2 Angebote des Dienstes
+      p Dieser Dienst stellt Ihnen aktuell folgende Funktionen zur Verfügung:
+        ol
+          li 
+            | Nutzung der Administrationsfunktion des Fragen/Feedbackwerkzeugs von Deckerpräsentationen,
+            | die mit ihrem Nutzernamen markiert sind
+      p Weitere Funktionen durch diesen Dienst sind in Arbeit.
+    section
+      h2 Nutzungsbedingungen
+      p 
+        | Mit der Nutzung dieses Dienstes akzeptieren Sie, dass Sie die Inhalte,
+        | die Sie über diesen Dienst hochladen auf urheber- und verfassunsrechtliche Richtigkeit geprüft haben.
+      p 
+        | Inhalte, die gegen geltendes Recht verstoßen können von uns ohne Nachfrage gelöscht werden.
+      p 
+        | In schwerwiegenden Fällen werden Ihre Kontaktinformationen an die entsprechenden Behörden weitergeleitet.
+    form#register-form
       div#register-message
       div.form-grid
-        text Benutzername
+        label(for="register-username") Benutzername
         input#register-username(type="text", name="registerUsername", value= username, disabled)
-        text E-Mail
+        label(for="register-email") E-Mail
         input#register-email(type="email", name="registerEmail", value= email, disabled)
-        text.hidden Token
+        label.hidden(for="register-token") Token
         input#register-token.hidden(type="text", name="registerToken", value= token, disabled)
-        text Passwort
+        label(for="register-password") Passwort
         input#register-password(type="password", name="registerPassword", placeholder="Passwort")
-        text Passwort wiederholen
+        label(for="register-repeat-password") Passwort wiederholen
         input#register-repeat-password(type="password", name="registerRepeatPassword", placeholder="Passwort wiederholen")
       button#register-button(type="button" onclick="asyncRegister()") Registrieren 

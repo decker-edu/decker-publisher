@@ -19,7 +19,7 @@
     "get-video-duration": "^4.1.0",
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
-    "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^2.16.105",
     "pg": "^8.7.3",
     "pug": "2.0.0-beta11",
     "yauzl": "^2.10.0"

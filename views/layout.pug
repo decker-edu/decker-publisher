@@ -11,21 +11,24 @@ html
       link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.15.4/css/all.css", integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm", crossorigin="anonymous")
     link(rel="stylesheet", href="/stylesheets/fontawesome/css/all.css")
     block styles
-    script(src="/javascripts/mouse.js")
-    script(src="/javascripts/login.js")
-    script(src="/javascripts/request.js")
+    script(defer src="/javascripts/mouse.js")
+    script(defer src="/javascripts/login.js")
+    script(defer src="/javascripts/request.js")
     block scripts
 
   body
     navigation.navigation-bar
       div.site-navigation
+        a.navigation.button-like(href="/") 
+          i.fas.fa-home
+          text Hauptseite
         if user
-          a.button-like(href="/home") 
-            i.fas.fa-home
-            text Übersicht 
-        if admin
-          a.button-like(href="/admin") 
+          a.navigation.button-like(href="/home") 
             i.fas.fa-cog
+            text Persönliche Seite 
+        if admin
+          a.navigation.button-like(href="/admin") 
+            i.fas.fa-toolbox
             text Administration
       div.user-navigation
         if user
@@ -36,21 +39,37 @@ html
           button.login-button(onclick="openLoginDialog()")
             i.fas.fa-sign-in-alt
             text Login
-    div.navigation-placeholder
     block content
+    footer
+      a(href="https://www.tu-dortmund.de") TU Dortmund
+      a(href="https://www.tu-dortmund.de/impressum") Impressum
+      a(href="/data-protection") Datenschutz
     block stuff
     if user
       dialog#user-dialog
-        div#user-message.dialog-message
-        button.logout-button(onclick="asyncLogout()")
-          i.fas.fa-sign-out-alt
-          text Logout
+        form#user-form
+          fieldset#user-fieldset
+            legend= user.username
+            div#user-message.dialog-message
+            div#user-inputs.dialog-input-area
+            div.dialog-buttons
+              a.button-like(href="/home")
+                i.fas.fa-home
+                text Übersicht
+              button.logout-button(type="button" onclick="asyncLogout()")
+                i.fas.fa-sign-out-alt
+                text Logout
     else
       dialog#login-dialog
-        div#login-message.dialog-message
-        form#login-form(action="" method="POST")
-          input#login-user(type="text", name="login-user", placeholder="Benutzername")
-          input#login-pass(type="password", name="login-pass", placeholder="Passwort")
-        div
-          button(type="button" onclick="asyncLogin()") Login
-          button(type="button" onclick="closeLoginDialog()") Abbrechen
+        form#login-form
+          fieldset#login-fieldset
+            legend Login
+            div#login-message.dialog-message
+            div#login-inputs.dialog-input-area
+              label(for="login-user") Benutzername
+              input#login-user(type="text", name="login-user", placeholder="Benutzername")
+              label(for="login-pass") Passwort
+              input#login-pass(type="password", name="login-pass", placeholder="Passwort")
+            div.dialog-buttons
+              button(type="button" onclick="asyncLogin()") Login
+              button(type="button" onclick="closeLoginDialog()") Abbrechen

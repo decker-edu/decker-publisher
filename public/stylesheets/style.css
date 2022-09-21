@@ -1,16 +1,45 @@
+@font-face {
+  font-family: Akkurat;
+  src: url(/fonts/AkkuratLLWeb-Regular.woff2);
+  font-style: normal;
+  font-weight: normal;
+  text-rendering: optimizeLegibility;
+}
+
+@font-face {
+  font-family: Akkurat;
+  src: url(/fonts/AkkuratLLWeb-Bold.woff2);
+  font-style: normal;
+  font-weight: bold;
+  text-rendering: optimizeLegibility;
+}
+
 :root {
   --tu-green: #639a00;
   --tu-hover: #404040;
   --tu-active: #808080;
 }
 
+html {
+  width: 100%;
+  background-color: #f4f4f4;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0;
+  max-width: 60rem;
+  min-height: calc(100vh - 3rem);
+  background-color: #ffffff;
+}
+
 html,
 body {
-  font-family: "Roboto";
-  width: 100%;
-  height: calc(100% - 3rem);
-  margin: 0;
-  padding: 0;
+  font-family: "Akkurat", sans-serif;
   font-size: 16px;
 }
 
@@ -23,23 +52,47 @@ header {
   margin: auto;
 }
 
+footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  line-height: 3rem;
+  min-height: 3rem;
+  background-color: #3b3b3b;
+  padding: 0.5rem 1rem;
+}
+
+footer a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+}
+
+footer a:hover {
+  background-color: var(--tu-green);
+}
+
 main {
   max-width: 60rem;
   display: flex;
   flex-direction: column;
   text-align: center;
-  margin: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
   row-gap: 1rem;
+  background-color: white;
 }
 
 main form {
   width: 40rem;
+  padding: 1rem;
   border: 1px solid black;
   border-radius: 0.25rem;
   box-shadow: 2px 2px 1px black;
   margin: auto;
   display: flex;
   flex-direction: column;
+  row-gap: 0.5rem;
 }
 
 main section text {
@@ -66,6 +119,12 @@ button:hover {
 
 button:active {
   background-color: var(--tu-active);
+}
+
+button[disabled] {
+  background-color: #808080;
+  color: #404040;
+  cursor: default;
 }
 
 dialog::backdrop {
@@ -111,17 +170,57 @@ pre.inline {
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  justify-items: start;
+  justify-items: stretch;
+
+  row-gap: 0.5rem;
+}
+
+.form-grid label {
+  text-align: left;
+}
+
+dialog fieldset {
+  min-width: 512px;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: space-around;
+  row-gap: 0.5rem;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+dialog fieldset legend {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.dialog-input-area {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.25rem;
+  width: 100%;
+}
+
+.dialog-input-area input {
+  font-size: 1.25rem;
 }
 
 .dialog-buttons {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  width: 100%;
 }
 
 .dialog-buttons button {
-  min-width: 256px;
+  min-width: 192px;
+}
+
+.dialog-buttons a.button-like {
+  text-align: center;
+  min-width: 192px;
 }
 
 .hidden {
@@ -147,7 +246,7 @@ pre.inline {
   grid-area: navigation;
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: space-between;
   width: 100%;
 }
 
@@ -168,7 +267,7 @@ pre.inline {
   color: white;
 }
 
-a.button-like {
+a.navigation.button-like {
   display: block;
 
   line-height: 3rem;
@@ -183,12 +282,12 @@ a.button-like {
   font-weight: bold;
 }
 
-a.button-like:hover {
+a.navigation.button-like:hover {
   background: white;
   color: black;
 }
 
-a.button-like i.fas {
+a.navigation.button-like i.fas {
   font-size: 1.5em;
   padding-left: 0.25rem;
   padding-right: 0.25rem;
@@ -196,15 +295,37 @@ a.button-like i.fas {
   line-height: 3rem;
 }
 
+dialog a.button-like {
+  background-color: var(--tu-green);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+
+  text-decoration: none;
+}
+
+dialog a.button-like:hover {
+  background-color: var(--tu-hover);
+}
+
+dialog a.button-like:active {
+  background-color: var(--tu-active);
+}
+
 .video-button {
   min-width: 256px;
 }
 
-button i.fas ~ text {
+button i.fas ~ text,
+a.button-like i.fas ~ text {
   line-height: 2rem;
 }
 
-button i.fas {
+button i.fas,
+a.button-like i.fas {
   font-size: 1.25em;
   padding-left: 0.25rem;
   padding-right: 0.25rem;
@@ -313,4 +434,31 @@ td:hover {
 
 main.admin {
   max-width: unset;
+}
+
+@keyframes ping {
+  0% {
+    background: white;
+    outline-offset: 0.25rem;
+  }
+  33% {
+    outline-offset: 0.5rem;
+  }
+  100% {
+    outline-offset: 0.25rem;
+  }
+}
+
+:focus {
+  outline: 2px solid #ca7406;
+  outline-offset: 0.25rem;
+  animation: ping 0.33s linear;
+}
+
+section p {
+  text-align: left;
+}
+
+section ol {
+  text-align: left;
 }

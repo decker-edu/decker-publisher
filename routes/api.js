@@ -20,6 +20,7 @@ const cache = require("../cache");
 const Errors = require("../types/errors");
 const { default: getVideoDurationInSeconds } = require("get-video-duration");
 const Account = require("../types/account");
+const converter = require("../converter");
 
 function makeRandomString(length, characters) {
   let result = "";
@@ -278,7 +279,7 @@ router.post("/register", function (req, res, next) {
 
 /* POST upload */
 router.post(
-  "/upload",
+  "/project",
   fileUpload({ debug: true }),
   async function (req, res, next) {
     cache.authenticate(req, (error, account) => {
@@ -311,9 +312,7 @@ router.post(
       file = req.files.file;
       projectName = req.body.projectName;
 
-      uploadPath =
-        __dirname + "/../uploads/" + account.username + "/" + file.name;
-
+      uploadPath = path.join(account.getUserDirectory(), uploads, file.name);
       uploadPath = path.resolve(uploadPath);
 
       console.log("[UPLOAD] Path:", uploadPath);
@@ -334,7 +333,7 @@ router.post(
             .end();
         }
         yauzl.open(uploadPath, { lazyEntries: true }, function (err, zipfile) {
-          let prefix = path.dirname(uploadPath) + "/";
+          let prefix = account.getUserDirectory() + "projects/";
           function mkdirp(dir, cb) {
             if (dir.startsWith("public")) {
               dir = dir.replace(/public/, projectName);
@@ -377,6 +376,12 @@ router.post(
                 });
               });
             }
+          });
+          zipfile.on("end", function () {
+            zipfile.close();
+          });
+          zipfile.on("close", function () {
+            fs.rmSync(uploadPath);
           });
         });
         return res
@@ -436,6 +441,7 @@ router.get("/video", (req, res, next) => {
 
 router.delete("/project", (req, res, next) => {
   let projectname = req.body.name;
+  let password = req.body.password;
   if (!projectname || /\.\.(\/|\\)/g.test(projectname)) {
     return res
       .status(400)
@@ -454,22 +460,83 @@ router.delete("/project", (req, res, next) => {
         .end();
     }
     if (account) {
-      const userdir = global.rootDirectory + `/uploads/${account.username}/`;
-      const fullpath = userdir + projectname;
-      console.log(fullpath);
-      if (fs.existsSync(fullpath)) {
-        fs.rmSync(fullpath, { recursive: true, force: true });
+      account.checkPassword(password, (verified) => {
+        if (!verified) {
+          return res
+            .status(403)
+            .json({ status: "error", message: escape("Falsches Passwort.") });
+        } else {
+          const userdir = account.getUserDirectory();
+          const fullpath = userdir + "projects/" + projectname;
+          if (fs.existsSync(fullpath)) {
+            fs.rmSync(fullpath, { recursive: true, force: true });
+            return res
+              .status(200)
+              .json({ status: "success", message: "Projekt gelöscht." })
+              .end();
+          } else {
+            return res
+              .status(400)
+              .json({ status: "error", message: "Interner Fehler." })
+              .end();
+          }
+        }
+      });
+    }
+  });
+});
+
+router.post("/convert", (req, res, next) => {
+  cache.authenticate(req, (error, account) => {
+    if (error || !account) {
+      res
+        .status(400)
+        .json({
+          status: "error",
+          message: "Sie haben keine Berechtigung dies zu tun.",
+        })
+        .end();
+    }
+    let file;
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Keine Datei empfangen." })
+        .end();
+    }
+    file = req.files.file;
+    let uploadPath = path.join(
+      account.getUserDirectory(),
+      "uploads",
+      "pdf",
+      file.name
+    );
+    console.log("[UPLOAD] Path:", uploadPath);
+
+    if (!fs.existsSync(path.dirname(uploadPath))) {
+      fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
+    }
+
+    file.mv(uploadPath, function (err) {
+      if (err) {
+        console.error(err);
         return res
-          .status(200)
-          .json({ status: "success", message: "Projekt gelöscht." })
-          .end();
-      } else {
-        return res
-          .status(400)
-          .json({ status: "error", message: "Interner Fehler." })
+          .status(500)
+          .json({
+            status: "error",
+            message: "Interner Fehler beim speichern der Datei.",
+          })
           .end();
       }
-    }
+      convertPDFToProject(uploadPath);
+      return res
+        .status(200)
+        .json({
+          status: "success",
+          message: "Datei erfolgreich hochgeladen.",
+        })
+        .end();
+    });
   });
 });
 

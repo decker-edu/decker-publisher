@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const escape = require("escape-html");
 
 const db = require("../db");
 const cache = require("../cache");
@@ -98,6 +99,9 @@ router.get("/requests", (req, res, next) => {
       }
       if (admin) {
         cache.getAllRequests((error, requests) => {
+          for (let request of requests) {
+            request.note = escape(request.note);
+          }
           if (error) {
             console.error(error);
             if (error === Errors.NO_RESULTS) {

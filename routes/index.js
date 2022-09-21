@@ -53,14 +53,14 @@ router.get("/home", async function (req, res, next) {
             return;
           }
           if (admin) {
-            res.render("home", {
+            res.render("projects", {
               title: "Decker Projektübersicht",
               admin: true,
               user: { username: account.username },
               projects: projects,
             });
           } else {
-            res.render("home", {
+            res.render("projects", {
               title: "Decker Projektübersicht",
               admin: false,
               user: { username: account.username },
@@ -119,6 +119,22 @@ router.get("/video", async function (req, res, next) {
         },
       });
     }
+  });
+});
+
+router.get("/data-protection", async function (req, res, next) {
+  cache.authenticate(req, (error, account) => {
+    if (error && error !== Errors.USER_NOT_FOUND) {
+      console.error(error);
+      return res.render("error", {
+        error: {
+          status: 500,
+        },
+        message: "Interner Fehler",
+        stack: undefined,
+      });
+    }
+    return res.render("data-protection", { user: account });
   });
 });
 

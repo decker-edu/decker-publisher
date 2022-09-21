@@ -88,7 +88,18 @@ let all_promise = Promise.all([
       );
     });
 
-  Promise.all([ar_promise, am_promise]).then((results) => {
+  let pr_promise = pool
+    .query(
+      "CREATE TABLE IF NOT EXISTS project_allowance (user_id integer NOT NULL, allowed_amount integer NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id))"
+    )
+    .then((result) => {
+      console.log(
+        "[project_allowance] created.",
+        `${result.command} executed. ${result.rowCount} rows affected.`
+      );
+    });
+
+  Promise.all([ar_promise, am_promise, pr_promise]).then((results) => {
     cache
       .createAccount(
         config.setup_admin.username,

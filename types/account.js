@@ -3,6 +3,8 @@ const path = require("path");
 const argon2 = require("argon2");
 const { getVideoDurationInSeconds } = require("get-video-duration");
 
+const config = require("../config.json");
+
 const db = require("../db");
 const cache = require("../cache");
 const Errors = require("./errors");
@@ -31,7 +33,8 @@ class Account {
   }
 
   getUserDirectory() {
-    const userdir = global.rootDirectory + `/uploads/${this.username}/`;
+    const userdir =
+      global.rootDirectory + `/${config.user_directory_name}/${this.username}/`;
     return userdir;
   }
 
@@ -73,7 +76,7 @@ class Account {
   }
 
   getProjects(callback) {
-    const userdir = global.rootDirectory + `/uploads/${this.username}/`;
+    const userdir = this.getUserDirectory() + "projects/";
     let projectDirectories = this.getDirectories(userdir);
     let projects = [];
     for (let directory of projectDirectories) {

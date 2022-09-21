@@ -31,7 +31,7 @@ function upload() {
   const data = new FormData();
   data.append("file", input.files[0]);
   data.append("projectName", projectName.value);
-  const request = new Request("/api/upload", {
+  const request = new Request("/api/project", {
     method: "POST",
     body: data,
   });
