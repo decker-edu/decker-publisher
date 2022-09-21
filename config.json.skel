@@ -1,0 +1,15 @@
+{
+    "session_secret": "",
+    "pg_user": "",
+    "pg_pass": "",
+    "pg_base": "",
+    "pg_port": 5432,
+    "pg_host": "",
+    "feedback_db_file": "",
+    "user_directory_name": "",
+    "setup_admin": {
+        "username": "",
+        "password": "",
+        "email": ""
+    }
+}
