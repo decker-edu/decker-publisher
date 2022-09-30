@@ -1,5 +1,7 @@
 var pg = require("pg");
 const config = require("./config.json");
+const Account = require("./types/account");
+const { DB_ERROR, USER_NOT_FOUND } = require("./types/errors");
 
 process.env.PGUSER = config.pg_user;
 process.env.PGHOST = config.pg_host;
@@ -7,7 +9,7 @@ process.env.PGPASSWORD = config.pg_pass;
 process.env.PGDATABASE = config.pg_base;
 process.env.PGPORT = config.pg_port;
 
-var pool = undefined;
+let pool = undefined;
 
 exports.setupPool = function () {
   if (pool) {
@@ -55,5 +57,53 @@ exports.transact = function (query, values) {
         });
       });
     });
+  });
+};
+
+exports.getAccountByID = function (id) {
+  if (!pool) setupPool();
+  return new Promise((resolve, reject) => {
+    pool
+      .query("SELECT id, username FROM accounts WHERE id = $1", [id])
+      .then((result) => {
+        if (result) {
+          if (result.rows.length > 0) {
+            const data = result.rows[0];
+            resolve(new Account(data.id, data.username));
+          } else {
+            reject(USER_NOT_FOUND);
+          }
+        } else {
+          reject(DB_ERROR);
+        }
+      })
+      .catch((error) => {
+        reject(error);
+      });
+  });
+};
+
+exports.getAccountByName = function (username) {
+  if (!pool) setupPool();
+  return new Promise((resolve, reject) => {
+    pool
+      .query("SELECT id, username, hash FROM accounts WHERE username = $1", [
+        username,
+      ])
+      .then((result) => {
+        if (result) {
+          if (result.rows.length > 0) {
+            const data = result.rows[0];
+            resolve(new Account(data.id, data.username, data.hash));
+          } else {
+            reject(USER_NOT_FOUND);
+          }
+        } else {
+          reject(DB_ERROR);
+        }
+      })
+      .catch((error) => {
+        reject(error);
+      });
   });
 };

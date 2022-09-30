@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const child_process = require("child_process");
 
+const yazl = require("yazl");
 const config = require("./config.json");
 
 const pdfjs = require("pdfjs-dist/legacy/build/pdf");
@@ -24,7 +25,7 @@ module.exports.convertPDF = function (filepath) {
     console.error("[convert] Not a PDF.");
     return;
   }
-  const dataBuffer = fs.readdirSync(filepath);
+  const dataBuffer = fs.readFileSync(filepath);
   let pdfInfo = {};
   pdfjs.getDocument(dataBuffer).promise.then(async (pdf) => {
     pdfInfo.pages = pdf.numPages;
@@ -148,14 +149,35 @@ module.exports.convertPDF = function (filepath) {
               //deckerSource += `  height: ${data.height}\n`;
               deckerSource += "---\n\n";
               for (let page = 1; page <= pdfInfo.pages; page++) {
+                const pagenumber = String(page).padStart(3, "0");
                 deckerSource += `# { menu-title="${pdfInfo.titles[page]}" }\n\n`;
-                deckerSource += `![](pages/${name}-page-${String(page).padStart(
-                  3,
-                  "0"
-                )}.svg){width=var(--slide-width) height=var(--slide-height)}\n\n`;
+                deckerSource += `![](pages/${filename}-page-${pagenumber}.svg){width=var(--slide-width) height=var(--slide-height)}\n\n`;
               }
-              let mdPath = path.join(directory, filename + "-deck.md");
-              fs.writeFile(mdPath, deckerSource).then((error) => {});
+              const yamlPath = path.join(directory, "decker.yaml");
+              fs.writeFileSync(yamlPath, "resource-pack: exe:tudo\n");
+              const mdPath = path.join(directory, filename + "-deck.md");
+              fs.writeFile(mdPath, deckerSource, (error) => {
+                if (error) console.error(error);
+                let zipfile = new yazl.ZipFile();
+                zipfile.addFile(mdPath, path.basename(mdPath));
+                zipfile.addFile(yamlPath, path.basename(yamlPath));
+                for (let page = 1; page <= pdfInfo.pages; page++) {
+                  const pagenumber = String(page).padStart(3, "0");
+                  const pagefilename = `${filename}-page-${pagenumber}.svg`;
+                  const pagefile = path.join(pagesDirectory, pagefilename);
+                  zipfile.addFile(pagefile, `pages/${pagefilename}`);
+                }
+                const zippath = path.join(directory, filename + ".zip");
+                zipfile.outputStream
+                  .pipe(fs.createWriteStream(zippath))
+                  .on("close", function () {
+                    console.log("[yazl] Written file:", zippath);
+                    fs.rmSync(pagesDirectory, { recursive: true, force: true });
+                    fs.rmSync(mdPath, { force: true });
+                    fs.rmSync(yamlPath, { force: true });
+                  });
+                zipfile.end();
+              });
             });
           }
         });

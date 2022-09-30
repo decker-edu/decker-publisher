@@ -5,7 +5,6 @@ const crypto = require("crypto");
 const db = require("./db");
 const config = require("./config.json");
 const Errors = require("./types/errors");
-const Account = require("./types/account");
 
 function makeRandomString(length, characters) {
   let result = "";
@@ -17,11 +16,6 @@ function makeRandomString(length, characters) {
     result += options.charAt(Math.floor(Math.random() * amount));
   }
   return result;
-}
-
-class Profile {
-  name;
-  decks;
 }
 
 class Cache {
@@ -51,7 +45,7 @@ class Cache {
         if (error) {
           return callback(error, undefined);
         }
-        account.checkPassword(request.body.password, (success) => {
+        account.checkPassword(request.body.password).then((success) => {
           if (success) {
             return callback(undefined, account);
           } else {
@@ -59,8 +53,6 @@ class Cache {
           }
         });
       });
-    } else {
-      return callback(Errors.USER_NOT_FOUND, undefined);
     }
   }
 
@@ -68,38 +60,23 @@ class Cache {
     if (this.accounts[id]) {
       callback(undefined, this.accounts[id]);
     } else {
-      db.transact("SELECT id, username FROM accounts WHERE id = $1", [id]).then(
-        (result) => {
-          if (result && result.rows.length > 0) {
-            this.accounts[id] = new Account(
-              result.rows[0].id,
-              result.rows[0].username
-            );
-            callback(undefined, this.accounts[id]);
-          } else {
-            callback(Errors.USER_NOT_FOUND, undefined);
-          }
-        }
-      );
+      db.getAccountByID(id)
+        .then((account) => {
+          callback(undefined, account);
+        })
+        .catch((error) => {
+          callback(error, undefined);
+        });
     }
   }
 
   getAccountByName(username, callback) {
-    db.transact("SELECT id, username FROM accounts WHERE username = $1", [
-      username,
-    ])
-      .then((result) => {
-        if (result && result.rows.length > 0) {
-          let account = result.rows[0];
-          this.accounts[account.id] = new Account(account.id, account.username);
-          callback(undefined, this.accounts[account.id]);
-        } else {
-          callback(Errors.USER_NOT_FOUND, undefined);
-        }
+    db.getAccountByName(username)
+      .then((account) => {
+        callback(undefined, account);
       })
       .catch((error) => {
-        console.error(error);
-        callback(Errors.DB_ERROR, undefined);
+        callback(error, undefined);
       });
   }
 

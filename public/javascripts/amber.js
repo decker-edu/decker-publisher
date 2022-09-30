@@ -1,5 +1,39 @@
+let amberProject = undefined;
+let amberFilepath = undefined;
+
 function requestAmber() {
-  alert("Not yet implemented");
+  fetch("/api/amberscript", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      project: amberProject,
+      filepath: amberFilepath,
+    }),
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw { status: response.status, message: "Fehler." };
+      }
+    })
+    .then((json) => {
+      showAmberDialogMessage(json.message, "success");
+      setTimeout(() => {
+        closeAmberDialog();
+        window.location.replace("/ambers");
+      }, 3000);
+    })
+    .catch((error) => {
+      if (error.message) {
+        showAmberDialogMessage(error.message, "error");
+      } else {
+        showAmberDialogMessage("Fehler.", "error");
+      }
+    });
 }
 
 function showAmberDialogMessage(message, type) {
@@ -17,7 +51,9 @@ function showAmberDialogMessage(message, type) {
   element.innerText = message;
 }
 
-function openAmberDialog(filepath) {
+function openAmberDialog(project, filepath) {
+  amberProject = project;
+  amberFilepath = filepath;
   let dialog = document.getElementById("amber-dialog");
   showAmberDialogMessage("Videodaten werden geladen.", "information");
   let filenameField = document.getElementById("amber-filename");
@@ -33,7 +69,7 @@ function openAmberDialog(filepath) {
     subtitleField.innerText = null;
   }
   dialog.showModal();
-  fetch(`/api/video?file=${filepath}`, {
+  fetch(`/api/video?project=${project}&file=${filepath}`, {
     method: "GET",
     headers: {
       Accept: "application/json",

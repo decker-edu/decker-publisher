@@ -88,6 +88,17 @@ let all_promise = Promise.all([
       );
     });
 
+  let jo_promise = pool
+    .query(
+      "CREATE TABLE IF NOT EXISTS amberscript_jobs (jobId integer PRIMARY KEY UNIQUE NOT NULL, user_id integer NOT NULL, projectname VARCHAR(255) NOT NULL, relative_filepath VARCHAR NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id))"
+    )
+    .then((result) => {
+      console.log(
+        "[amberscript_jobs] created.",
+        `${result.command} executed. ${result.rowCount} rows affected.`
+      );
+    });
+
   let pr_promise = pool
     .query(
       "CREATE TABLE IF NOT EXISTS project_allowance (user_id integer NOT NULL, allowed_amount integer NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id))"

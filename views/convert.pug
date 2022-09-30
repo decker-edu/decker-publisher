@@ -1,0 +1,25 @@
+extends layout
+
+block scripts 
+    script(defer src="/javascripts/convert.js")
+
+block content
+  header 
+    h1 PDF Umwandeln
+  main
+    div#explanation
+      p
+        | Sie können eine PDF-Datei hochladen und in eine Deckerpräsentation umwandeln.
+      p
+        | Die Konvertierung extrahiert aus jeder PDF-Seite ein SVG-Bild und bettet dieses in eine
+        | Folie der Webpräsentation ein. Als Ergebnis erhalten Sie eine ZIP-Datei mit einem fertigen
+        | Deckerprojekt, das Sie anpassen können. Das von Ihnen übersetzte Projekt können Sie als
+        | Webpräsentation wieder hochladen.
+    div#insert-area
+    form
+      label.fileinput#file-upload-placeholder(tabindex="0" onkeydown="passOn(event)")
+        span#file-upload-label Datei auswählen
+        input#file-upload-input(type="file" enctype="multipart/form-data" name="projectFile" onchange="inputChanged()")
+      button#file-upload-button(type="button" onclick="upload()" title="Hochladen" aria-label="Hochladen" hidden)
+        i.fas.fa-upload
+        text Upload starten

@@ -49,7 +49,8 @@ body {
 
 header {
   text-align: center;
-  margin: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 footer {
@@ -74,9 +75,12 @@ footer a:hover {
 
 main {
   max-width: 60rem;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
   text-align: center;
+  justify-content: space-between;
+  align-items: center;
   padding-left: 1rem;
   padding-right: 1rem;
   row-gap: 1rem;
@@ -359,6 +363,8 @@ a.button-like i.fas {
 
 #upload-area {
   display: flex;
+  flex-grow: 1;
+  width: 100%;
   flex-direction: column;
   border-top: 1px solid black;
   padding-top: 0.5rem;
@@ -372,6 +378,7 @@ a.button-like i.fas {
 }
 
 label.fileinput {
+  position: relative;
   background-color: var(--tu-green);
   color: white;
   border: none;
@@ -390,7 +397,7 @@ label.fileinput:active {
   background-color: var(--tu-active);
 }
 
-#insert-area input[type="file"] {
+.fileinput input[type="file"] {
   display: none;
 }
 
@@ -459,6 +466,60 @@ section p {
   text-align: left;
 }
 
-section ol {
+section li {
   text-align: left;
+}
+
+.tile-area {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  column-gap: 1rem;
+  max-width: 30rem;
+}
+
+a.tile-like {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--tu-green);
+  color: white;
+  border: none;
+  justify-content: space-around;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a.tile-like:hover {
+  background-color: var(--tu-hover);
+}
+
+a.tile-like:active {
+  background-color: var(--tu-active);
+}
+
+a.tile-like i.fas {
+  display: block;
+  font-size: 4rem;
+}
+
+@keyframes turning {
+  0% {
+    rotate: 0deg;
+  }
+  100% {
+    rotate: 360deg;
+  }
+}
+
+.turning {
+  animation: turning 1s infinite;
+}
+
+video {
+  max-width: 100%;
 }

@@ -1,9 +1,9 @@
 extends layout
 
 block scripts 
-    script(src="/javascripts/upload.js")
-    script(src="/javascripts/video.js")
-    script(src="/javascripts/project.js")
+    script(defer src="/javascripts/upload.js")
+    script(defer src="/javascripts/video.js")
+    script(defer src="/javascripts/project.js")
 
 block content
   header 
@@ -20,10 +20,10 @@ block content
           each project in projects
             tr
               td
-                a(href="/decks/" + user.username + "/" + project.name)= project.name
+                a(href="/decks/" + user.username + "/" + project.name + "/")= project.name
               td
                 each video in project.videos
-                  button.video-button(onclick="openVideoDialog('"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
+                  button.video-button(onclick="openVideoDialog('"+project.name+"', '"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
                     i.fas.fa-film
                     text= video.filename
               td
@@ -44,7 +44,7 @@ block content
       |  Datei und wählen dieses Archiv aus. Das Archiv sollte auf oberster Ebene nur den Ordner 
       pre.inline public
       |  beinhalten.
-    label.fileinput
+    label.fileinput#file-upload-placeholder(tabindex="0" onkeydown="passOn(event)")
       span#file-upload-label Datei auswählen
       input#file-upload-input(type="file" enctype="multipart/form-data" name="projectFile" onchange="inputChanged()")
     div#project-config.hidden
@@ -67,6 +67,9 @@ block stuff
             button(type="button" onclick="deleteSelectedProject()")
               i.fas.fa-trash
               text Löschen
+            button(onclick="closeVideoDialog()")
+              i.fas.fa-ban
+              text Dialog schließen
   dialog#video-dialog
     div#video-message.dialog-message
     div.video-data

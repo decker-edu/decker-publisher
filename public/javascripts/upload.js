@@ -25,6 +25,11 @@ function inputChanged() {
   }
 }
 
+function passOn(event) {
+  const input = document.getElementById("file-upload-input");
+  input.click();
+}
+
 function upload() {
   const input = document.querySelector("#file-upload-input");
   const projectName = document.querySelector("#project-name-input");

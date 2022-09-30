@@ -8,16 +8,19 @@ block scripts
 block content
   header
     h1 Video
-    h2= video.path
+    h2= video.project
+    h3= video.path
   main
-    video(src= video.url)
+    video(src= video.url controls)
 
     if video.vtt
         pre.vtt= video.vtt
     else 
         pre.vtt Keine Untertitel
 
-    button(onclick="openAmberDialog('"+video.path+"')") Untertitel generieren
+    button(onclick="openAmberDialog('"+video.project+"', '"+video.path+"')") 
+      i.fas.fa-closed-captioning
+      text Untertitel generieren
 
 block stuff
   dialog#amber-dialog

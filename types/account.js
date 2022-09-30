@@ -12,24 +12,49 @@ const Errors = require("./errors");
 class Account {
   id;
   username;
-  profile;
+  hash;
 
-  constructor(id, username) {
+  constructor(id, username, hash) {
     this.id = id;
     this.username = username;
+    this.hash = hash;
   }
 
-  checkPassword(password, callback) {
-    db.transact("SELECT hash FROM accounts WHERE id = $1", [this.id]).then(
-      (result) => {
-        if (result && result.rows.length > 0) {
-          let hash = result.rows[0].hash;
-          argon2.verify(hash, password).then(callback);
-        } else {
-          argon2.verify(undefined, password).then(callback);
-        }
+  checkPassword(password) {
+    return new Promise((resolve, reject) => {
+      if (this.hash) {
+        argon2.verify(this.hash, password).then((success) => {
+          resolve(success);
+        });
+      } else {
+        db.transact("SELECT hash FROM accounts WHERE id = $1", [this.id])
+          .then((result) => {
+            if (result) {
+              if (result.rows.length > 0) {
+                let hash = result.rows[0].hash;
+                this.hash = hash;
+                argon2.verify(this.hash, password).then((success) => {
+                  resolve(success);
+                });
+              } else {
+                argon2.verify(undefined, password).then((success) => {
+                  resolve(success);
+                });
+              }
+            } else {
+              argon2.verify(undefined, password).then((success) => {
+                resolve(success);
+              });
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+            argon2.verify(undefined, password).then((success) => {
+              resolve(success);
+            });
+          });
       }
-    );
+    });
   }
 
   getUserDirectory() {
@@ -76,8 +101,9 @@ class Account {
   }
 
   getProjects(callback) {
-    const userdir = this.getUserDirectory() + "projects/";
-    let projectDirectories = this.getDirectories(userdir);
+    const userdir = this.getUserDirectory();
+    const projectDir = path.join(userdir, "projects");
+    let projectDirectories = this.getDirectories(projectDir);
     let projects = [];
     for (let directory of projectDirectories) {
       let mp4s = this.getFiles(directory, (file) => {
@@ -87,7 +113,7 @@ class Account {
       let videoData = mp4s.map((video) => {
         return {
           filename: path.basename(video),
-          filepath: path.relative(userdir, video).replace(/\\/g, "/"),
+          filepath: path.relative(directory, video).replace(/\\/g, "/"),
         };
       });
       projects.push({ name: path.basename(directory), videos: videoData });

@@ -8,80 +8,72 @@ const Account = require("../types/account");
 const Errors = require("../types/errors");
 
 router.get("/", (req, res, next) => {
-  cache.authenticate(req, (error, account) => {
+  if (!req.account) {
+    return res.render("error", { message: "Nicht authentifiziert." });
+  }
+  req.account.hasRole("admin", (error, admin) => {
     if (error) {
-      return res.render("error", { error: { message: "Not authenticated." } });
+      return res.render("error", {
+        error: {
+          message: "Internal Server Error",
+          error: {
+            status: 500,
+          },
+        },
+      });
     }
-    account.hasRole("admin", (error, admin) => {
-      //TODO unhardcode role name
-      if (error) {
-        return res.render("error", {
+    if (admin) {
+      return res.render("admin", {
+        title: "Administration",
+        user: req.account,
+        admin: true,
+      });
+    } else {
+      return res.render("error", {
+        error: {
+          message: "Not authenticated.",
           error: {
-            message: "Internal Server Error",
-            error: {
-              status: 500,
-              stack: "",
-            },
+            status: 403,
           },
-        });
-      }
-      if (admin) {
-        return res.render("admin", {
-          title: "Administration",
-          user: { username: account.username },
-          admin: true,
-        });
-      } else {
-        return res.render("error", {
-          error: {
-            message: "Not authenticated.",
-            error: {
-              status: 403,
-              stack: "",
-            },
-          },
-        });
-      }
-    });
+        },
+      });
+    }
   });
 });
 
 router.get("/users", (req, res, next) => {
-  cache.authenticate(req, (error, account) => {
+  if (!req.account) {
+    return res.render("error", { message: "Nicht authentifiziert." });
+  }
+  req.account.hasRole("admin", (error, admin) => {
     if (error) {
-      return res.render("error", { error: { message: "Not authenticated." } });
+      return res.render("error", {
+        error: { message: "Interner Fehler.", error: { status: 500 } },
+      });
     }
-    account.hasRole("admin", (error, admin) => {
-      //TODO unhardcode role name
-      if (error) {
-        return res.render("error", {
-          error: { message: "Internal Server Error" },
-        });
-      }
-      if (admin) {
-        cache.getAllAccounts((error, accounts) => {
-          if (error) {
-            return res.render("error", {
-              message: "Error while fetching accounts.",
-              error: {
-                status: 404,
-                stack: error,
-              },
-            });
-          }
-          return res.render("admin-users", {
-            title: "Benutzeradministration",
-            user: { username: account.username },
-            admin: true,
-            accounts: accounts,
+    if (admin) {
+      cache.getAllAccounts((error, accounts) => {
+        if (error) {
+          return res.render("error", {
+            message: "Fehler beim abfragen der Nutzerkonten.",
+            error: {
+              status: 404,
+              stack: error,
+            },
           });
+        }
+        return res.render("admin-users", {
+          title: "Benutzeradministration",
+          user: req.account,
+          admin: true,
+          accounts: accounts,
         });
-      } else {
-        return res.render("error", {
-          error: { message: "Not authenticated." },
-        });
-      }
-    });
+      });
+    } else {
+      return res.render("error", {
+        error: { message: "Not authenticated." },
+      });
+    }
   });
 });
 

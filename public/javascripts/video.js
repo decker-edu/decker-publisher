@@ -18,9 +18,11 @@ function showVideoDialogMessage(message, type) {
   element.innerText = message;
 }
 
+let dialogProject = undefined;
 let dialogFilepath = undefined;
 
-function openVideoDialog(filepath) {
+function openVideoDialog(project, filepath) {
+  dialogProject = project;
   dialogFilepath = filepath;
   let dialog = document.getElementById("video-dialog");
   showVideoDialogMessage("Videodaten werden geladen.", "information");
@@ -37,7 +39,7 @@ function openVideoDialog(filepath) {
     subtitleField.innerText = null;
   }
   dialog.showModal();
-  fetch(`/api/video?file=${filepath}`, {
+  fetch(`/api/video?project=${project}&file=${filepath}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -74,5 +76,7 @@ function navigateToVideo() {
     );
     return;
   }
-  window.location.replace(`/video?filepath=${dialogFilepath}`);
+  window.location.replace(
+    `/video?project=${dialogProject}&filepath=${dialogFilepath}`
+  );
 }

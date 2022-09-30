@@ -19,6 +19,7 @@ const session_store = require("./session.js");
 const config = require("./config.json");
 
 const db = require("./db");
+const authenticator = require("./middleware/authenticator");
 
 global.rootDirectory = path.resolve(__dirname);
 
@@ -49,6 +50,7 @@ app.use(
     store: session_store,
   })
 );
+app.use(authenticator);
 
 app.use("/", indexRouter);
 app.use("/api", apiRouter);

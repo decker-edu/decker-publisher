@@ -85,7 +85,9 @@ function asyncLogout() {
     .then((json) => {
       if (json.status === "success") {
         displayUserDialogMessage(json.message, "success");
-        window.location.replace("/");
+        setTimeout(() => {
+          window.location.replace("/");
+        }, 1000);
       } else {
         displayUserDialogMessage(json.message, "error");
       }

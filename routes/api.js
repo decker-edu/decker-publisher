@@ -9,6 +9,7 @@ const escape = require("escape-html");
 const argon2 = require("argon2");
 
 const db = require("../db");
+const amberscript = require("../amberscript");
 
 const fs = require("fs");
 const path = require("path");
@@ -199,6 +200,13 @@ router.post("/register", function (req, res, next) {
   let token = req.body.token;
   let password = req.body.password;
 
+  if (password.length < 8) {
+    return res.status(400).json({
+      status: "error",
+      message: "Passwort muss mindestens 8 Zeichen lang sein.",
+    });
+  }
+
   db.transact("SELECT username, email FROM account_requests WHERE token = $1", [
     token,
   ])
@@ -278,165 +286,191 @@ router.post("/register", function (req, res, next) {
 });
 
 /* POST upload */
-router.post(
-  "/project",
-  fileUpload({ debug: true }),
-  async function (req, res, next) {
-    cache.authenticate(req, (error, account) => {
-      if (error) {
-        res
-          .status(400)
+router.post("/project", fileUpload(), async (req, res, next) => {
+  cache.authenticate(req, (error, account) => {
+    if (error) {
+      res
+        .status(400)
+        .json({
+          status: "error",
+          message: "Sie haben keine Berechtigung dies zu tun.",
+        })
+        .end();
+    }
+    let file;
+    let uploadPath;
+    let projectName;
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Keine Datei empfangen." })
+        .end();
+    }
+
+    if (!req.body.projectName || req.body.projectName === "") {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Kein Projektname empfangen." })
+        .end();
+    }
+
+    if (req.body.projectName.includes(".")) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Ungültiger Projektname." })
+        .end();
+    }
+
+    file = req.files.file;
+    projectName = req.body.projectName;
+
+    uploadPath = path.join(account.getUserDirectory(), "uploads", file.name);
+    uploadPath = path.resolve(uploadPath);
+
+    projectPath = path.join(
+      account.getUserDirectory(),
+      "projects",
+      projectName
+    );
+
+    if (!fs.existsSync(path.join(account.getUserDirectory(), "projects"))) {
+      fs.mkdirSync(path.join(account.getUserDirectory(), "projects"), {
+        recursive: true,
+      });
+    }
+
+    if (fs.existsSync(projectPath)) {
+      return res
+        .status(400)
+        .json({
+          status: "error",
+          message: "Projektname wird bereits genutzt.",
+        })
+        .end();
+    }
+
+    if (!fs.existsSync(path.dirname(uploadPath))) {
+      fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
+    }
+
+    file.mv(uploadPath, function (err) {
+      if (err) {
+        console.error(err);
+        return res
+          .status(500)
           .json({
             status: "error",
-            message: "Sie haben keine Berechtigung dies zu tun.",
+            message: "Interner Fehler beim speichern der Datei.",
           })
           .end();
       }
-      let file;
-      let uploadPath;
-      let projectName;
-      if (!req.files || Object.keys(req.files).length === 0) {
-        return res
-          .status(400)
-          .json({ status: "error", message: "Keine Datei empfangen." })
-          .end();
-      }
-
-      if (!req.body.projectName || req.body.projectName === "") {
-        return res
-          .status(400)
-          .json({ status: "error", message: "Kein Projektname empfangen." })
-          .end();
-      }
-
-      file = req.files.file;
-      projectName = req.body.projectName;
-
-      uploadPath = path.join(account.getUserDirectory(), uploads, file.name);
-      uploadPath = path.resolve(uploadPath);
-
-      console.log("[UPLOAD] Path:", uploadPath);
-
-      if (!fs.existsSync(path.dirname(uploadPath))) {
-        fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
-      }
-
-      file.mv(uploadPath, function (err) {
+      yauzl.open(uploadPath, { lazyEntries: true }, function (err, zipfile) {
+        let prefix = account.getUserDirectory() + "projects/";
+        function mkdirp(dir, cb) {
+          if (dir.startsWith("public")) {
+            dir = dir.replace(/public/, projectName);
+          }
+          if (dir === ".") return cb();
+          fs.stat(prefix + dir, function (err) {
+            if (err == null) return cb();
+            var parent = path.dirname(dir);
+            mkdirp(parent, function () {
+              console.log("[YAUZL] Creating Directory:", dir);
+              fs.mkdir(prefix + dir, cb);
+            });
+          });
+        }
         if (err) {
           console.error(err);
-          return res
-            .status(500)
-            .json({
-              status: "error",
-              message: "Interner Fehler beim speichern der Datei.",
-            })
-            .end();
+          return;
         }
-        yauzl.open(uploadPath, { lazyEntries: true }, function (err, zipfile) {
-          let prefix = account.getUserDirectory() + "projects/";
-          function mkdirp(dir, cb) {
-            if (dir.startsWith("public")) {
-              dir = dir.replace(/public/, projectName);
-            }
-            if (dir === ".") return cb();
-            fs.stat(prefix + dir, function (err) {
-              if (err == null) return cb();
-              var parent = path.dirname(dir);
-              mkdirp(parent, function () {
-                console.log("[YAUZL] Creating Directory:", dir);
-                fs.mkdir(prefix + dir, cb);
+        zipfile.readEntry();
+        zipfile.on("entry", function (entry) {
+          if (/\/$/.test(entry.fileName)) {
+            mkdirp(entry.fileName, function () {
+              if (err) {
+                console.error(err);
+                return;
+              }
+              zipfile.readEntry();
+            });
+          } else {
+            mkdirp(path.dirname(entry.fileName), function () {
+              zipfile.openReadStream(entry, function (err, readStream) {
+                if (err) throw err;
+                readStream.on("end", function () {
+                  zipfile.readEntry();
+                });
+                let unpackTarget = prefix + entry.fileName;
+                unpackTarget = unpackTarget.replace(/public/, projectName);
+                let writeStream = fs.createWriteStream(unpackTarget);
+                readStream.pipe(writeStream);
               });
             });
           }
-          if (err) {
-            console.error(err);
-            return;
-          }
-          zipfile.readEntry();
-          zipfile.on("entry", function (entry) {
-            if (/\/$/.test(entry.fileName)) {
-              mkdirp(entry.fileName, function () {
-                if (err) {
-                  console.error(err);
-                  return;
-                }
-                zipfile.readEntry();
-              });
-            } else {
-              mkdirp(path.dirname(entry.fileName), function () {
-                zipfile.openReadStream(entry, function (err, readStream) {
-                  if (err) throw err;
-                  readStream.on("end", function () {
-                    zipfile.readEntry();
-                  });
-                  let unpackTarget = prefix + entry.fileName;
-                  unpackTarget = unpackTarget.replace(/public/, projectName);
-                  let writeStream = fs.createWriteStream(unpackTarget);
-                  readStream.pipe(writeStream);
-                });
-              });
-            }
-          });
-          zipfile.on("end", function () {
-            zipfile.close();
-          });
-          zipfile.on("close", function () {
-            fs.rmSync(uploadPath);
-          });
         });
-        return res
-          .status(200)
-          .json({
-            status: "success",
-            message: "Datei erfolgreich hochgeladen.",
-          })
-          .end();
+        zipfile.on("end", function () {
+          zipfile.close();
+        });
+        zipfile.on("close", function () {
+          fs.rmSync(uploadPath);
+        });
       });
+      return res
+        .status(200)
+        .json({
+          status: "success",
+          message: "Datei erfolgreich hochgeladen.",
+        })
+        .end();
     });
-  }
-);
+  });
+});
 
 router.get("/video", (req, res, next) => {
+  let project = req.query.project;
   let filepath = req.query.file;
+  if (!project || project === "" || /\.\.(\/|\\)/g.test(project)) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Fehlerhafte Anfrage." })
+      .end();
+  }
   if (!filepath || filepath === "" || /\.\.(\/|\\)/g.test(filepath)) {
     return res
       .status(400)
       .json({ status: "error", message: "Fehlerhafte Anfrage." })
       .end();
   }
-  cache.authenticate(req, (error, account) => {
-    if (error) {
+  if (!req.account) {
+    return res
+      .status(403)
+      .json({ status: "error", message: "Nicht authentifiziert." })
+      .end();
+  }
+  const userdir = req.account.getUserDirectory();
+  const fullpath = path.join(userdir, "projects", project, filepath);
+  const filename = path.basename(fullpath, path.extname(fullpath));
+  const dirname = path.dirname(fullpath);
+  const subtitles = filename + ".vtt";
+  const vttfile = path.join(dirname, subtitles);
+  let hasvtt = false;
+  if (fs.existsSync(vttfile)) {
+    hasvtt = true;
+  }
+  if (fs.existsSync(fullpath)) {
+    getVideoDurationInSeconds(fullpath).then((seconds) => {
       return res
-        .status(400)
-        .json({ status: "error", message: "Nutzerkonto nicht gefunden." })
+        .status(200)
+        .json({ status: "success", data: { length: seconds, vtt: hasvtt } })
         .end();
-    }
-    if (account) {
-      let userdir = account.getUserDirectory();
-      userdir = path.resolve(userdir);
-      const fullpath = userdir + "/" + filepath;
-      const filename = path.basename(fullpath, path.extname(fullpath));
-      const dirname = path.dirname(fullpath);
-      const subtitles = filename + ".vtt";
-      const vttfile = `${dirname}/${subtitles}`;
-      let hasvtt = false;
-      console.log(vttfile);
-      if (fs.existsSync(vttfile)) {
-        hasvtt = true;
-      }
-      getVideoDurationInSeconds(fullpath).then((seconds) => {
-        return res
-          .status(200)
-          .json({ status: "success", data: { length: seconds, vtt: hasvtt } })
-          .end();
-      });
-    } else {
-      return res
-        .status(400)
-        .json({ status: "error", message: "Interner Fehler." })
-        .end();
-    }
-  });
+    });
+  } else {
+    return res
+      .status(404)
+      .json({ status: "error", message: "Video nicht gefunden." })
+      .end();
+  }
 });
 
 router.delete("/project", (req, res, next) => {
@@ -460,14 +494,14 @@ router.delete("/project", (req, res, next) => {
         .end();
     }
     if (account) {
-      account.checkPassword(password, (verified) => {
+      account.checkPassword(password).then((verified) => {
         if (!verified) {
           return res
             .status(403)
             .json({ status: "error", message: escape("Falsches Passwort.") });
         } else {
           const userdir = account.getUserDirectory();
-          const fullpath = userdir + "projects/" + projectname;
+          const fullpath = path.join(userdir, "projects", projectname);
           if (fs.existsSync(fullpath)) {
             fs.rmSync(fullpath, { recursive: true, force: true });
             return res
@@ -486,7 +520,30 @@ router.delete("/project", (req, res, next) => {
   });
 });
 
-router.post("/convert", (req, res, next) => {
+router.get("/convert", (req, res, next) => {
+  const filequery = req.query.file;
+  if (!filequery) {
+    return res.status(400).end();
+  }
+  cache.authenticate(req, (error, account) => {
+    if (error) {
+      return res.status(403).end();
+    }
+    if (!account) {
+      return res.status(403).end();
+    }
+    let userdir = account.getUserDirectory();
+    let filepath = path.join(userdir, "uploads", "pdf", filequery);
+    console.log(filepath);
+    if (!fs.existsSync(filepath)) {
+      return res.status(404).end();
+    } else {
+      return res.sendFile(filepath);
+    }
+  });
+});
+
+router.post("/convert", fileUpload(), (req, res, next) => {
   cache.authenticate(req, (error, account) => {
     if (error || !account) {
       res
@@ -528,16 +585,54 @@ router.post("/convert", (req, res, next) => {
           })
           .end();
       }
-      convertPDFToProject(uploadPath);
-      return res
+      res
         .status(200)
         .json({
           status: "success",
           message: "Datei erfolgreich hochgeladen.",
         })
         .end();
+      converter.convertPDF(uploadPath);
+      return;
     });
   });
+});
+
+router.post("/amberscript", (req, res, next) => {
+  if (!req.account) {
+    return res.status(403).end();
+  }
+  const project = req.body.project;
+  const filepath = req.body.filepath;
+  const userdir = req.account.getUserDirectory();
+  const fullpath = path.join(userdir, "projects", project, filepath);
+  if (!fs.existsSync(fullpath)) {
+    return res.status(404).end();
+  }
+  amberscript
+    .postAmber(req.account, project, filepath, undefined)
+    .catch((error) => {
+      console.error(error);
+      return res.status(500).end();
+    });
+});
+
+router.post("/amberscript/callback", (req, res, next) => {
+  const message = req.body;
+  if (!message.jobStatus) {
+    return res.status(400).end();
+  }
+  if (message.jobStatus && message.jobStatus.jobId) {
+    const jobId = message.jobStatus.jobId;
+    const status = message.jobStatus.status;
+    if (status === "DONE") {
+      amberscript.finallizeJob(jobId);
+    } else if (status === "ERROR") {
+      amberscript.publishError(jobId, message.jobStatus.errorMsg);
+    } else {
+      return res.status(400).end();
+    }
+  }
 });
 
 module.exports = router;
