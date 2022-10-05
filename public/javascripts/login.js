@@ -64,7 +64,9 @@ function asyncLogin() {
     .then((json) => {
       if (json.status === "success") {
         displayLoginDialogMessage(json.message, "success");
-        window.location.replace("/");
+        setTimeout(() => {
+          window.location.replace("/");
+        }, 3000);
       } else {
         displayLoginDialogMessage(json.message, "error");
       }
@@ -97,7 +99,6 @@ function asyncLogout() {
 let loginDialog = document.getElementById("login-dialog");
 if (loginDialog) {
   loginDialog.addEventListener("keypress", (event) => {
-    console.log(event);
     let usernameField = document.getElementById("login-user");
     let passwordField = document.getElementById("login-pass");
     if (event.key === "Enter") {

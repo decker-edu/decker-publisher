@@ -20,17 +20,22 @@ module.exports = function (request, response, next) {
         }
       });
   } else if (request.body.username && request.body.password) {
-    db.getAccountByName(request.body.username).then((account) => {
-      account.checkPassword(request.body.password).then((success) => {
-        if (success) {
-          request.account = account;
-          next();
-        } else {
-          request.account = undefined;
-          next();
-        }
+    db.getAccountByName(request.body.username)
+      .then((account) => {
+        account.checkPassword(request.body.password).then((success) => {
+          if (success) {
+            request.account = account;
+            next();
+          } else {
+            request.account = undefined;
+            next();
+          }
+        });
+      })
+      .catch((error) => {
+        request.account = undefined;
+        next();
       });
-    });
   } else {
     request.account = undefined;
     next();

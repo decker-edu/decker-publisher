@@ -57,18 +57,34 @@ function verifyEmail(string, allowedOrigins) {
 }
 
 router.post("/login", function (req, res, next) {
-  cache.authenticate(req, (error, account) => {
-    if (error) {
-      console.error("[/login]", error);
-      return res
-        .status(400)
-        .json({
-          status: "error",
-          message: escape("Ungültige Benutzerdaten."),
-        })
-        .end();
+  if (req.account) {
+    req.session.user = req.account.id;
+    if (req.body.username && req.body.password) {
+      db.transact("SELECT * from feedback_accounts WHERE username = $1", [
+        req.body.username,
+      ]).then((result) => {
+        if (result && result.rows.length > 0) {
+          let hash = result.rows[0].hash;
+          if (hash === "{}") {
+            console.log("[LOGIN] Fixing broken login.");
+            let digest = crypto
+              .createHash("sha256")
+              .update(req.body.password + result.rows[0].salt)
+              .digest("hex");
+            db.transact(
+              "UPDATE feedback_accounts SET hash = $1 WHERE username = $2",
+              [digest, req.body.username]
+            )
+              .then((result) => {
+                cache.exportFeedbackUsers();
+              })
+              .catch((error) => {
+                console.error(error);
+              });
+          }
+        }
+      });
     }
-    req.session.user = account.id;
     return res
       .status(200)
       .json({
@@ -76,7 +92,15 @@ router.post("/login", function (req, res, next) {
         message: escape("Login erfolgreich."),
       })
       .end();
-  });
+  } else {
+    return res
+      .status(400)
+      .json({
+        status: "error",
+        message: escape("Ungültige Benutzerdaten."),
+      })
+      .end();
+  }
 });
 
 router.post("/logout", function (req, res, next) {
@@ -90,14 +114,13 @@ router.post("/request", function (req, res, next) {
   let note = req.body.requestNote;
   console.log(user, mail, note);
   if (!user || !mail || !note) {
-    res
+    return res
       .status(400)
       .json({
         status: "error",
         message: escape("Fehlerhafte Anfrage. Bitte alle Daten spezifizieren."),
       })
       .end();
-    return;
   }
   let verification = verifyUsername(user);
   if (!verification.length) {
@@ -195,10 +218,10 @@ router.post("/request", function (req, res, next) {
 });
 
 router.post("/register", function (req, res, next) {
-  let username = req.body.username;
-  let email = req.body.email;
-  let token = req.body.token;
-  let password = req.body.password;
+  let username = req.body.registerUsername;
+  let password = req.body.registerPassword;
+  let email = req.body.registerEmail;
+  let token = req.body.registerToken;
 
   if (password.length < 8) {
     return res.status(400).json({
@@ -214,6 +237,8 @@ router.post("/register", function (req, res, next) {
       if (result.rows.length > 0) {
         let entry = result.rows[0];
         if (entry.username !== username || entry.email !== email) {
+          console.error(username, email);
+          console.error(entry.username, entry.email);
           res
             .status(400)
             .json({
@@ -240,44 +265,37 @@ router.post("/register", function (req, res, next) {
     .then((success) => {
       if (success) {
         try {
-          argon2.hash(password).then((hash) => {
-            db.transact(
-              "INSERT INTO accounts(username, hash, email, created) VALUES ($1, $2, $3, NOW())",
-              [username, hash, email]
-            )
-              .then((result) => {
-                db.transact("DELETE FROM account_requests WHERE token = $1", [
-                  token,
-                ]);
-                let salt = makeRandomString(
-                  9,
-                  "abcdefghijklmnopqrstuvwxyz0123456789"
+          cache
+            .createAccount(username, password, email)
+            .then((success) => {
+              if (success) {
+                return res.status(200).json({
+                  status: "success",
+                  message: "Account erfolgreich registriert.",
+                });
+              } else {
+                console.error(
+                  "Fehler: Registrierung resolved aber success nicht true."
                 );
-                let shahash = crypto
-                  .createHash("sha256")
-                  .update(password + salt);
-                db.transact(
-                  "INSERT INTO feedback_accounts(username, hash, salt, email) VALUES ($1, $2, $3, $4)",
-                  [username, shahash, salt, email]
-                );
-                res
-                  .status(200)
-                  .json({
-                    status: "success",
-                    message: "Registration erfolgreich.",
-                  })
-                  .end();
-              })
-              .catch((error) => {
-                res
-                  .status(400)
+                return res
+                  .status(500)
                   .json({
                     status: "error",
-                    message: "Interner Datenbankfehler",
+                    message: "Interner Fehler.",
                   })
                   .end();
-              });
-          });
+              }
+            })
+            .catch((error) => {
+              console.error(error);
+              res
+                .status(500)
+                .json({
+                  status: "error",
+                  message: "Interner Fehler.",
+                })
+                .end();
+            });
         } catch (error) {
           console.error(error);
         }

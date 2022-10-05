@@ -78,53 +78,53 @@ router.get("/users", (req, res, next) => {
 });
 
 router.get("/requests", (req, res, next) => {
-  cache.authenticate(req, (error, account) => {
+  if (!req.account) {
+    return res.render("error", {
+      error: { message: "Nicht authentifiziert." },
+    });
+  }
+  req.account.hasRole("admin", (error, admin) => {
+    //TODO unhardcode role name
     if (error) {
-      return res.render("error", { error: { message: "Not authenticated." } });
+      return res.render("error", {
+        error: { message: "Internal Server Error" },
+      });
     }
-    account.hasRole("admin", (error, admin) => {
-      //TODO unhardcode role name
-      if (error) {
-        return res.render("error", {
-          error: { message: "Internal Server Error" },
-        });
-      }
-      if (admin) {
-        cache.getAllRequests((error, requests) => {
-          for (let request of requests) {
-            request.note = escape(request.note);
-          }
-          if (error) {
-            console.error(error);
-            if (error === Errors.NO_RESULTS) {
-              return res.render("admin-requests", {
-                title: "Anfrageadministration",
-                user: { username: account.username },
-                admin: true,
-                requests: undefined,
-              });
-            }
-            return res.render("error", {
-              message: "Error while fetching requests.",
-              error: {
-                status: 404,
-                stack: error.toString(),
-              },
+    if (admin) {
+      cache.getAllRequests((error, requests) => {
+        for (let request of requests) {
+          request.note = escape(request.note);
+        }
+        if (error) {
+          console.error(error);
+          if (error === Errors.NO_RESULTS) {
+            return res.render("admin-requests", {
+              title: "Anfrageadministration",
+              user: req.account,
+              admin: true,
+              requests: undefined,
             });
           }
-          return res.render("admin-requests", {
-            title: "Anfrageadministration",
-            user: { username: account.username },
-            admin: true,
-            requests: requests,
+          return res.render("error", {
+            message: "Error while fetching requests.",
+            error: {
+              status: 404,
+              stack: error.toString(),
+            },
           });
+        }
+        return res.render("admin-requests", {
+          title: "Anfrageadministration",
+          user: req.account,
+          admin: true,
+          requests: requests,
         });
-      } else {
-        return res.render("error", {
-          error: { message: "Not authenticated." },
-        });
-      }
-    });
+      });
+    } else {
+      return res.render("error", {
+        error: { message: "Not authenticated." },
+      });
+    }
   });
 });
 

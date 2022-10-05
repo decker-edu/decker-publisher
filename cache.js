@@ -1,10 +1,13 @@
 const fs = require("fs");
+const os = require("os");
+const path = require("path");
 const argon2 = require("argon2");
 const crypto = require("crypto");
 
 const db = require("./db");
 const config = require("./config.json");
 const Errors = require("./types/errors");
+const { spawn } = require("child_process");
 
 function makeRandomString(length, characters) {
   let result = "";
@@ -147,6 +150,12 @@ class Cache {
                 `${result.command} executed. ${result.rowCount} rows affected.`
               );
               this.exportFeedbackUsers();
+              const userdir = path.join(
+                config.user_directory_name,
+                username,
+                "projects"
+              );
+              fs.mkdirSync(userdir, { recursive: true });
               resolve(true);
             })
             .catch((error) => {

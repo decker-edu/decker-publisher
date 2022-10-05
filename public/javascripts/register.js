@@ -38,10 +38,10 @@ function asyncRegister() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      username: username,
-      password: password,
-      email: email,
-      token: token,
+      registerUsername: username,
+      registerPassword: password,
+      registerEmail: email,
+      registerToken: token,
     }),
   })
     .then((response) => {
