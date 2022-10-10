@@ -19,33 +19,26 @@ router.get("/", async function (req, res, next) {
 });
 
 router.get("/home", async function (req, res, next) {
-  cache.authenticate(req, (error, account) => {
+  if (!req.account) {
+    return res.redirect("/");
+  }
+  account.hasRole("admin", (error, admin) => {
     if (error) {
-      if (error === Errors.USER_NOT_FOUND) {
-        res.redirect("/");
-      } else if (error === Errors.AUTH_FAILED) {
-        res.render("error", {
-          message: "Benutzername und Passwort falsch.",
-          error: {
-            status: 403,
-            stack: "",
-          },
-        });
-      }
-    } else {
-      account.hasRole("admin", (error, admin) => {
-        if (error) {
-          console.error(error);
-          admin = false;
-        }
-        res.render("home", {
-          title: "Persönlicher Bereich",
-          admin: admin,
-          user: { username: account.username },
-        });
-      });
+      console.error(error);
+      admin = false;
     }
+    res.render("home", {
+      title: "Persönlicher Bereich",
+      admin: admin,
+      user: req.account,
+    });
   });
+});
+
+router.get("/profile", (req, res, next) => {
+  if (!req.account) {
+    res.send("error");
+  }
 });
 
 router.get("/projects", (req, res, next) => {
@@ -139,6 +132,13 @@ router.get("/video", async function (req, res, next) {
 router.get("/data-protection", async function (req, res, next) {
   return res.render("data-protection", {
     title: "Datenschutzhinweise",
+    user: req.account,
+  });
+});
+
+router.get("/sync", async function (req, res, next) {
+  return res.render("sync", {
+    title: "Sync",
     user: req.account,
   });
 });

@@ -1,0 +1,9 @@
+extends layout
+
+block scripts 
+    script(defer src="/javascripts/sync.js")
+
+block content
+    main#content
+        div
+            button(onclick="requestFiles()") Files

@@ -1,0 +1,20 @@
+extends layout
+
+block scripts 
+    script(defer src="/javascripts/convert.js")
+
+block content
+  header 
+    h1 Profileinstellungen
+  main
+    div#form-wrapper
+      form
+        div.form-grid
+          label(for="profile-username") Nutzername
+          input#profile-username(disabled, type="text")= user.username
+          label(for="profile-email") E-Mail
+          input#profile-email(disabled, type="email")= user.email
+          label(for="profile-password") Neues Passwort
+          input#profile-password(type="password")
+          label(for="profile-password-repeat") Neues Passwort Wiederholen
+          input#profile-password-repeat(type="password")

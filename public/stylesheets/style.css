@@ -79,7 +79,6 @@ main {
   display: flex;
   flex-direction: column;
   text-align: center;
-  justify-content: space-between;
   align-items: center;
   padding-left: 1rem;
   padding-right: 1rem;
@@ -460,6 +459,10 @@ main.admin {
   outline: 2px solid #ca7406;
   outline-offset: 0.25rem;
   animation: ping 0.33s linear;
+}
+
+main section {
+  width: 100%;
 }
 
 section p {
