@@ -7,7 +7,11 @@ registerRepeatField.addEventListener("change", onPasswordChanged);
 function onPasswordChanged() {
   let firstPassword = registerPasswordField.value;
   let secondPassword = registerRepeatField.value;
-  if (firstPassword !== secondPassword) {
+  if (
+    firstPassword === "" ||
+    secondPassword === "" ||
+    firstPassword !== secondPassword
+  ) {
     registerButton.disabled = true;
   } else {
     registerButton.disabled = false;

@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const argon2 = require("argon2");
+const crypto = require("crypto");
 const { getVideoDurationInSeconds } = require("get-video-duration");
 
 const config = require("../config.json");
@@ -9,14 +10,28 @@ const db = require("../db");
 const cache = require("../cache");
 const Errors = require("./errors");
 
+function makeRandomString(length, characters) {
+  let result = "";
+  let options = characters
+    ? characters
+    : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let amount = options.length;
+  for (let i = 0; i < length; i++) {
+    result += options.charAt(Math.floor(Math.random() * amount));
+  }
+  return result;
+}
+
 class Account {
   id;
   username;
+  email;
   hash;
 
-  constructor(id, username, hash) {
+  constructor(id, username, email, hash) {
     this.id = id;
     this.username = username;
+    this.email = email;
     this.hash = hash;
   }
 
@@ -57,10 +72,109 @@ class Account {
     });
   }
 
+  updatePassword(newPassword) {
+    return new Promise((resolve, reject) => {
+      argon2
+        .hash(newPassword)
+        .then((argonhash) => {
+          db.transact("UPDATE accounts SET hash = $2 WHERE id = $1", [
+            this.id,
+            argonhash,
+          ])
+            .then((result) => {
+              console.log(`[accounts] Updated ${this.username}'s password.`);
+              const salt = makeRandomString(
+                9,
+                "abcdefghijklmnopqrstuvwxyz0123456789"
+              );
+              const shahash = crypto
+                .createHash("sha256")
+                .update(newPassword + salt)
+                .digest("hex");
+              db.transact(
+                "UPDATE feedback_accounts SET hash = $2, salt = $3 WHERE id = $1",
+                [this.id, shahash, salt]
+              )
+                .then((result) => {
+                  console.log(
+                    `[feedback_accounts] Updated ${this.username}'s password.`
+                  );
+                  resolve(true);
+                })
+                .catch((error) => {
+                  reject(error);
+                });
+            })
+            .catch((error) => {
+              reject(error);
+            });
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
+  updateEmail(newEmail) {
+    return new Promise((resolve, reject) => {
+      db.transact("UPDATE accounts SET email = $2 WHERE id = $1", [
+        this.id,
+        newEmail,
+      ]).then((result) => {
+        console.log(`[accounts] Updated ${this.username}'s E-Mail.`);
+        db.transact("UPDATE feedback_accounts SET email = $2 WHERE id = $1", [
+          this.id,
+          newEmail,
+        ])
+          .then((result) => {
+            console.log(
+              `[feedback_accounts] Updated ${this.username}'s E-Mail.`
+            );
+            resolve(true);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    });
+  }
+
+  getSSHKey() {
+    const userdir = this.getUserDirectory();
+    const sshpath = path.join(userdir, "ssh");
+    if (!fs.existsSync(sshpath)) {
+      fs.mkdirSync(sshpath, { recursive: true });
+      return "";
+    }
+    const filepath = path.join(sshpath, "authorized_keys");
+    if (!fs.existsSync(filepath)) {
+      return "";
+    } else {
+      const buffer = fs.readFileSync(filepath);
+      return buffer.toString("utf8");
+    }
+  }
+
+  setSSHKey(string) {
+    const userdir = this.getUserDirectory();
+    const sshpath = path.join(userdir, "ssh");
+    const filepath = path.join(sshpath, "authorized_keys");
+    if (!fs.existsSync(sshpath)) {
+      fs.mkdirSync(sshpath, { recursive: true });
+    }
+    fs.writeFileSync(filepath, string);
+  }
+
   getUserDirectory() {
-    const userdir =
-      global.rootDirectory + `/${config.user_directory_name}/${this.username}/`;
-    return userdir;
+    if (config.user_directory_name.startsWith("/")) {
+      return path.join(config.user_directory_name, this.username);
+    } else {
+      return path.join(
+        global.rootDirectory,
+        config.user_directory_name,
+        this.username
+      );
+    }
   }
 
   getFiles(filepath, filter) {

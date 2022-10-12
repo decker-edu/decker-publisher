@@ -1,7 +1,8 @@
 extends layout
 
 block scripts 
-    script(defer src="/javascripts/convert.js")
+    script(defer src="/javascripts/dialog.js")
+    script(defer src="/javascripts/profile.js")
 
 block content
   header 
@@ -11,10 +12,70 @@ block content
       form
         div.form-grid
           label(for="profile-username") Nutzername
-          input#profile-username(disabled, type="text")= user.username
+          input#profile-username(disabled pattern="*" type="text" value=user.username)
           label(for="profile-email") E-Mail
-          input#profile-email(disabled, type="email")= user.email
-          label(for="profile-password") Neues Passwort
-          input#profile-password(type="password")
-          label(for="profile-password-repeat") Neues Passwort Wiederholen
-          input#profile-password-repeat(type="password")
+          input#profile-email(disabled pattern=".+@.+\\..{2,3}" type="email" value=user.email)
+          label(for="profile-sshkey") SSH-Schlüssel
+          textarea#profile-sshkey(disabled style="resize: none;" value=user.sshkey)
+          div.form-buttons
+            button(type="button" onclick="openDialog(\"change-email\")")
+              text E-Mail ändern
+            button(type="button" onclick="openDialog(\"change-password\")")
+              text Passwort ändern
+            button(type="button" onclick="openDialog(\"change-ssh-key\")")
+              text SSH-Schlüssel ändern
+            button(type="button" onclick="openDialog(\"delete-account\")")
+              text Konto löschen
+block dialogs
+  dialog#change-password
+    fieldset#change-password-fieldset
+      legend Passwort ändern
+    div.dialog-message
+    form#change-password-form.form-grid
+      label(for="change-password-old") Altes Passwort
+      input#change-password-old(type="password" required pattern="^.{8,}" placeholder="Altes Passwort")
+      label(for="change-password-new") Neues Passwort
+      input#change-password-new(type="password" required pattern="^.{8,}" placeholder="Neues Passwort" onchange="passwordChanged()")
+      label(for="change-password-new-repeat") Neues Passwort Wiederholen
+      input#change-password-new-repeat(type="password" required pattern="^.{8,}" placeholder="Passwort Wiederholen" onchange="passwordChanged()")
+    div.dialog-buttons
+      button#change-password-button(disabled type="button" onclick="changePassword(\""+user.username+"\")")
+        i.fas.fa-key
+        text Passwort Ändern
+      button(type="button" onclick="closeDialog(\"change-password\")")
+        i.fas.fa-ban
+        text Dialog schließen
+
+  dialog#change-email
+    fieldset#change-email-fieldset
+      legend E-Mail-Adresse ändern
+    div.dialog-message
+    form#change-email-form.form-grid
+      label(for="change-email-input") Neue E-Mail-Adresse
+      input#change-email-input(type="email" required pattern="^.+@.+\\..{2,3}" placeholder="Neue E-Mail" onchange="emailChanged()")
+      label(for="change-email-confirmation") Mit Passwort bestätigen
+      input#change-email-confirmation(type="password" required pattern="^.{8,}" placeholder="Passwort" onchange="emailChanged()")
+    div.dialog-buttons
+      button#change-email-button(disabled type="button" onclick="changeEmail(\""+user.username+"\")")
+        i.fas.fa-envelope
+        text E-Mail-Adresse ändern
+      button(type="button" onclick="closeDialog(\"change-email\")")
+        i.fas.fa-ban
+        text Dialog schließen
+
+  dialog#change-ssh-key
+    fieldset#change-ssh-key-fieldset
+      legend SSH-Schlüssel ändern
+    div.dialog-message
+    form#change-ssh-key-form.form-grid
+      label(for="change-ssh-key-textarea") Neue E-Mail-Adresse
+      textarea#change-ssh-key-input(required placeholder="SSH-Schlüssel" onchange="sshkeyChanged()")
+      label(for="change-ssh-key-confirmation") Mit Passwort bestätigen
+      input#change-ssh-key-confirmation(type="password" required pattern="^.{8,}" placeholder="Passwort" onchange="sshkeyChanged()")
+    div.dialog-buttons
+      button#change-ssh-key-button(disabled type="button" onclick="changeSSHKey(\""+user.username+"\")")
+        i.fas.fa-key
+        text SSH-Schlüssel ändern
+      button(type="button" onclick="closeDialog(\"change-sshkey\")")
+        i.fas.fa-ban
+        text Dialog schließen

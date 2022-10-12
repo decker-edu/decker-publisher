@@ -64,12 +64,14 @@ exports.getAccountByID = function (id) {
   if (!pool) setupPool();
   return new Promise((resolve, reject) => {
     pool
-      .query("SELECT id, username FROM accounts WHERE id = $1", [id])
+      .query("SELECT id, username, hash, email FROM accounts WHERE id = $1", [
+        id,
+      ])
       .then((result) => {
         if (result) {
           if (result.rows.length > 0) {
             const data = result.rows[0];
-            resolve(new Account(data.id, data.username));
+            resolve(new Account(data.id, data.username, data.email, data.hash));
           } else {
             reject(USER_NOT_FOUND);
           }
@@ -87,14 +89,15 @@ exports.getAccountByName = function (username) {
   if (!pool) setupPool();
   return new Promise((resolve, reject) => {
     pool
-      .query("SELECT id, username, hash FROM accounts WHERE username = $1", [
-        username,
-      ])
+      .query(
+        "SELECT id, username, hash, email FROM accounts WHERE username = $1",
+        [username]
+      )
       .then((result) => {
         if (result) {
           if (result.rows.length > 0) {
             const data = result.rows[0];
-            resolve(new Account(data.id, data.username, data.hash));
+            resolve(new Account(data.id, data.username, data.email, data.hash));
           } else {
             reject(USER_NOT_FOUND);
           }

@@ -59,32 +59,6 @@ function verifyEmail(string, allowedOrigins) {
 router.post("/login", function (req, res, next) {
   if (req.account) {
     req.session.user = req.account.id;
-    if (req.body.username && req.body.password) {
-      db.transact("SELECT * from feedback_accounts WHERE username = $1", [
-        req.body.username,
-      ]).then((result) => {
-        if (result && result.rows.length > 0) {
-          let hash = result.rows[0].hash;
-          if (hash === "{}") {
-            console.log("[LOGIN] Fixing broken login.");
-            let digest = crypto
-              .createHash("sha256")
-              .update(req.body.password + result.rows[0].salt)
-              .digest("hex");
-            db.transact(
-              "UPDATE feedback_accounts SET hash = $1 WHERE username = $2",
-              [digest, req.body.username]
-            )
-              .then((result) => {
-                cache.exportFeedbackUsers();
-              })
-              .catch((error) => {
-                console.error(error);
-              });
-          }
-        }
-      });
-    }
     return res
       .status(200)
       .json({
@@ -268,6 +242,11 @@ router.post("/register", function (req, res, next) {
           cache
             .createAccount(username, password, email)
             .then((success) => {
+              db.transact("DELETE FROM account_requests WHERE username=$1", [
+                username,
+              ]).catch((error) => {
+                console.error(error);
+              });
               if (success) {
                 return res.status(200).json({
                   status: "success",
@@ -301,6 +280,129 @@ router.post("/register", function (req, res, next) {
         }
       }
     });
+});
+
+router.put("/user/:username/password", (req, res, next) => {
+  if (!req.account) {
+    return res
+      .status(403)
+      .json({ message: escape("Nicht eingeloggt.") })
+      .end();
+  }
+  const username = req.params.username;
+  if (req.account.username !== username) {
+    return res
+      .status(403)
+      .json({ message: escape("Keine Berechtigung.") })
+      .end();
+  }
+  const oldPassword = req.body.oldPassword;
+  const newPassword = req.body.newPassword;
+  if (newPassword.length < 8) {
+    return res
+      .status(400)
+      .json({
+        message: escape("Das Passwort muss aus mindestens 8 Zeichen bestehen."),
+      })
+      .end();
+  }
+  req.account.checkPassword(oldPassword).then((success) => {
+    if (success) {
+      req.account
+        .updatePassword(newPassword)
+        .then((success) => {
+          if (success) {
+            cache.exportFeedbackUsers();
+            return res
+              .status(200)
+              .json({ message: "Passwort geändert." })
+              .end();
+          }
+          return res
+            .status(500)
+            .json({
+              message: "Interner Fehler beim aktuallisieren des Passworts.",
+            })
+            .end();
+        })
+        .catch((error) => {
+          console.error(error);
+          return res
+            .status(500)
+            .json({
+              message: "Interner Fehler beim aktuallisieren des Passworts.",
+            })
+            .end();
+        });
+    } else {
+      return res.status(403).json({ message: "Falsches Passwort." }).end();
+    }
+  });
+});
+
+router.put("/user/:username/email", (req, res, next) => {
+  if (!req.account) {
+    return res
+      .status(403)
+      .json({ message: escape("Nicht eingeloggt.") })
+      .end();
+  }
+  const username = req.params.username;
+  if (req.account.username !== username) {
+    return res
+      .status(403)
+      .json({ message: escape("Keine Berechtigung.") })
+      .end();
+  }
+  const passwordConfirmation = req.body.passwordConfirmation;
+  const newEmail = req.body.newEmail;
+  if (!passwordConfirmation || !newEmail) {
+    return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+  }
+  const mailverification = verifyEmail(newEmail, ["tu-dortmund.de", "udo.edu"]);
+  if (!mailverification.origin) {
+    return res
+      .status(400)
+      .json({ message: "Adresse muss eine Unimailadresse sein." })
+      .end();
+  }
+  if (!mailverification.format) {
+    return res
+      .status(400)
+      .json({ message: "Keine gültige E-Mail-Adresse." })
+      .end();
+  }
+  req.account.checkPassword(passwordConfirmation).then((success) => {
+    if (success) {
+      req.account
+        .updateEmail(newEmail)
+        .then((success) => {
+          if (success) {
+            cache.exportFeedbackUsers();
+            return res.status(200).json({ message: "E-Mail geändert." }).end();
+          }
+          return res
+            .status(500)
+            .json({
+              message:
+                "Interner Fehler beim aktuallisieren der E-Mail-Adresse.",
+            })
+            .end();
+        })
+        .catch((error) => {
+          console.error(error);
+          return res
+            .status(500)
+            .json({
+              message:
+                "Interner Fehler beim aktuallisieren der E-Mail-Adresse.",
+            })
+            .end();
+        });
+    } else {
+      return res.status(403).json({ message: "Falsches Passwort." }).end();
+    }
+  });
 });
 
 /* POST upload */

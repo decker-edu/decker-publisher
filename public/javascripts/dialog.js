@@ -1,9 +1,25 @@
 let currentDialog = undefined;
 
-function openDialog({ message, form }) {
-  if (!currentDialog) {
-    currentDialog = document.createElement("dialog");
-    let messageElement = document.createElement("div");
-    let formElement = document.createElement("form");
+function openDialog(id) {
+  const element = document.getElementById(id);
+  if (element && element.tagName === "DIALOG") {
+    currentDialog = element;
+    element.showModal();
+  }
+}
+
+function closeDialog(id) {
+  const element = document.getElementById(id);
+  if (element && element.tagName === "DIALOG") {
+    element.close();
+    currentDialog = undefined;
+  }
+}
+
+function displayMessage(message) {
+  if (!currentDialog) return;
+  const element = currentDialog.querySelector(".dialog-message");
+  if (element) {
+    element.innerText = message;
   }
 }

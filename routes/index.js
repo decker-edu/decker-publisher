@@ -22,7 +22,7 @@ router.get("/home", async function (req, res, next) {
   if (!req.account) {
     return res.redirect("/");
   }
-  account.hasRole("admin", (error, admin) => {
+  req.account.hasRole("admin", (error, admin) => {
     if (error) {
       console.error(error);
       admin = false;
@@ -37,8 +37,26 @@ router.get("/home", async function (req, res, next) {
 
 router.get("/profile", (req, res, next) => {
   if (!req.account) {
-    res.send("error");
+    res.redirect("/");
   }
+  const sshkey = req.account.getSSHKey();
+  req.account.sshkey = sshkey;
+  res.render("profile", {
+    title: "Profileinstellungen",
+    admin: false,
+    user: req.account,
+  });
+});
+
+router.get("/configuration", (req, res, next) => {
+  if (!req.account) {
+    res.redirect("/");
+  }
+  res.render("configuration", {
+    title: "Decker Konfiguration",
+    admin: false,
+    user: req.account,
+  });
 });
 
 router.get("/projects", (req, res, next) => {
