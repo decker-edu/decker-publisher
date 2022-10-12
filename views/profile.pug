@@ -16,7 +16,7 @@ block content
           label(for="profile-email") E-Mail
           input#profile-email(disabled pattern=".+@.+\\..{2,3}" type="email" value=user.email)
           label(for="profile-sshkey") SSH-Schlüssel
-          textarea#profile-sshkey(disabled style="resize: none;" value=user.sshkey)
+          textarea#profile-sshkey(disabled style="resize: none; overflow: hidden; min-height: 12.5em;")= user.sshkey
           div.form-buttons
             button(type="button" onclick="openDialog(\"change-email\")")
               text E-Mail ändern
@@ -28,54 +28,76 @@ block content
               text Konto löschen
 block dialogs
   dialog#change-password
-    fieldset#change-password-fieldset
-      legend Passwort ändern
     div.dialog-message
-    form#change-password-form.form-grid
-      label(for="change-password-old") Altes Passwort
-      input#change-password-old(type="password" required pattern="^.{8,}" placeholder="Altes Passwort")
-      label(for="change-password-new") Neues Passwort
-      input#change-password-new(type="password" required pattern="^.{8,}" placeholder="Neues Passwort" onchange="passwordChanged()")
-      label(for="change-password-new-repeat") Neues Passwort Wiederholen
-      input#change-password-new-repeat(type="password" required pattern="^.{8,}" placeholder="Passwort Wiederholen" onchange="passwordChanged()")
-    div.dialog-buttons
-      button#change-password-button(disabled type="button" onclick="changePassword(\""+user.username+"\")")
-        i.fas.fa-key
-        text Passwort Ändern
-      button(type="button" onclick="closeDialog(\"change-password\")")
-        i.fas.fa-ban
-        text Dialog schließen
+    form#change-password-form
+      fieldset#change-password-fieldset
+        legend Passwort ändern
+        div.form-grid
+          label(for="change-password-old") Altes Passwort
+          input#change-password-old(type="password" required pattern="^.{8,}" placeholder="Altes Passwort")
+          label(for="change-password-new") Neues Passwort
+          input#change-password-new(type="password" required pattern="^.{8,}" placeholder="Neues Passwort" onchange="passwordChanged()")
+          label(for="change-password-new-repeat") Neues Passwort Wiederholen
+          input#change-password-new-repeat(type="password" required pattern="^.{8,}" placeholder="Passwort Wiederholen" onchange="passwordChanged()")
+      div.dialog-buttons
+        button#change-password-button(disabled type="button" onclick="changePassword(\""+user.username+"\")")
+          i.fas.fa-key
+          text Passwort Ändern
+        button(type="button" onclick="closeDialog(\"change-password\")")
+          i.fas.fa-ban
+          text Dialog schließen
 
   dialog#change-email
-    fieldset#change-email-fieldset
-      legend E-Mail-Adresse ändern
     div.dialog-message
-    form#change-email-form.form-grid
-      label(for="change-email-input") Neue E-Mail-Adresse
-      input#change-email-input(type="email" required pattern="^.+@.+\\..{2,3}" placeholder="Neue E-Mail" onchange="emailChanged()")
-      label(for="change-email-confirmation") Mit Passwort bestätigen
-      input#change-email-confirmation(type="password" required pattern="^.{8,}" placeholder="Passwort" onchange="emailChanged()")
-    div.dialog-buttons
-      button#change-email-button(disabled type="button" onclick="changeEmail(\""+user.username+"\")")
-        i.fas.fa-envelope
-        text E-Mail-Adresse ändern
-      button(type="button" onclick="closeDialog(\"change-email\")")
-        i.fas.fa-ban
-        text Dialog schließen
+    form#change-email-form
+      fieldset#change-email-fieldset
+        legend E-Mail-Adresse ändern
+        div.form-grid
+          label(for="change-email-input") Neue E-Mail-Adresse
+          input#change-email-input(type="email" required pattern="^.+@.+\\..{2,3}" placeholder="Neue E-Mail" onchange="emailChanged()")
+          label(for="change-email-confirmation") Mit Passwort bestätigen
+          input#change-email-confirmation(type="password" required pattern="^.{8,}" placeholder="Passwort" onchange="emailChanged()")
+      div.dialog-buttons
+        button#change-email-button(disabled type="button" onclick="changeEmail(\""+user.username+"\")")
+          i.fas.fa-envelope
+          text E-Mail-Adresse ändern
+        button(type="button" onclick="closeDialog(\"change-email\")")
+          i.fas.fa-ban
+          text Dialog schließen
 
   dialog#change-ssh-key
-    fieldset#change-ssh-key-fieldset
-      legend SSH-Schlüssel ändern
     div.dialog-message
-    form#change-ssh-key-form.form-grid
-      label(for="change-ssh-key-textarea") Neue E-Mail-Adresse
-      textarea#change-ssh-key-input(required placeholder="SSH-Schlüssel" onchange="sshkeyChanged()")
-      label(for="change-ssh-key-confirmation") Mit Passwort bestätigen
-      input#change-ssh-key-confirmation(type="password" required pattern="^.{8,}" placeholder="Passwort" onchange="sshkeyChanged()")
+    form#change-ssh-key-form
+      fieldset#change-ssh-key-fieldset
+        legend SSH-Schlüssel ändern
+        div.form-grid
+          label(for="change-ssh-key-textarea") Neue E-Mail-Adresse
+          textarea#change-ssh-key-textarea(required name="ssh-key" placeholder="SSH-Schlüssel" onchange="sshkeyChanged()")
+          label(for="change-ssh-key-confirmation") Mit Passwort bestätigen
+          input#change-ssh-key-confirmation(required name="password" type="password" pattern="^.{8,}" placeholder="Passwort" onchange="sshkeyChanged()")
+      div.dialog-buttons
+        button#change-ssh-key-button(disabled type="button" onclick="changeSSHKey(\""+user.username+"\")")
+          i.fas.fa-key
+          text SSH-Schlüssel ändern
+        button(type="button" onclick="closeDialog(\"change-ssh-key\")")
+          i.fas.fa-ban
+          text Dialog schließen
+  
+  dialog#delete-account
+    div.dialog-message
+      | Das automatische Löschen von Konten auf Anfrage ist noch nicht vollständig umgesetzt.
+      | Sollten Sie Ihr Konto vollständig und mit allen Inhalten entfernen wollen, bitte kontaktieren Sie den Administrator:
+      | sebastian.hauer@tu-dortmund.de
+    // form#delete-account-form
+      fieldset#delete-account-fieldset
+        legend Konto löschen
+        div.form-grid
+          label(for="delete-account-confirmation") Mit Passwort bestätigen
+          input#delete-account-confirmation(required name="password" type="password" pattern="^.{8,}" placeholder="Passwort" onchange="sshkeyChanged()")
     div.dialog-buttons
-      button#change-ssh-key-button(disabled type="button" onclick="changeSSHKey(\""+user.username+"\")")
-        i.fas.fa-key
-        text SSH-Schlüssel ändern
-      button(type="button" onclick="closeDialog(\"change-sshkey\")")
+      //button#delete-account-button(disabled type="button" onclick="deleteAccount(\""+user.username+"\")")
+        i.fas.fa-trash
+        text Konto löschen
+      button(type="button" onclick="closeDialog(\"delete-account\")")
         i.fas.fa-ban
         text Dialog schließen

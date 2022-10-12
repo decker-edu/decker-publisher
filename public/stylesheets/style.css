@@ -73,6 +73,10 @@ footer a:hover {
   background-color: var(--tu-green);
 }
 
+dialog {
+  max-width: 60rem;
+}
+
 main {
   max-width: 60rem;
   flex-grow: 1;
@@ -231,6 +235,7 @@ dialog fieldset legend {
 }
 
 .dialog-buttons {
+  margin-top: 0.5rem;
   display: flex;
   flex-direction: row;
   justify-content: space-between;

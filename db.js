@@ -110,3 +110,24 @@ exports.getAccountByName = function (username) {
       });
   });
 };
+
+exports.deleteAccount = function (account) {
+  if (!pool) setupPool();
+  return new Promise((resolve, reject) => {
+    const deleteRoles = pool.query(
+      "DELETE FROM account_roles WHERE user_id = $1",
+      [account.username]
+    );
+    const p1 = pool.query("DELETE FROM accounts WHERE username = $1", [
+      account.username,
+    ]);
+    const p2 = pool.query("DELETE FROM feedback_accounts WHERE username = $1", [
+      account.username,
+    ]);
+    Promise.all([p1, p2])
+      .then(([result1, result2]) => {})
+      .catch((error) => {
+        reject(error);
+      });
+  });
+};

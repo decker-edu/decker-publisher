@@ -26,6 +26,16 @@ function emailChanged() {
   }
 }
 
+function sshkeyChanged() {
+  const form = document.getElementById("change-ssh-key-form");
+  const button = document.getElementById("change-ssh-key-button");
+  if (!form.checkValidity()) {
+    button.disabled = true;
+  } else {
+    button.disabled = false;
+  }
+}
+
 function changePassword(username) {
   const oldInput = document.getElementById("change-password-old");
   const newInput = document.getElementById("change-password-new");
@@ -80,6 +90,72 @@ function changeEmail(username) {
           displayMessage(json.message);
           setTimeout(() => {
             window.location.reload();
+          }, 1000);
+        });
+      } else {
+        response.json().then((json) => {
+          displayMessage(`${response.status}: ${json.message}`);
+        });
+      }
+    })
+    .catch((error) => {
+      displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
+      console.error(error);
+    });
+}
+
+function changeSSHKey(username) {
+  const textarea = document.getElementById("change-ssh-key-textarea");
+  const passwordInput = document.getElementById("change-ssh-key-confirmation");
+  fetch(`/api/user/${username}/sshkey`, {
+    method: "PUT",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      passwordConfirmation: passwordInput.value,
+      newKey: textarea.value,
+    }),
+  })
+    .then((response) => {
+      if (response.ok) {
+        response.json().then((json) => {
+          displayMessage(json.message);
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        });
+      } else {
+        response.json().then((json) => {
+          displayMessage(`${response.status}: ${json.message}`);
+        });
+      }
+    })
+    .catch((error) => {
+      displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
+      console.error(error);
+    });
+}
+
+function deleteAccount(username) {
+  const passwordInput = document.getElementById("delete-account-confirmation");
+  fetch(`/api/user/${username}`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      passwordConfirmation: passwordInput.value,
+    }),
+  })
+    .then((response) => {
+      if (response.ok) {
+        response.json().then((json) => {
+          displayMessage(json.message);
+          setTimeout(() => {
+            window.location.replace("/");
           }, 1000);
         });
       } else {

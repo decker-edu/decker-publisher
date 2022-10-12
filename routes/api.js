@@ -405,6 +405,58 @@ router.put("/user/:username/email", (req, res, next) => {
   });
 });
 
+router.put("/user/:username/sshkey", (req, res, next) => {
+  if (!req.account) {
+    return res
+      .status(403)
+      .json({ message: escape("Nicht eingeloggt.") })
+      .end();
+  }
+  const username = req.params.username;
+  if (req.account.username !== username) {
+    return res
+      .status(403)
+      .json({ message: escape("Keine Berechtigung.") })
+      .end();
+  }
+  const passwordConfirmation = req.body.passwordConfirmation;
+  const newKey = req.body.newKey;
+  if (!passwordConfirmation || !newKey) {
+    return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+  }
+  req.account.checkPassword(passwordConfirmation).then((success) => {
+    if (success) {
+      req.account.setSSHKey(newKey);
+      return res.status(200).json({ message: "Schlüssel übernommen." }).end();
+    } else {
+      return res
+        .status(403)
+        .json({ message: "Passwortbestätigung fehlgeschlagen." })
+        .end();
+    }
+  });
+});
+
+router.delete("/user/:username", (req, res, next) => {
+  const passwordConfirmation = req.body.passwordConfirmation;
+  if (!req.account) {
+    return res
+      .status(403)
+      .json({ message: escape("Nicht eingeloggt.") })
+      .end();
+  }
+  req.account.hasRole("admin", (error, role) => {
+    if (role) {
+      db.deleteAccount(req.params.username);
+    } else {
+      return res
+        .status(403)
+        .json({ message: escape("Keine Berechtigung") })
+        .end();
+    }
+  });
+});
+
 /* POST upload */
 router.post("/project", fileUpload(), async (req, res, next) => {
   cache.authenticate(req, (error, account) => {
