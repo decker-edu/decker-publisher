@@ -167,7 +167,7 @@ module.exports.convertPDF = function (filepath) {
                   const pagefile = path.join(pagesDirectory, pagefilename);
                   zipfile.addFile(pagefile, `pages/${pagefilename}`);
                 }
-                const zippath = path.join(directory, filename + ".zip");
+                const zippath = path.join(directory, filename + ".tmp.zip");
                 zipfile.outputStream
                   .pipe(fs.createWriteStream(zippath))
                   .on("close", function () {
@@ -175,6 +175,10 @@ module.exports.convertPDF = function (filepath) {
                     fs.rmSync(pagesDirectory, { recursive: true, force: true });
                     fs.rmSync(mdPath, { force: true });
                     fs.rmSync(yamlPath, { force: true });
+                    fs.renameSync(
+                      zippath,
+                      path.join(directory, filename + ".zip")
+                    );
                   });
                 zipfile.end();
               });
