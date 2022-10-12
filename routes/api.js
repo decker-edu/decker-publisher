@@ -537,18 +537,18 @@ router.post("/project", fileUpload(), async (req, res, next) => {
           .end();
       }
       yauzl.open(uploadPath, { lazyEntries: true }, function (err, zipfile) {
-        let prefix = account.getUserDirectory() + "projects/";
+        let prefix = path.join(account.getUserDirectory(), "projects");
         function mkdirp(dir, cb) {
           if (dir.startsWith("public")) {
             dir = dir.replace(/public/, projectName);
           }
           if (dir === ".") return cb();
-          fs.stat(prefix + dir, function (err) {
+          fs.stat(path.join(prefix, dir), function (err) {
             if (err == null) return cb();
             var parent = path.dirname(dir);
             mkdirp(parent, function () {
               console.log("[YAUZL] Creating Directory:", dir);
-              fs.mkdir(prefix + dir, cb);
+              fs.mkdir(path.join(prefix, dir), cb);
             });
           });
         }
@@ -573,7 +573,7 @@ router.post("/project", fileUpload(), async (req, res, next) => {
                 readStream.on("end", function () {
                   zipfile.readEntry();
                 });
-                let unpackTarget = prefix + entry.fileName;
+                let unpackTarget = path.join(prefix, entry.fileName);
                 unpackTarget = unpackTarget.replace(/public/, projectName);
                 let writeStream = fs.createWriteStream(unpackTarget);
                 readStream.pipe(writeStream);
