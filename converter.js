@@ -93,7 +93,7 @@ module.exports.convertPDF = function (filepath) {
             }
             const pdf2svg = new Promise((resolve, reject) => {
               child_process.exec(
-                `pdf2svg ${filepath} ${pagesDirectory}/${filename}-page-%03d.svg all`,
+                `pdf2svg "${filepath}" "${pagesDirectory}/${filename}-page-%03d.svg" all`,
                 (error, stdout, stderr) => {
                   if (error) {
                     reject(error);
