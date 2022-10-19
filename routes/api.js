@@ -714,7 +714,9 @@ router.get("/convert", (req, res, next) => {
         if (err) {
           res.end();
         } else {
+          console.log("[convert] File download complete. File deleted.");
           fs.rmSync(filepath);
+          res.end();
         }
       });
     }
