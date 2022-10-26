@@ -722,7 +722,15 @@ router.get("/convert", (req, res, next) => {
     if (!fs.existsSync(filepath)) {
       return res.status(404).end();
     } else {
-      return res.sendFile(filepath);
+      return res.download(filepath, filequery, (err) => {
+        if (err) {
+          res.end();
+        } else {
+          console.log("[convert] File download complete. File deleted.");
+          fs.rmSync(filepath);
+          res.end();
+        }
+      });
     }
   });
 });
