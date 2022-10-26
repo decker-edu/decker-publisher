@@ -68,7 +68,7 @@ let all_promise = Promise.all([
 ]).then((results) => {
   let ar_promise = pool
     .query(
-      "CREATE TABLE IF NOT EXISTS account_roles (user_id integer NOT NULL, role_id integer NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id), FOREIGN KEY (role_id) REFERENCES roles(id), CONSTRAINT unique_combination UNIQUE (user_id, role_id))"
+      "CREATE TABLE IF NOT EXISTS account_roles (user_id integer NOT NULL, role_id integer NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE, FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE, CONSTRAINT unique_combination UNIQUE (user_id, role_id))"
     )
     .then((result) => {
       console.log(
@@ -90,7 +90,7 @@ let all_promise = Promise.all([
 
   let jo_promise = pool
     .query(
-      "CREATE TABLE IF NOT EXISTS amberscript_jobs (jobId integer PRIMARY KEY UNIQUE NOT NULL, user_id integer NOT NULL, projectname VARCHAR(255) NOT NULL, relative_filepath VARCHAR NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id))"
+      "CREATE TABLE IF NOT EXISTS amberscript_jobs (jobId integer PRIMARY KEY UNIQUE NOT NULL, user_id integer NOT NULL, projectname VARCHAR(255) NOT NULL, relative_filepath VARCHAR NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE)"
     )
     .then((result) => {
       console.log(
@@ -99,6 +99,7 @@ let all_promise = Promise.all([
       );
     });
 
+  /*
   let pr_promise = pool
     .query(
       "CREATE TABLE IF NOT EXISTS project_allowance (user_id integer NOT NULL, allowed_amount integer NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id))"
@@ -109,6 +110,7 @@ let all_promise = Promise.all([
         `${result.command} executed. ${result.rowCount} rows affected.`
       );
     });
+  */
 
   Promise.all([ar_promise, am_promise, pr_promise]).then((results) => {
     cache

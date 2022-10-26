@@ -449,10 +449,22 @@ router.delete("/user/:username", (req, res, next) => {
     if (role) {
       db.deleteAccount(req.params.username);
     } else {
-      return res
-        .status(403)
-        .json({ message: escape("Keine Berechtigung") })
-        .end();
+      if (!passwordConfirmation) {
+        return res
+          .status(400)
+          .json({ message: escape("Fehlerhafte Anfrage") })
+          .end();
+      }
+      req.account.checkPassword(passwordConfirmation).then((success) => {
+        if (success) {
+          db.deleteAccount(req.params.username);
+        } else {
+          return res
+            .status(403)
+            .json({ message: escape("Keine Berechtigung") })
+            .end();
+        }
+      });
     }
   });
 });
@@ -774,19 +786,17 @@ router.post("/amberscript", (req, res, next) => {
   if (!req.account) {
     return res.status(403).end();
   }
-  const project = req.body.project;
-  const filepath = req.body.filepath;
+  const project = req.body.project || req.query.project;
+  const filepath = req.body.filepath || req.query.filepath;
   const userdir = req.account.getUserDirectory();
   const fullpath = path.join(userdir, "projects", project, filepath);
   if (!fs.existsSync(fullpath)) {
-    return res.status(404).end();
+    return res.status(404).json({ message: "Datei nicht gefunden." }).end();
   }
-  amberscript
-    .postAmber(req.account, project, filepath, undefined)
-    .catch((error) => {
-      console.error(error);
-      return res.status(500).end();
-    });
+  amberscript.post(req.account, project, filepath, undefined).catch((error) => {
+    console.error(error);
+    return res.status(500).end();
+  });
 });
 
 router.post("/amberscript/callback", (req, res, next) => {
