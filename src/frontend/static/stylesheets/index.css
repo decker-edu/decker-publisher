@@ -1,0 +1,39 @@
+.downloads {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.downloads div {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.button-link {
+  display: block;
+  background-color: var(--tu-green);
+  padding: 0.5rem;
+  color: white;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+}
+
+.button-link:hover {
+  background-color: var(--tu-hover);
+}
+
+.button-link:active {
+  background-color: var(--tu-active);
+}
+
+.vscode,
+.hosting,
+.account {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.5rem;
+}
