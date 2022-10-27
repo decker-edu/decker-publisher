@@ -357,19 +357,22 @@ router.put("/user/:username/email", (req, res, next) => {
   const passwordConfirmation = req.body.passwordConfirmation;
   const newEmail = req.body.newEmail;
   if (!passwordConfirmation || !newEmail) {
-    return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+    return res
+      .status(400)
+      .json({ message: escape("Fehlerhafte Anfrage.") })
+      .end();
   }
   const mailverification = verifyEmail(newEmail, ["tu-dortmund.de", "udo.edu"]);
   if (!mailverification.origin) {
     return res
       .status(400)
-      .json({ message: "Adresse muss eine Unimailadresse sein." })
+      .json({ message: escape("Adresse muss eine Unimailadresse sein.") })
       .end();
   }
   if (!mailverification.format) {
     return res
       .status(400)
-      .json({ message: "Keine gültige E-Mail-Adresse." })
+      .json({ message: escape("Keine gültige E-Mail-Adresse.") })
       .end();
   }
   req.account.checkPassword(passwordConfirmation).then((success) => {
@@ -379,13 +382,17 @@ router.put("/user/:username/email", (req, res, next) => {
         .then((success) => {
           if (success) {
             cache.exportFeedbackUsers();
-            return res.status(200).json({ message: "E-Mail geändert." }).end();
+            return res
+              .status(200)
+              .json({ message: escape("E-Mail geändert.") })
+              .end();
           }
           return res
             .status(500)
             .json({
-              message:
-                "Interner Fehler beim aktuallisieren der E-Mail-Adresse.",
+              message: escape(
+                "Interner Fehler beim aktuallisieren der E-Mail-Adresse."
+              ),
             })
             .end();
         })
@@ -394,13 +401,17 @@ router.put("/user/:username/email", (req, res, next) => {
           return res
             .status(500)
             .json({
-              message:
-                "Interner Fehler beim aktuallisieren der E-Mail-Adresse.",
+              message: escape(
+                "Interner Fehler beim aktuallisieren der E-Mail-Adresse."
+              ),
             })
             .end();
         });
     } else {
-      return res.status(403).json({ message: "Falsches Passwort." }).end();
+      return res
+        .status(403)
+        .json({ message: escape("Falsches Passwort.") })
+        .end();
     }
   });
 });
@@ -422,16 +433,22 @@ router.put("/user/:username/sshkey", (req, res, next) => {
   const passwordConfirmation = req.body.passwordConfirmation;
   const newKey = req.body.newKey;
   if (!passwordConfirmation || !newKey) {
-    return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+    return res
+      .status(400)
+      .json({ message: escape("Fehlerhafte Anfrage.") })
+      .end();
   }
   req.account.checkPassword(passwordConfirmation).then((success) => {
     if (success) {
       req.account.setSSHKey(newKey);
-      return res.status(200).json({ message: "Schlüssel übernommen." }).end();
+      return res
+        .status(200)
+        .json({ message: escape("Schlüssel übernommen.") })
+        .end();
     } else {
       return res
         .status(403)
-        .json({ message: "Passwortbestätigung fehlgeschlagen." })
+        .json({ message: escape("Passwortbestätigung fehlgeschlagen.") })
         .end();
     }
   });
@@ -477,7 +494,7 @@ router.post("/project", fileUpload(), async (req, res, next) => {
         .status(400)
         .json({
           status: "error",
-          message: "Sie haben keine Berechtigung dies zu tun.",
+          message: escape("Sie haben keine Berechtigung dies zu tun."),
         })
         .end();
     }
@@ -487,7 +504,7 @@ router.post("/project", fileUpload(), async (req, res, next) => {
     if (!req.files || Object.keys(req.files).length === 0) {
       return res
         .status(400)
-        .json({ status: "error", message: "Keine Datei empfangen." })
+        .json({ status: "error", message: escape("Keine Datei empfangen.") })
         .end();
     }
 

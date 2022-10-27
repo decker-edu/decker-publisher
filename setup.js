@@ -112,7 +112,7 @@ let all_promise = Promise.all([
     });
   */
 
-  Promise.all([ar_promise, am_promise, pr_promise]).then((results) => {
+  Promise.all([ar_promise, am_promise, jo_promise]).then((results) => {
     cache
       .createAccount(
         config.setup_admin.username,
