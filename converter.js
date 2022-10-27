@@ -144,9 +144,6 @@ module.exports.convertPDF = function (filepath) {
               deckerSource += `author: ${
                 pdfInfo.author ? pdfInfo.author : "Unknown Author"
               }\n`;
-              //deckerSource += `reveal:\n`;
-              //deckerSource += `  width: ${data.width}\n`;
-              //deckerSource += `  height: ${data.height}\n`;
               deckerSource += "---\n\n";
               for (let page = 1; page <= pdfInfo.pages; page++) {
                 const pagenumber = String(page).padStart(3, "0");
@@ -179,6 +176,7 @@ module.exports.convertPDF = function (filepath) {
                       zippath,
                       path.join(directory, filename + ".zip")
                     );
+                    fs.rmSync(filepath);
                   });
                 zipfile.end();
               });

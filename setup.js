@@ -88,6 +88,17 @@ let all_promise = Promise.all([
       );
     });
 
+  let keys_promise = pool
+    .query(
+      "CREATE TABLE IF NOT EXISTS ssh_keys (username VARCHAR NOT NULL UNIQUE PRIMARY KEY, key VARCHAR NOT NULL, FOREIGN KEY(username) REFERENCES accounts(username) ON DELETE CASCADE)"
+    )
+    .then((result) => {
+      console.log(
+        "[ssh_keys] created.",
+        `${result.command} executed. ${result.rowCount} rows affected.`
+      );
+    });
+
   let jo_promise = pool
     .query(
       "CREATE TABLE IF NOT EXISTS amberscript_jobs (jobId integer PRIMARY KEY UNIQUE NOT NULL, user_id integer NOT NULL, projectname VARCHAR(255) NOT NULL, relative_filepath VARCHAR NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id))"
