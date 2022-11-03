@@ -153,7 +153,7 @@ class Account {
 
   setSSHKey(string) {
     db.transact(
-      "INSERT INTO ssh_keys (username, key) VALUES ($1, $2) ON CONFLICT DO UPDATE SET key = $2",
+      "INSERT INTO ssh_keys (username, key) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET key = $2",
       [this.username, string]
     );
   }
