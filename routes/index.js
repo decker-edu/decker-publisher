@@ -35,11 +35,11 @@ router.get("/home", async function (req, res, next) {
   });
 });
 
-router.get("/profile", (req, res, next) => {
+router.get("/profile", async (req, res, next) => {
   if (!req.account) {
     res.redirect("/");
   }
-  const sshkey = req.account.getSSHKey();
+  const sshkey = await req.account.getSSHKey();
   req.account.sshkey = sshkey;
   res.render("profile", {
     title: "Profileinstellungen",
