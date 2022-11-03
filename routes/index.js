@@ -62,6 +62,7 @@ router.get("/configuration", (req, res, next) => {
 router.get("/projects", (req, res, next) => {
   cache.authenticate(req, (error, account) => {
     if (error) {
+      console.error(error);
       return res.redirect("/");
     }
     if (!account) {
