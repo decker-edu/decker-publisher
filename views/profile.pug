@@ -71,7 +71,7 @@ block dialogs
       fieldset#change-ssh-key-fieldset
         legend SSH-Schlüssel ändern
         div.form-grid
-          label(for="change-ssh-key-textarea") Neue E-Mail-Adresse
+          label(for="change-ssh-key-textarea") Neuer SSH-Schlüssel
           textarea#change-ssh-key-textarea(required name="ssh-key" placeholder="SSH-Schlüssel" onchange="sshkeyChanged()")
           label(for="change-ssh-key-confirmation") Mit Passwort bestätigen
           input#change-ssh-key-confirmation(required name="password" type="password" pattern="^.{8,}" placeholder="Passwort" onchange="sshkeyChanged()")
