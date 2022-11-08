@@ -18,8 +18,8 @@ function recoveryMail(recepient, token) {
       process.stdin.write(
         `Guten Tag,\n\
     für Ihr Nutzerkonto wurde eine Anfrage zum Zurücksetzen des Passworts gestellt.\n\
-Zum zurücksetzen Ihres Passworts benutzen Sie bitte folgenden Link:\n\
-${config.hostname}/password-reset/${token}\n\
+Zum zurücksetzen Ihres Passworts benutzen Sie bitte folgenden Link:\n\n\
+${config.hostname}/password-reset/${token}\n\n\
 Sollten Sie keine solche Anfrage gestellt haben können Sie diese E-Mail ignorieren.\n\n\
 Mit freundlichen Grüßen\n\
     Das Decker System\n`
