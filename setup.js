@@ -77,6 +77,17 @@ let all_promise = Promise.all([
       );
     });
 
+  let rec_promise = pool
+    .query(
+      "CREATE TABLE IF NOT EXISTS recovery_requests (user_id integer NOT NULL UNIQUE, token VARCHAR NOT NULL, created TIMESTAMP NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE)"
+    )
+    .then((result) => {
+      console.log(
+        "[recovery_requests] created.",
+        `${result.command} executed. ${result.rowCount} rows affected.`
+      );
+    });
+
   let am_promise = pool
     .query(
       "CREATE TABLE IF NOT EXISTS amberscript_charges (id serial PRIMARY KEY NOT NULL, user_id integer NOT NULL, seconds integer NOT NULL, caused_by integer NOT NULL, reason TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id), FOREIGN KEY (caused_by) REFERENCES accounts(id))"
@@ -112,35 +123,37 @@ let all_promise = Promise.all([
     });
   */
 
-  Promise.all([ar_promise, am_promise, jo_promise]).then((results) => {
-    cache
-      .createAccount(
-        config.setup_admin.username,
-        config.setup_admin.password,
-        config.setup_admin.email
-      )
-      .then((result) => {
-        console.log("[create admin account]", result);
-        pool
-          .query(
-            "INSERT INTO roles (name) VALUES ('admin') ON CONFLICT DO NOTHING"
-          )
-          .then((result) => {
-            console.log(
-              "[create admin role]",
-              `${result.command} executed. ${result.rowCount} rows affected.`
-            );
-            pool
-              .query(
-                "INSERT INTO account_roles VALUES (1, 1) ON CONFLICT DO NOTHING"
-              )
-              .then((result) => {
-                console.log(
-                  "[assign admin role]",
-                  `${result.command} executed. ${result.rowCount} rows affected.`
-                );
-              });
-          });
-      });
-  });
+  Promise.all([ar_promise, am_promise, rec_promise, jo_promise]).then(
+    (results) => {
+      cache
+        .createAccount(
+          config.setup_admin.username,
+          config.setup_admin.password,
+          config.setup_admin.email
+        )
+        .then((result) => {
+          console.log("[create admin account]", result);
+          pool
+            .query(
+              "INSERT INTO roles (name) VALUES ('admin') ON CONFLICT DO NOTHING"
+            )
+            .then((result) => {
+              console.log(
+                "[create admin role]",
+                `${result.command} executed. ${result.rowCount} rows affected.`
+              );
+              pool
+                .query(
+                  "INSERT INTO account_roles VALUES (1, 1) ON CONFLICT DO NOTHING"
+                )
+                .then((result) => {
+                  console.log(
+                    "[assign admin role]",
+                    `${result.command} executed. ${result.rowCount} rows affected.`
+                  );
+                });
+            });
+        });
+    }
+  );
 });

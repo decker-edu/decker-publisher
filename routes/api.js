@@ -22,6 +22,8 @@ const Errors = require("../types/errors");
 const { default: getVideoDurationInSeconds } = require("get-video-duration");
 const Account = require("../types/account");
 const converter = require("../converter");
+const mailer = require("../mailer");
+const { config } = require("process");
 
 function makeRandomString(length, characters) {
   let result = "";
@@ -282,6 +284,65 @@ router.post("/register", function (req, res, next) {
     });
 });
 
+function required(value, res) {
+  if (!value || value === "") {
+    res
+      .status(400)
+      .json({ message: escape("Fehlerhafte Anfrage.") })
+      .end();
+    return true;
+  }
+  return false;
+}
+
+router.post("/user/reset-password", async (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.newPassword;
+  const token = req.body.token;
+  if (required(email) || required(password) || required(token)) {
+    return;
+  }
+  if (password.length < 8) {
+    return res
+      .status(400)
+      .json({
+        message: escape("Das Passwort muss aus mindestens 8 Zeichen bestehen."),
+      })
+      .end();
+  }
+  try {
+    const userResult = await db.transact(
+      "SELECT * FROM accounts WHERE email = $1",
+      [email]
+    );
+    const tokenResult = await db.transact(
+      "SELECT * FROM recovery_requests WHERE token = $1",
+      [token]
+    );
+    if (userResult.rows.length > 0 && tokenResult.rows.length > 0) {
+      const user = userResult.rows[0];
+      const request = tokenResult.rows[0];
+      if (user.id === request.user_id) {
+        const account = await db.getAccountByID(userResult.rows[0].id);
+        if (account) {
+          account.updatePassword(password);
+          db.transact("DELETE FROM recovery_requests WHERE token = $1", [
+            token,
+          ]);
+          return res.status(200).json({ message: "Passwort geändert." }).end();
+        }
+      } else {
+        return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+      }
+    } else {
+      return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Interner Fehler." }).end();
+  }
+});
+
 router.put("/user/:username/password", (req, res, next) => {
   if (!req.account) {
     return res
@@ -484,6 +545,35 @@ router.delete("/user/:username", (req, res, next) => {
       });
     }
   });
+});
+
+router.post("/request-recovery", async (req, res, next) => {
+  const email = req.body.recoveryEmail;
+  const token = makeRandomString(32);
+  if (!email || email === "") {
+    return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+  }
+  db.transact("SELECT * FROM accounts WHERE email = $1", [email])
+    .then((result) => {
+      if (result && result.rows && result.rows.length > 0) {
+        const user = result.rows[0];
+        db.transact(
+          "INSERT INTO recovery_requests (user_id, token, created) VALUES($1, $2, NOW()) ON CONFLICT (user_id) DO UPDATE SET token=EXCLUDED.token, created=NOW()",
+          [user.id, token]
+        ).then((result) => {
+          if (result) {
+            mailer.sendRecoveryMail(email, token);
+            return res.status(200).json({ message: "Anfrage gesendet." }).end();
+          }
+        });
+      } else {
+        return res.status(200).json({ message: "Anfrage gesendet." }).end();
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      return res.status(500).json({ message: "Interner Fehler." }).end();
+    });
 });
 
 /* POST upload */

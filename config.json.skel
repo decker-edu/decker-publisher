@@ -8,9 +8,14 @@
     "feedback_db_file": "",
     "user_directory_name": "",
     "amberscriptCallbackUrl": "",
+    "hostname": "",
     "setup_admin": {
         "username": "",
         "password": "",
         "email": ""
+    },
+    "mail_config": {
+        "mail_program": "",
+        "mail_from": ""
     }
 }

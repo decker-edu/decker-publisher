@@ -66,7 +66,7 @@ function asyncLogin() {
         displayLoginDialogMessage(json.message, "success");
         setTimeout(() => {
           window.location.replace("/");
-        }, 3000);
+        }, 1500);
       } else {
         displayLoginDialogMessage(json.message, "error");
       }
@@ -89,7 +89,7 @@ function asyncLogout() {
         displayUserDialogMessage(json.message, "success");
         setTimeout(() => {
           window.location.replace("/");
-        }, 1000);
+        }, 1500);
       } else {
         displayUserDialogMessage(json.message, "error");
       }
