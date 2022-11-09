@@ -326,6 +326,7 @@ router.post("/user/reset-password", async (req, res, next) => {
         const account = await db.getAccountByID(userResult.rows[0].id);
         if (account) {
           account.updatePassword(password);
+          cache.exportFeedbackUsers();
           db.transact("DELETE FROM recovery_requests WHERE token = $1", [
             token,
           ]);
