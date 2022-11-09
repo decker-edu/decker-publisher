@@ -8,7 +8,7 @@ import path from "path";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 
-import indexRouter from "./routes/index";
+import indexRouter from "./frontend/routes/index";
 import apiRouter from "./routes/api";
 import adminRouter from "./routes/admin";
 import deckRouter from "./routes/decks";
@@ -21,7 +21,7 @@ import config from "./config.json";
 import db from "./db";
 import authenticator from "./middleware/authenticator";
 
-declare var rootDirectory = path.resolve(__dirname);
+global.rootDirectory = path.resolve(__dirname);
 
 db.setupPool();
 db.transact("SELECT NOW()").then((result) => {

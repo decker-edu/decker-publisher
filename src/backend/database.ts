@@ -1,147 +1,124 @@
 import pg from "pg";
 import config from "config.json";
-import Account from "./types/account";
 
-process.env.PGUSER = config.pg_user;
-process.env.PGHOST = config.pg_host;
-process.env.PGPASSWORD = config.pg_pass;
-process.env.PGDATABASE = config.pg_base;
-process.env.PGPORT = config.pg_port;
+const DATABASE_ERROR_MESSAGE : string = "Datenbankfehler";
 
 class DatabaseConfiguration {
     username: string;
     password: string;
-    host: string;
+    hostname: string;
     database: string;
     port: number;
 }
 
+interface Query {
+  query: string;
+  values?: [any];
+}
+
+class Transaction {
+  queries : Query[];
+  constructor() {
+    this.queries = [];
+  }
+
+  add(query : Query) {
+    this.queries.push(query);
+  }
+
+  async execute(client : pg.ClientBase) {
+    try {
+      await client.query("BEGIN");
+      for(const query of this.queries) {
+        if(query.values) {
+          await client.query(query.query, query.values);
+        } else {
+          await client.query(query.query);
+        }
+      }
+      await client.query("COMMIT");
+    } catch (error) {
+      console.error("[Transaction] Transaction failed. Executing ROLLBACK.");
+      await client.query("ROLLBACK");
+      throw error;
+    }
+  }
+}
+
 class Database {
     pool: pg.Pool;
-    constructor(config: DatabaseConfiguration) {
+    constructor(config?: DatabaseConfiguration) {
+      if(config) {
+        this.pool = new pg.Pool({
+          user: config.username,
+          password: config.password,
+          database: config.database,
+          host: config.hostname,
+          port: config.port
+        })
+      } else {
+        this.pool = new pg.Pool();
+      }
+    }
 
+    async execute(transaction : Transaction) : Promise<void> {
+      try {
+        const client : pg.PoolClient = await this.pool.connect();
+        try {
+          transaction.execute(client);
+        } catch (error) {
+          console.error("[DB] Transaction failed.");
+          throw Error(DATABASE_ERROR_MESSAGE);
+        } finally {
+          client.release();
+        }
+      } catch (error) {
+        console.error("[PG] Can not connect to pool.");
+        throw Error(DATABASE_ERROR_MESSAGE);
+      }
+    }
+
+    async query(query: string | Query, values? : any[]) : Promise<pg.QueryResult> {
+      try {
+        const client = await this.pool.connect();
+        try {
+          if(typeof query === "string") {
+            if(values) {
+              return client.query(query, values);
+            } else {
+              return client.query(query);
+            }
+          } else {
+            if(query.values) {
+              return client.query(query.query, query.values);
+            } else {
+              return client.query(query.query);
+            }
+          }
+        } catch (error) {
+          console.error("[DB] Error executing query:");
+          console.error("[DB]", query);
+          if(values) {
+            console.error("[DB]", values);
+          }
+          throw Error(DATABASE_ERROR_MESSAGE);
+        } finally {
+          client.release();
+        }
+      } catch (error) {
+        console.error("[PG] Can not connect to pool.");
+        throw Error(DATABASE_ERROR_MESSAGE);
+      }
     }
 }
 
-let pool : pg.Pool = undefined;
+const configuration = new DatabaseConfiguration();
+configuration.username = config.pg_user;
+configuration.password = config.pg_pass;
+configuration.database = config.pg_base;
+configuration.hostname = config.pg_host;
+configuration.port = config.pg_port;
 
-exports.setupPool = function () {
-  if (pool) {
-    return pool;
-  }
-  pool = new pg.Pool();
-  console.log("[PG] New Pool created.");
-  return pool;
-};
+const instance = new Database(configuration);
 
-exports.transact = function (query, values) {
-  return new Promise((resolve, reject) => {
-    if (!pool) {
-      setupPool();
-    }
-    pool.connect(async (err, client, release) => {
-      function maybeRollback(error) {
-        if (error) {
-          console.error("[DB] Transaction error. ", error.stack);
-          client.query("ROLLBACK", (rollback_error) => {
-            if (rollback_error) {
-              console.error("[DB] Rollback failed. ", rollback_error.stack);
-            }
-            release();
-          });
-        }
-        return !!error;
-      }
-
-      if (err) {
-        return console.error("[DB] Can not connect to pool. ", err.stack);
-      }
-
-      client.query("BEGIN", (error, result) => {
-        if (maybeRollback(error)) return reject(error);
-        client.query(query, values, (error, actual_result) => {
-          if (maybeRollback(error)) return reject(error);
-          client.query("COMMIT", (error, result) => {
-            if (error) {
-              console.error("[DB] Error commiting transaction. ", error.stack);
-            }
-            release();
-            resolve(actual_result);
-          });
-        });
-      });
-    });
-  });
-};
-
-exports.getAccountByID = function (id) {
-  if (!pool) setupPool();
-  return new Promise((resolve, reject) => {
-    pool
-      .query("SELECT id, username, hash, email FROM accounts WHERE id = $1", [
-        id,
-      ])
-      .then((result) => {
-        if (result) {
-          if (result.rows.length > 0) {
-            const data = result.rows[0];
-            resolve(new Account(data.id, data.username, data.email, data.hash));
-          } else {
-            reject(USER_NOT_FOUND);
-          }
-        } else {
-          reject(DB_ERROR);
-        }
-      })
-      .catch((error) => {
-        reject(error);
-      });
-  });
-};
-
-exports.getAccountByName = function (username) {
-  if (!pool) setupPool();
-  return new Promise((resolve, reject) => {
-    pool
-      .query(
-        "SELECT id, username, hash, email FROM accounts WHERE username = $1",
-        [username]
-      )
-      .then((result) => {
-        if (result) {
-          if (result.rows.length > 0) {
-            const data = result.rows[0];
-            resolve(new Account(data.id, data.username, data.email, data.hash));
-          } else {
-            reject(USER_NOT_FOUND);
-          }
-        } else {
-          reject(DB_ERROR);
-        }
-      })
-      .catch((error) => {
-        reject(error);
-      });
-  });
-};
-
-exports.deleteAccount = function (account) {
-  if (!pool) setupPool();
-  return new Promise((resolve, reject) => {
-    const deleteRoles = pool.query(
-      "DELETE FROM account_roles WHERE user_id = $1",
-      [account.username]
-    );
-    const p1 = pool.query("DELETE FROM accounts WHERE username = $1", [
-      account.username,
-    ]);
-    const p2 = pool.query("DELETE FROM feedback_accounts WHERE username = $1", [
-      account.username,
-    ]);
-    Promise.all([p1, p2])
-      .then(([result1, result2]) => {})
-      .catch((error) => {
-        reject(error);
-      });
-  });
-};
+export default instance;

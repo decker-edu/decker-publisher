@@ -11,14 +11,16 @@ process.env.PGPORT = config.pg_port;
 
 let pool = undefined;
 
-exports.setupPool = function () {
+function setupPool() {
   if (pool) {
     return pool;
   }
   pool = new pg.Pool();
   console.log("[PG] New Pool created.");
   return pool;
-};
+}
+
+exports.setupPool = setupPool;
 
 exports.transact = function (query, values) {
   return new Promise((resolve, reject) => {

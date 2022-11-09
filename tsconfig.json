@@ -8,8 +8,12 @@
         "moduleResolution": "node",
         "sourceMap": true,
         "outDir": "dist",
-        "baseUrl": ".",
+        "baseUrl": "./",
+        "typeRoots": ["src/backend/types"],
         "paths": {
+            "config.json": [
+                "config.json"
+            ],
             "*": [
                 "node_modules/*"
             ]

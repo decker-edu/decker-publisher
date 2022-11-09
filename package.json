@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node --trace-warnings ./bin/www",
     "test": "node --trace-warnings ./test.js",
-    "setup": "node --trace-warnings ./setup.js"
+    "setup": "node --trace-warnings ./setup.js",
+    "build": "tsc"
   },
   "dependencies": {
     "@types/cookie-parser": "^1.4.3",
