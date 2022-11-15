@@ -1,4 +1,4 @@
-const app = require('../app.js');
+import application from './application.js';
 import Debug from "debug";
 const debug = Debug('decker-publisher:server');
 import http = require('http');
