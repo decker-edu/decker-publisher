@@ -795,11 +795,21 @@ router.delete("/project", (req, res, next) => {
           const userdir = account.getUserDirectory();
           const fullpath = path.join(userdir, "projects", projectname);
           if (fs.existsSync(fullpath)) {
-            fs.rmSync(fullpath, { recursive: true, force: true });
-            return res
-              .status(200)
-              .json({ status: "success", message: "Projekt gelöscht." })
-              .end();
+            try {
+              fs.rmSync(fullpath, { recursive: true, force: true });
+              return res
+                .status(200)
+                .json({ status: "success", message: "Projekt gelöscht." })
+                .end();
+            } catch (error) {
+              console.error(error);
+              return res.status(500).json({
+                status: "error",
+                message: escape(
+                  "Interner Fehler: Mit rsync hochgeladene Projekte können nicht über das Webinterface gelöscht werden."
+                ),
+              });
+            }
           } else {
             return res
               .status(400)
