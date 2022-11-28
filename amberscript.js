@@ -46,17 +46,23 @@ async function post(account, project, filename, apiKey) {
     .then((json) => {
       const status = json.jobStatus;
       const jobID = status.jobId;
+      archive(account, project, filename, jobID, status);
     })
     .catch((error) => {
       throw error;
     });
 }
 
-async function archive(account, projectname, filename, jobId) {
+async function finallizeJob(jobID, status) {}
+
+async function archive(account, projectname, filename, jobId, jobstate) {
   const user_id = account.id;
+  if (!jobstate) {
+    jobstate = "OPEN";
+  }
   db.transact(
     "INSERT INTO amberscript_jobs (user_id, jobId, projectname, relative_filepath, jobstate) VALUES ($1, $2, $3, $4, $5)",
-    [user_id, jobId, projectname, filename, "OPEN"]
+    [user_id, jobId, projectname, filename, jobstate]
   );
 }
 

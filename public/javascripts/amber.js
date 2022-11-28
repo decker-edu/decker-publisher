@@ -25,7 +25,7 @@ function requestAmber() {
       setTimeout(() => {
         closeAmberDialog();
         window.location.replace("/ambers");
-      }, 3000);
+      }, 1500);
     })
     .catch((error) => {
       if (error.message) {

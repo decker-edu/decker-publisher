@@ -139,30 +139,23 @@ class Account {
     });
   }
 
-  getSSHKey() {
-    const userdir = this.getUserDirectory();
-    const sshpath = path.join(userdir, "ssh");
-    if (!fs.existsSync(sshpath)) {
-      fs.mkdirSync(sshpath, { recursive: true });
-      return "";
-    }
-    const filepath = path.join(sshpath, "authorized_keys");
-    if (!fs.existsSync(filepath)) {
-      return "";
-    } else {
-      const buffer = fs.readFileSync(filepath);
-      return buffer.toString("utf8");
-    }
+  async getSSHKey() {
+    return db
+      .transact("SELECT key FROM ssh_keys WHERE username = $1", [this.username])
+      .then((result) => {
+        if (result.rows.length > 0) {
+          return result.rows[0].key;
+        } else {
+          return "";
+        }
+      });
   }
 
   setSSHKey(string) {
-    const userdir = this.getUserDirectory();
-    const sshpath = path.join(userdir, "ssh");
-    const filepath = path.join(sshpath, "authorized_keys");
-    if (!fs.existsSync(sshpath)) {
-      fs.mkdirSync(sshpath, { recursive: true });
-    }
-    fs.writeFileSync(filepath, string);
+    db.transact(
+      "INSERT INTO ssh_keys (username, key) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET key = $2",
+      [this.username, string]
+    );
   }
 
   getUserDirectory() {

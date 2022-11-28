@@ -35,11 +35,11 @@ router.get("/home", async function (req, res, next) {
   });
 });
 
-router.get("/profile", (req, res, next) => {
+router.get("/profile", async (req, res, next) => {
   if (!req.account) {
     res.redirect("/");
   }
-  const sshkey = req.account.getSSHKey();
+  const sshkey = await req.account.getSSHKey();
   req.account.sshkey = sshkey;
   res.render("profile", {
     title: "Profileinstellungen",
@@ -59,9 +59,60 @@ router.get("/configuration", (req, res, next) => {
   });
 });
 
+router.get("/password-recovery", (req, res, next) => {
+  res.render("request-recovery", {
+    title: "Decker: Passwort vergessen?",
+    admin: false,
+    user: null,
+  });
+});
+
+async function purgeOldRequests() {
+  const result = await db.transact(
+    "DELETE FROM recovery_requests WHERE created + INTERVAL '6 hours' < NOW()"
+  );
+}
+
+router.get("/password-reset/", async (req, res, next) => {
+  res.redirect("/password-recovery");
+});
+
+router.get("/password-reset/:token", async (req, res, next) => {
+  const token = req.params.token;
+  if (!token) {
+    return res.redirect("/password-recovery");
+  }
+  try {
+    await purgeOldRequests();
+    const reqResult = await db.transact(
+      "SELECT * FROM recovery_requests WHERE token = $1",
+      [token]
+    );
+    if (reqResult.rows.length > 0) {
+      const request = reqResult.rows[0];
+      const account = await db.getAccountByID(request.user_id);
+      if (account) {
+        res.render("password-reset", {
+          title: "Decker: Passwort zurücksetzen",
+          token: token,
+          username: account.username,
+          email: account.email,
+        });
+      } else {
+        res.redirect("/password-recovery");
+      }
+    } else {
+      res.redirect("/password-recovery");
+    }
+  } catch (error) {
+    res.render("error", error);
+  }
+});
+
 router.get("/projects", (req, res, next) => {
   cache.authenticate(req, (error, account) => {
     if (error) {
+      console.error(error);
       return res.redirect("/");
     }
     if (!account) {

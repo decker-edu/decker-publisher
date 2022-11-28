@@ -22,6 +22,8 @@ const Errors = require("../types/errors");
 const { default: getVideoDurationInSeconds } = require("get-video-duration");
 const Account = require("../types/account");
 const converter = require("../converter");
+const mailer = require("../mailer");
+const { config } = require("process");
 
 function makeRandomString(length, characters) {
   let result = "";
@@ -282,6 +284,66 @@ router.post("/register", function (req, res, next) {
     });
 });
 
+function required(value, res) {
+  if (!value || value === "") {
+    res
+      .status(400)
+      .json({ message: escape("Fehlerhafte Anfrage.") })
+      .end();
+    return true;
+  }
+  return false;
+}
+
+router.post("/user/reset-password", async (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.newPassword;
+  const token = req.body.token;
+  if (required(email) || required(password) || required(token)) {
+    return;
+  }
+  if (password.length < 8) {
+    return res
+      .status(400)
+      .json({
+        message: escape("Das Passwort muss aus mindestens 8 Zeichen bestehen."),
+      })
+      .end();
+  }
+  try {
+    const userResult = await db.transact(
+      "SELECT * FROM accounts WHERE email = $1",
+      [email]
+    );
+    const tokenResult = await db.transact(
+      "SELECT * FROM recovery_requests WHERE token = $1",
+      [token]
+    );
+    if (userResult.rows.length > 0 && tokenResult.rows.length > 0) {
+      const user = userResult.rows[0];
+      const request = tokenResult.rows[0];
+      if (user.id === request.user_id) {
+        const account = await db.getAccountByID(userResult.rows[0].id);
+        if (account) {
+          account.updatePassword(password);
+          cache.exportFeedbackUsers();
+          db.transact("DELETE FROM recovery_requests WHERE token = $1", [
+            token,
+          ]);
+          return res.status(200).json({ message: "Passwort geändert." }).end();
+        }
+      } else {
+        return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+      }
+    } else {
+      return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Interner Fehler." }).end();
+  }
+});
+
 router.put("/user/:username/password", (req, res, next) => {
   if (!req.account) {
     return res
@@ -357,19 +419,22 @@ router.put("/user/:username/email", (req, res, next) => {
   const passwordConfirmation = req.body.passwordConfirmation;
   const newEmail = req.body.newEmail;
   if (!passwordConfirmation || !newEmail) {
-    return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+    return res
+      .status(400)
+      .json({ message: escape("Fehlerhafte Anfrage.") })
+      .end();
   }
   const mailverification = verifyEmail(newEmail, ["tu-dortmund.de", "udo.edu"]);
   if (!mailverification.origin) {
     return res
       .status(400)
-      .json({ message: "Adresse muss eine Unimailadresse sein." })
+      .json({ message: escape("Adresse muss eine Unimailadresse sein.") })
       .end();
   }
   if (!mailverification.format) {
     return res
       .status(400)
-      .json({ message: "Keine gültige E-Mail-Adresse." })
+      .json({ message: escape("Keine gültige E-Mail-Adresse.") })
       .end();
   }
   req.account.checkPassword(passwordConfirmation).then((success) => {
@@ -379,13 +444,17 @@ router.put("/user/:username/email", (req, res, next) => {
         .then((success) => {
           if (success) {
             cache.exportFeedbackUsers();
-            return res.status(200).json({ message: "E-Mail geändert." }).end();
+            return res
+              .status(200)
+              .json({ message: escape("E-Mail geändert.") })
+              .end();
           }
           return res
             .status(500)
             .json({
-              message:
-                "Interner Fehler beim aktuallisieren der E-Mail-Adresse.",
+              message: escape(
+                "Interner Fehler beim aktuallisieren der E-Mail-Adresse."
+              ),
             })
             .end();
         })
@@ -394,13 +463,17 @@ router.put("/user/:username/email", (req, res, next) => {
           return res
             .status(500)
             .json({
-              message:
-                "Interner Fehler beim aktuallisieren der E-Mail-Adresse.",
+              message: escape(
+                "Interner Fehler beim aktuallisieren der E-Mail-Adresse."
+              ),
             })
             .end();
         });
     } else {
-      return res.status(403).json({ message: "Falsches Passwort." }).end();
+      return res
+        .status(403)
+        .json({ message: escape("Falsches Passwort.") })
+        .end();
     }
   });
 });
@@ -422,16 +495,22 @@ router.put("/user/:username/sshkey", (req, res, next) => {
   const passwordConfirmation = req.body.passwordConfirmation;
   const newKey = req.body.newKey;
   if (!passwordConfirmation || !newKey) {
-    return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+    return res
+      .status(400)
+      .json({ message: escape("Fehlerhafte Anfrage.") })
+      .end();
   }
   req.account.checkPassword(passwordConfirmation).then((success) => {
     if (success) {
       req.account.setSSHKey(newKey);
-      return res.status(200).json({ message: "Schlüssel übernommen." }).end();
+      return res
+        .status(200)
+        .json({ message: escape("Schlüssel übernommen.") })
+        .end();
     } else {
       return res
         .status(403)
-        .json({ message: "Passwortbestätigung fehlgeschlagen." })
+        .json({ message: escape("Passwortbestätigung fehlgeschlagen.") })
         .end();
     }
   });
@@ -449,12 +528,53 @@ router.delete("/user/:username", (req, res, next) => {
     if (role) {
       db.deleteAccount(req.params.username);
     } else {
-      return res
-        .status(403)
-        .json({ message: escape("Keine Berechtigung") })
-        .end();
+      if (!passwordConfirmation) {
+        return res
+          .status(400)
+          .json({ message: escape("Fehlerhafte Anfrage") })
+          .end();
+      }
+      req.account.checkPassword(passwordConfirmation).then((success) => {
+        if (success) {
+          db.deleteAccount(req.params.username);
+        } else {
+          return res
+            .status(403)
+            .json({ message: escape("Keine Berechtigung") })
+            .end();
+        }
+      });
     }
   });
+});
+
+router.post("/request-recovery", async (req, res, next) => {
+  const email = req.body.recoveryEmail;
+  const token = makeRandomString(32);
+  if (!email || email === "") {
+    return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+  }
+  db.transact("SELECT * FROM accounts WHERE email = $1", [email])
+    .then((result) => {
+      if (result && result.rows && result.rows.length > 0) {
+        const user = result.rows[0];
+        db.transact(
+          "INSERT INTO recovery_requests (user_id, token, created) VALUES($1, $2, NOW()) ON CONFLICT (user_id) DO UPDATE SET token=EXCLUDED.token, created=NOW()",
+          [user.id, token]
+        ).then((result) => {
+          if (result) {
+            mailer.sendRecoveryMail(email, token);
+            return res.status(200).json({ message: "Anfrage gesendet." }).end();
+          }
+        });
+      } else {
+        return res.status(200).json({ message: "Anfrage gesendet." }).end();
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      return res.status(500).json({ message: "Interner Fehler." }).end();
+    });
 });
 
 /* POST upload */
@@ -465,7 +585,7 @@ router.post("/project", fileUpload(), async (req, res, next) => {
         .status(400)
         .json({
           status: "error",
-          message: "Sie haben keine Berechtigung dies zu tun.",
+          message: escape("Sie haben keine Berechtigung dies zu tun."),
         })
         .end();
     }
@@ -475,7 +595,7 @@ router.post("/project", fileUpload(), async (req, res, next) => {
     if (!req.files || Object.keys(req.files).length === 0) {
       return res
         .status(400)
-        .json({ status: "error", message: "Keine Datei empfangen." })
+        .json({ status: "error", message: escape("Keine Datei empfangen.") })
         .end();
     }
 
@@ -675,11 +795,21 @@ router.delete("/project", (req, res, next) => {
           const userdir = account.getUserDirectory();
           const fullpath = path.join(userdir, "projects", projectname);
           if (fs.existsSync(fullpath)) {
-            fs.rmSync(fullpath, { recursive: true, force: true });
-            return res
-              .status(200)
-              .json({ status: "success", message: "Projekt gelöscht." })
-              .end();
+            try {
+              fs.rmSync(fullpath, { recursive: true, force: true });
+              return res
+                .status(200)
+                .json({ status: "success", message: "Projekt gelöscht." })
+                .end();
+            } catch (error) {
+              console.error(error);
+              return res.status(500).json({
+                status: "error",
+                message: escape(
+                  "Interner Fehler: Mit rsync hochgeladene Projekte können nicht über das Webinterface gelöscht werden."
+                ),
+              });
+            }
           } else {
             return res
               .status(400)
@@ -782,19 +912,17 @@ router.post("/amberscript", (req, res, next) => {
   if (!req.account) {
     return res.status(403).end();
   }
-  const project = req.body.project;
-  const filepath = req.body.filepath;
+  const project = req.body.project || req.query.project;
+  const filepath = req.body.filepath || req.query.filepath;
   const userdir = req.account.getUserDirectory();
   const fullpath = path.join(userdir, "projects", project, filepath);
   if (!fs.existsSync(fullpath)) {
-    return res.status(404).end();
+    return res.status(404).json({ message: "Datei nicht gefunden." }).end();
   }
-  amberscript
-    .postAmber(req.account, project, filepath, undefined)
-    .catch((error) => {
-      console.error(error);
-      return res.status(500).end();
-    });
+  amberscript.post(req.account, project, filepath, undefined).catch((error) => {
+    console.error(error);
+    return res.status(500).end();
+  });
 });
 
 router.post("/amberscript/callback", (req, res, next) => {

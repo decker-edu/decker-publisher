@@ -68,11 +68,22 @@ let all_promise = Promise.all([
 ]).then((results) => {
   let ar_promise = pool
     .query(
-      "CREATE TABLE IF NOT EXISTS account_roles (user_id integer NOT NULL, role_id integer NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id), FOREIGN KEY (role_id) REFERENCES roles(id), CONSTRAINT unique_combination UNIQUE (user_id, role_id))"
+      "CREATE TABLE IF NOT EXISTS account_roles (user_id integer NOT NULL, role_id integer NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE, FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE, CONSTRAINT unique_combination UNIQUE (user_id, role_id))"
     )
     .then((result) => {
       console.log(
         "[account_roles] created.",
+        `${result.command} executed. ${result.rowCount} rows affected.`
+      );
+    });
+
+  let rec_promise = pool
+    .query(
+      "CREATE TABLE IF NOT EXISTS recovery_requests (user_id integer NOT NULL UNIQUE, token VARCHAR NOT NULL, created TIMESTAMP NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE)"
+    )
+    .then((result) => {
+      console.log(
+        "[recovery_requests] created.",
         `${result.command} executed. ${result.rowCount} rows affected.`
       );
     });
@@ -101,7 +112,7 @@ let all_promise = Promise.all([
 
   let jo_promise = pool
     .query(
-      "CREATE TABLE IF NOT EXISTS amberscript_jobs (jobId integer PRIMARY KEY UNIQUE NOT NULL, user_id integer NOT NULL, projectname VARCHAR(255) NOT NULL, relative_filepath VARCHAR NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id))"
+      "CREATE TABLE IF NOT EXISTS amberscript_jobs (jobId integer PRIMARY KEY UNIQUE NOT NULL, user_id integer NOT NULL, projectname VARCHAR(255) NOT NULL, relative_filepath VARCHAR NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE)"
     )
     .then((result) => {
       console.log(
@@ -110,6 +121,7 @@ let all_promise = Promise.all([
       );
     });
 
+  /*
   let pr_promise = pool
     .query(
       "CREATE TABLE IF NOT EXISTS project_allowance (user_id integer NOT NULL, allowed_amount integer NOT NULL, FOREIGN KEY (user_id) REFERENCES accounts(id))"
@@ -120,36 +132,39 @@ let all_promise = Promise.all([
         `${result.command} executed. ${result.rowCount} rows affected.`
       );
     });
+  */
 
-  Promise.all([ar_promise, am_promise, pr_promise]).then((results) => {
-    cache
-      .createAccount(
-        config.setup_admin.username,
-        config.setup_admin.password,
-        config.setup_admin.email
-      )
-      .then((result) => {
-        console.log("[create admin account]", result);
-        pool
-          .query(
-            "INSERT INTO roles (name) VALUES ('admin') ON CONFLICT DO NOTHING"
-          )
-          .then((result) => {
-            console.log(
-              "[create admin role]",
-              `${result.command} executed. ${result.rowCount} rows affected.`
-            );
-            pool
-              .query(
-                "INSERT INTO account_roles VALUES (1, 1) ON CONFLICT DO NOTHING"
-              )
-              .then((result) => {
-                console.log(
-                  "[assign admin role]",
-                  `${result.command} executed. ${result.rowCount} rows affected.`
-                );
-              });
-          });
-      });
-  });
+  Promise.all([ar_promise, am_promise, rec_promise, jo_promise]).then(
+    (results) => {
+      cache
+        .createAccount(
+          config.setup_admin.username,
+          config.setup_admin.password,
+          config.setup_admin.email
+        )
+        .then((result) => {
+          console.log("[create admin account]", result);
+          pool
+            .query(
+              "INSERT INTO roles (name) VALUES ('admin') ON CONFLICT DO NOTHING"
+            )
+            .then((result) => {
+              console.log(
+                "[create admin role]",
+                `${result.command} executed. ${result.rowCount} rows affected.`
+              );
+              pool
+                .query(
+                  "INSERT INTO account_roles VALUES (1, 1) ON CONFLICT DO NOTHING"
+                )
+                .then((result) => {
+                  console.log(
+                    "[assign admin role]",
+                    `${result.command} executed. ${result.rowCount} rows affected.`
+                  );
+                });
+            });
+        });
+    }
+  );
 });

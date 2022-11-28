@@ -156,7 +156,7 @@ function deleteAccount(username) {
           displayMessage(json.message);
           setTimeout(() => {
             window.location.replace("/");
-          }, 1000);
+          }, 1500);
         });
       } else {
         response.json().then((json) => {

@@ -71,5 +71,6 @@ html
               label(for="login-pass") Passwort
               input#login-pass(type="password", required, pattern=".{8,}", name="login-pass", placeholder="Passwort")
             div.dialog-buttons
-              button(type="button" onclick="asyncLogin()") Login
               button(type="button" onclick="closeLoginDialog()") Abbrechen
+              a.button-like(href="/password-recovery") Passwort vergessen
+              button(type="button" onclick="asyncLogin()") Login

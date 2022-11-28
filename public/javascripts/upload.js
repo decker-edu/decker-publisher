@@ -30,32 +30,77 @@ function passOn(event) {
   input.click();
 }
 
+function clearInsertArea() {
+  const div = document.getElementById("insert-area");
+  while (div.firstChild) {
+    div.removeChild(div.lastChild);
+  }
+}
+
+function initProgress(event) {
+  clearInsertArea();
+  const div = document.getElementById("insert-area");
+  const bar = document.createElement("progress");
+  bar.id = "upload-progress";
+  bar.value = 0;
+  bar.innerText = "Upload gestartet.";
+  div.appendChild(bar);
+  updateProgress(event);
+}
+
+function updateProgress(event) {
+  if (event.lengthComputable) {
+    const total = event.total;
+    const loaded = event.loaded;
+    const part = (loaded / total) * 100;
+    const bar = document.getElementById("upload-progress");
+    if (bar) {
+      bar.value = part;
+      bar.innerText = part;
+    }
+  } else {
+    if (event.lengthComputable) {
+      const total = event.total;
+      const loaded = event.loaded;
+      const part = (loaded / total) * 100;
+      const bar = document.getElementById("upload-progress");
+      if (bar) {
+        bar.value = part;
+        bar.innerText = part;
+      }
+    } else {
+      const loaded = event.loaded;
+      const bar = document.getElementById("upload-progress");
+      if (bar) {
+        bar.value = loaded;
+        bar.innerHTML = loaded + " bytes";
+      }
+    }
+    const loaded = event.loaded;
+    const bar = document.getElementById("upload-progress");
+    if (bar) {
+      bar.value = loaded;
+      bar.innerHTML = loaded + " bytes";
+    }
+  }
+}
+
+function endProgress(event) {
+  clearInsertArea();
+  const div = document.getElementById("insert-area");
+  div.appendChild(document.createTextNode("Datei erfolgreich hochgeladen."));
+}
+
 function upload() {
   const input = document.querySelector("#file-upload-input");
   const projectName = document.querySelector("#project-name-input");
   const data = new FormData();
   data.append("file", input.files[0]);
   data.append("projectName", projectName.value);
-  const request = new Request("/api/project", {
-    method: "POST",
-    body: data,
-  });
-  fetch(request)
-    .then((response) => {
-      return response.json();
-    })
-    .then((json) => {
-      const div = document.getElementById("insert-area");
-      while (div.firstChild) {
-        div.removeChild(div.lastChild);
-      }
-      div.appendChild(document.createTextNode(json.message));
-    })
-    .catch((error) => {
-      const div = document.getElementById("insert-area");
-      while (div.firstChild) {
-        div.removeChild(div.lastChild);
-      }
-      div.appendChild(document.createTextNode("Interner Fehler"));
-    });
+  const xhr = new XMLHttpRequest();
+  xhr.addEventListener("progress", updateProgress);
+  xhr.addEventListener("loadstart", initProgress);
+  xhr.addEventListener("loadend", endProgress);
+  xhr.open("POST", "/api/project");
+  xhr.send(data);
 }

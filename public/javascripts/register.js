@@ -54,7 +54,9 @@ function asyncRegister() {
     .then((json) => {
       if (json.status === "success") {
         displayRegisterMessage(json.message, "success");
-        window.location.replace("/");
+        setTimeout(() => {
+          window.location.replace("/");
+        }, 1500);
       } else {
         displayRegisterMessage(json.message, "error");
       }
