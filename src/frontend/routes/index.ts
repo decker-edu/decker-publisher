@@ -1,4 +1,4 @@
-import express from "express";
+import express, { response } from "express";
 
 const router = express.Router();
 
@@ -7,7 +7,6 @@ import fs from "fs";
 import database from "../../backend/database";
 import config from "config.json";
 import child_process from "child_process";
-import { Account } from "src/backend/account";
 
 function requiresLogin(req : express.Request, res : express.Response, next : express.NextFunction) {
   if(!req.account) {
@@ -147,38 +146,40 @@ router.get("/sync", async function (req, res, next) {
 });
 
 router.get("/register/:token", async function (req, res, next) {
-  let token = req.params.token;
-  
-  db.transact("SELECT username, email FROM account_requests WHERE token = $1", [
-    token,
-  ]).then((result) => {
-    if (result.rows.length > 0) {
-      let username = result.rows[0].username;
-      let email = result.rows[0].email;
-      res.render("register", {
-        username: username,
-        email: email,
-        token: token,
-      });
+  try {
+    const tokenstring : string = req.params.token;
+    const queryResult = await database.query("SELECT username, email FROM account_requests WHERE token = $1", [tokenstring]);
+    if(queryResult.rows.length > 0) {
+      const account_request = queryResult.rows[0];
+      const username : string = account_request.username;
+      const email : string = account_request.email;
+      return response.render("register", {username: username, email: email, token: tokenstring});
     } else {
       res.render("error", {
         message: "Registrierungstoken wurde nicht gefunden.",
         error: {
-          status: 404,
-          stack: "Kein solches Token in der Datenbank.",
-        },
-      });
+          status: 404
+        }
+      })
     }
-  });
+  } catch (error) {
+    return res.render("error", {
+      message: "Interner Datenbankfehler",
+      error: {
+        status: 500,
+        stack: error.stack
+      }
+    })
+  }
 });
 
-function getAllRecordings(directory : string, deckname : string) {
+function getAllRecordings(directory : string, deckname : string) : Promise<string[]> {
   return new Promise((resolve, reject) => {
     fs.readdir(directory, (err, files) => {
       if (err) {
         return reject(err);
       }
-      let result = [];
+      let result : string[] = [];
       for (const file of files) {
         if (file.endsWith(".webm") && file.includes(deckname)) {
           result.push(file);
@@ -213,7 +214,7 @@ router.get(
   }
 );
 
-async function runFFMPEG(directory, deckname) {
+async function runFFMPEG(directory : string, deckname : string) {
   getAllRecordings(directory, deckname)
     .then((recordings) => {
       let contents = "";
@@ -253,127 +254,109 @@ async function runFFMPEG(directory, deckname) {
 }
 
 router.put(
-  "/replace/decks/:username/:project/*-recording.webm",
+  "/replace/decks/:username/:project/:filename-recording.webm",
   async function (req, res, next) {
-    const username = req.params.username;
-    const projectname = req.params.project;
-    const filepart = req.params[0];
-    const deckname = path.basename(filepart);
-    const fullpath = path.join(
-      config.user_directory_name,
-      username,
-      "projects",
-      projectname,
-      filepart + "-recording.webm"
-    );
-    const dirname = path.dirname(fullpath);
-    cache.authenticate(req, (error, account) => {
-      if (error) {
-        return res.status(403).end();
-      }
-      if (account && account.username === username) {
-        getAllRecordings(path.dirname(fullpath), deckname)
-          .then((recordings) => {
-            for (const recording of recordings) {
-              const target = path.join(dirname, recording);
-              fs.rm(target, (error) => {
-                if (error) {
-                  console.error(error);
-                }
-                console.log("[PUT VIDEO] removed", target);
-              });
+    try {
+      const username = req.params.username;
+      const projectname = req.params.project;
+      const filepart = req.params.filename;
+      const deckname = path.basename(filepart);
+      const fullpath = path.join(
+        config.user_directory_name,
+        username,
+        "projects",
+        projectname,
+        filepart + "-recording.webm"
+      );
+      const dirname = path.dirname(fullpath);
+      const account = req.account;
+      if(account && account.username === username) {
+        const recordings = await getAllRecordings(path.dirname(fullpath), deckname);
+        for(const recording of recordings) {
+          const target = path.join(dirname, recording);
+          fs.rm(target, (error) => {
+            if(error) {
+              console.error(error);
             }
-            req
-              .pipe(
-                fs.createWriteStream(
-                  path.join(dirname, deckname + "-recording.webm")
-                )
-              )
-              .on("close", () => {
-                runFFMPEG(dirname, deckname);
-              });
-            res.status(200).end();
+            console.log("[PUT VIDEO] removed", target);
           })
-          .catch((error) => {
-            console.error(error);
-            res.status(500).end();
-          });
+        }
+        req.pipe(fs.createWriteStream(path.join(dirname, deckname + "-recording.webm"))).on("close", () => {
+          runFFMPEG(dirname, deckname);
+        });
+        return res.status(200).end();
       }
-    });
-  }
-);
+    } catch (error) {
+      return res.status(500).json({message: "Interner Fehler."}).end();
+    }
+  });
 
 router.put(
-  "/append/decks/:username/:project/*-recording.webm",
+  "/append/decks/:username/:project/:filename-recording.webm",
   async function (req, res, next) {
-    const username = req.params.username;
-    const projectname = req.params.project;
-    const filepart = req.params[0];
-    const deckname = path.basename(filepart);
-    const fullpath = path.join(
-      config.user_directory_name,
-      username,
-      "projects",
-      projectname,
-      filepart + "-recording.webm"
-    );
-    const dirname = path.dirname(fullpath);
-    cache.authenticate(req, (error, account) => {
-      if (error) {
-        return res.status(403).end();
+    try {
+      const username = req.params.username;
+      const projectname = req.params.project;
+      const filepart = req.params.filename;
+      const deckname = path.basename(filepart);
+      const fullpath = path.join(
+        config.user_directory_name,
+        username,
+        "projects",
+        projectname,
+        filepart + "-recording.webm"
+      );
+      const dirname = path.dirname(fullpath);
+      const account = req.account;
+      if(account && account.username === username) {
+        const recordings = await getAllRecordings(path.dirname(fullpath), deckname);
+        for (const recording of recordings) {
+          if (recording === deckname + "-recording.webm") {
+            fs.renameSync(
+              path.join(dirname, deckname + "-recording.webm"),
+              path.join(dirname, deckname + "-recording-0.webm")
+            );
+            console.log(
+              "[PUT VIDEO] renamed",
+              path.join(dirname, deckname + "-recording.webm"),
+              "to",
+              path.join(dirname, deckname + "-recording-0.webm")
+            );
+          }
+        }
+        req
+        .pipe(
+          fs.createWriteStream(
+            path.join(
+              dirname,
+              deckname +
+                "-recording" +
+                (recordings.length > 0 ? "-" + recordings.length : "") +
+                ".webm"
+            )
+          )
+        )
+        .on("close", () => {
+          console.log(
+            "[PUT VIDEO] wrote",
+            path.join(
+              dirname,
+              deckname + "-recording-" + recordings.length + ".webm"
+            )
+          );
+          runFFMPEG(dirname, deckname);
+        });
+        return res.status(200).end();
+      } else {
+        return res.send(403).end();
       }
-      if (account && account.username === username) {
-        getAllRecordings(path.dirname(fullpath), deckname)
-          .then((recordings) => {
-            for (const recording of recordings) {
-              if (recording === deckname + "-recording.webm") {
-                fs.renameSync(
-                  path.join(dirname, deckname + "-recording.webm"),
-                  path.join(dirname, deckname + "-recording-0.webm")
-                );
-                console.log(
-                  "[PUT VIDEO] renamed",
-                  path.join(dirname, deckname + "-recording.webm"),
-                  "to",
-                  path.join(dirname, deckname + "-recording-0.webm")
-                );
-              }
-            }
-            req
-              .pipe(
-                fs.createWriteStream(
-                  path.join(
-                    dirname,
-                    deckname +
-                      "-recording" +
-                      (recordings.length > 0 ? "-" + recordings.length : "") +
-                      ".webm"
-                  )
-                )
-              )
-              .on("close", () => {
-                console.log(
-                  "[PUT VIDEO] wrote",
-                  path.join(
-                    dirname,
-                    deckname + "-recording-" + recordings.length + ".webm"
-                  )
-                );
-                runFFMPEG(dirname, deckname);
-              });
-            return res.status(200).end();
-          })
-          .catch((error) => {
-            console.error(error);
-            return res.status(500).end();
-          });
-      }
-    });
-  }
-);
+    } catch (error) {
+      return res.status(500).json({message: "Interner Fehler"}).end();
+    }
+  });
 
 router.get("favicon.ico", (req, res, next) => {
   return res.sendFile("public/images/favicon.png");
 });
 
-module.exports = router;
+export default router;

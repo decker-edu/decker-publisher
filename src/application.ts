@@ -1,6 +1,6 @@
 import createError from "http-errors";
 
-import express from "express";
+import express, { NextFunction } from "express";
 import fileUpload from "express-fileupload";
 import session from "express-session";
 
@@ -18,13 +18,12 @@ const app = express();
 import session_store from "./session.js";
 import config from "./config.json";
 
-import db from "./db";
+import database from "./backend/database"
 import authenticator from "./middleware/authenticator";
 
 global.rootDirectory = path.resolve(__dirname);
 
-db.setupPool();
-db.transact("SELECT NOW()").then((result) => {
+database.query("SELECT NOW()").then((result) => {
   console.log(result.rows[0]);
 });
 
@@ -63,14 +62,14 @@ app.use(function (req, res, next) {
 });
 
 // error handler
-app.use(function (err, req, res, next) {
+app.use(function (error : any, request : express.Request, response : express.Response, next : express.NextFunction) {
   // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
+  response.locals.message = error.message;
+  response.locals.error = request.app.get("env") === "development" ? error : {};
 
   // render the error page
-  res.status(err.status || 500);
-  res.render("error");
+  response.status(error.status || 500);
+  response.render("error");
 });
 
 module.exports = app;
