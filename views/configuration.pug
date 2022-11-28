@@ -12,28 +12,18 @@ block content
       | # Frage-/Feedbackmenu
       | feedback:
       |   base-url: "https://decker.cs.tu-dortmund.de/feedback"
-<<<<<<< HEAD
-      | # Teilnehmerumfragen (Mutliple Choice Gewinnspiel)
-      | poll-server: "wss://decker.cs.tu-dortmund.de/quizzer/quiz"
-=======
       |
       | # Teilnehmerumfragen (Mutliple Choice Gewinnspiel)
       | poll-server: "wss://decker.cs.tu-dortmund.de/quizzer/quiz"
       |
->>>>>>> main
       | # Live-Untertitel
       | caption-server: "https://decker.cs.tu-dortmund.de/captions"
       | speech-recognition-language: "de-DE"
     h2 rsync
     pre.code
       | rsync-destination:
-<<<<<<< HEAD
-      |   host: "#{user.username}@decker.cs.tu-dortmund.de"
-      |   path: "~/decks/projektname"
-=======
       |   host: "decker-#{user.username}@decker.cs.tu-dortmund.de"
       |   path: '"~/decks/projektname"'
->>>>>>> main
       |   options: "-av"
 
 block dialogs

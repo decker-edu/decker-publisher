@@ -190,11 +190,11 @@ function getAllRecordings(directory : string, deckname : string) {
 }
 
 router.get(
-  "/recordings/decks/:username/:project/*-recording.webm",
+  "/recordings/decks/:username/:project/:filename-recording.webm",
   async function (req, res, next) {
     const username = req.params.username;
     const projectname = req.params.project;
-    const filepart = req.params[0];
+    const filepart = req.params.filename;
     const deckname = path.basename(filepart);
     const fullpath = path.join(
       config.user_directory_name,
