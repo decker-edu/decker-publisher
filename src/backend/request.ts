@@ -11,7 +11,7 @@ class AccountRequest {
         this.email = email;
     }
 
-    static async isAvailable(username: string) {
+    static async isAvailable(username: string) : Promise<boolean> {
         try {
             const existing = await database.query("SELECT * FROM accounts WHERE username = $1", [username]);
             if(existing.rows.length > 0) {

@@ -16,7 +16,7 @@ import deckRouter from "./routes/decks";
 const app = express();
 
 import session_store from "./session.js";
-import config from "./config.json";
+import config from "config.json";
 
 import database from "./backend/database"
 import authenticator from "./middleware/authenticator";
