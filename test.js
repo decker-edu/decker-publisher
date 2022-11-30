@@ -18,6 +18,21 @@ const converter = require("./converter");
 })();
 
 (async function () {
+  const token = 1234;
+  const username = "hello";
+  const email = "test@test.de";
+  const note = "test";
+  db.transact(
+    "INSERT INTO account_requests (token, username, email, created, note) VALUES ($1, $2, $3, NOW(), $4) RETURNING id",
+    [token, username, email, note]
+  ).then((result) => {
+    if (result && result.rows.length > 0) {
+      console.log(result.rows[0]);
+    }
+  });
+})();
+
+(async function () {
   const hash = crypto
     .createHash("sha256")
     .update("asdf" + "v8xkzxdqt")

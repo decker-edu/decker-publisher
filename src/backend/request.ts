@@ -28,13 +28,17 @@ class AccountRequest {
         }
     }
 
-    static async reserve(username: string, email: string, token: string, note: string) {
+    static async reserve(username: string, email: string, token: string, note: string) : Promise<AccountRequest> {
         try {
-            const result = await database.query("INSERT INTO account_requests (token, username, email, created, note) VALUES ($1, $2, $3, NOW(), $4)", [token, username, email, note]);
-            return true;
+            const result = await database.query("INSERT INTO account_requests (token, username, email, created, note) VALUES ($1, $2, $3, NOW(), $4) RETURNING id", [token, username, email, note]);
+            if(result.rows.length > 0) {
+                const id = result.rows[0];
+            } else {
+                throw new Error("Unable to reserve account in the database.")
+            }
         } catch (error) {
             console.error(error);
-            return false;
+            throw error;
         }
     }
 }
