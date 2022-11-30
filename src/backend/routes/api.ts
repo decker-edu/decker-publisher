@@ -1,12 +1,12 @@
-var express = require("express");
-var router = express.Router();
+import express from "express";
+const router = express.Router();
 var createError = require("http-errors");
 
-const fileUpload = require("express-fileupload");
-const validator = require("email-validator");
-const escapeHTML = require("escape-html");
+import fileUpload from "express-fileupload";
+import validator from "email-validator";
+import escapeHTML from "escape-html";
 
-const argon2 = require("argon2");
+import argon2 from "argon2";
 
 import database from "../database";
 import amberscript from "../amberscript";
@@ -15,17 +15,15 @@ import fs from "fs";
 import path from "path";
 //const crypto = require("crypto");
 
-const yauzl = require("yauzl");
+import yauzl from "yauzl";
 
-const cache = require("../cache");
-const Errors = require("../types/errors");
-const { default: getVideoDurationInSeconds } = require("get-video-duration");
-const Account = require("../types/account");
-const converter = require("../converter");
-const mailer = require("../mailer");
-const { config } = require("process");
+import { default as getVideoDurationInSeconds } from "get-video-duration";
+import { Account } from "../account";
+import { AccountRequest } from "../request"
+import { Converter } from "../converter";
+import { Mailer } from "../mailer";
 
-function makeRandomString(length, characters) {
+function makeRandomString(length : number, characters? : string) : string {
   let result = "";
   let options = characters
     ? characters
@@ -37,19 +35,24 @@ function makeRandomString(length, characters) {
   return result;
 }
 
-function verifyUsername(string) {
-  let length = string.length;
-  let onlyletter = string.match(/[a-z]([a-z]|[0-9])+/gi);
-  return { length: length >= 4, format: onlyletter };
+interface UsernameVerification {
+  length: boolean;
+  format: boolean;
 }
 
-function verifyEmail(string, allowedOrigins) {
-  let format = validator.validate(string);
+function verifyUsername(username : string) : UsernameVerification {
+  let length = username.length;
+  let onlyletter = username.match(/[a-z]([a-z]|[0-9])+/gi);
+  return { length: length >= 4, format: onlyletter ? onlyletter.length > 0 : false };
+}
+
+function verifyEmail(mail : string, allowedOrigins : string[]) {
+  let format = validator.validate(mail);
   let origin = true;
   if (allowedOrigins) {
     origin = false;
     for (let suffix of allowedOrigins) {
-      if (string.endsWith(suffix)) {
+      if (mail.endsWith(suffix)) {
         origin = true;
         break;
       }
@@ -58,53 +61,48 @@ function verifyEmail(string, allowedOrigins) {
   return { format: format, origin: origin };
 }
 
-router.post("/login", function (req, res, next) {
+router.post("/login", function (req : express.Request, res : express.Response, next : express.NextFunction) {
   if (req.account) {
-    req.session.user = req.account.id;
+    req.session.userId = req.account.id;
     return res
       .status(200)
       .json({
-        status: "success",
-        message: escape("Login erfolgreich."),
+        message: escapeHTML("Login erfolgreich."),
       })
       .end();
   } else {
     return res
       .status(400)
       .json({
-        status: "error",
-        message: escape("Ungültige Benutzerdaten."),
+        message: escapeHTML("Ungültige Benutzerdaten."),
       })
       .end();
   }
 });
 
-router.post("/logout", function (req, res, next) {
-  delete req.session.user;
-  res.status(200).json({ status: "success", message: "Logout erfolgt." }).end();
+router.post("/logout", function (req : express.Request, res : express.Response, next : express.NextFunction) {
+  delete req.session.userId;
+  res.status(200).json({ message: "Logout erfolgt." }).end();
 });
 
-router.post("/request", function (req, res, next) {
-  let user = req.body.requestUser;
-  let mail = req.body.requestMail;
-  let note = req.body.requestNote;
-  console.log(user, mail, note);
-  if (!user || !mail || !note) {
+router.post("/request", async function (req : express.Request, res : express.Response, next : express.NextFunction) {
+  const username = req.body.requestUser;
+  const mail = req.body.requestMail;
+  const note = req.body.requestNote;
+  if (!username || !mail || !note) {
     return res
       .status(400)
       .json({
-        status: "error",
-        message: escape("Fehlerhafte Anfrage. Bitte alle Daten spezifizieren."),
+        message: escapeHTML("Fehlerhafte Anfrage. Bitte alle Daten spezifizieren."),
       })
       .end();
   }
-  let verification = verifyUsername(user);
+  let verification = verifyUsername(username);
   if (!verification.length) {
     res
       .status(400)
       .json({
-        status: "error",
-        message: escape(
+        message: escapeHTML(
           "Der Benutzername sollte mindestens 4 Zeichen beinhalten."
         ),
       })
@@ -116,7 +114,7 @@ router.post("/request", function (req, res, next) {
       .status(400)
       .json({
         status: "error",
-        message: escape(
+        message: escapeHTML(
           "Der Benutzername muss mit einem Buchstaben beginnen und darf nur Buchstaben oder Zahlen beinhalten."
         ),
       })
@@ -129,7 +127,7 @@ router.post("/request", function (req, res, next) {
       .status(400)
       .json({
         status: "error",
-        message: escape("Ungültig formatierte E-Mail Adresse."),
+        message: escapeHTML("Ungültig formatierte E-Mail Adresse."),
       })
       .end();
   }
@@ -138,59 +136,27 @@ router.post("/request", function (req, res, next) {
       .status(400)
       .json({
         status: "error",
-        message: escape("Anmeldung nur mit einer tu-dortmund.de Adresse."),
+        message: escapeHTML("Anmeldung nur mit einer tu-dortmund.de Adresse."),
       })
       .end();
   }
-  db.transact("SELECT * FROM accounts where username = $1", [user]).then(
-    (result) => {
-      if (result.rows.length > 0) {
-        return res.status(400).json({
-          status: "error",
-          message: escape("Dieser Benutzername ist bereits reserviert."),
-        });
+  try {
+    const available : boolean = await AccountRequest.isAvailable(username);
+    if(available) {
+      const randomToken : string = makeRandomString(64);
+      const request = await AccountRequest.reserve(username, mail, randomToken, note);
+      if(request) {
+        return res.status(200).json({message: escapeHTML("Die Anfrage wurde übermittelt. Wir melden uns bei Ihnen zeitnah per E-Mail.")});
       } else {
-        db.transact("SELECT * FROM account_requests WHERE username = $1", [
-          user,
-        ]).then((result) => {
-          if (result.rows.length > 0) {
-            return res.status(400).json({
-              status: "error",
-              message: escape("Dieser Benutzername ist bereits reserviert."),
-            });
-          } else {
-            let randomToken = makeRandomString(64);
-            db.transact(
-              "INSERT INTO account_requests (token, username, email, created, note) VALUES ($1, $2, $3, NOW(), $4)",
-              [randomToken, user, mail, note]
-            )
-              .then((result) => {
-                console.log(
-                  "[requests]",
-                  `${result.command} executed. ${result.rowCount} rows affected.`
-                );
-                return res
-                  .status(200)
-                  .json({
-                    status: "success",
-                    message: escape(
-                      "Anfrage wurde übermittelt, der Administrator wird Ihnen bald eine E-Mail senden."
-                    ),
-                  })
-                  .end();
-              })
-              .catch((error) => {
-                console.error("[ACCOUNT REQUEST] [DB ERROR]", error);
-                res.status(500).json({
-                  status: "error",
-                  message: "Interner Datenbankfehler",
-                });
-              });
-          }
-        });
+        return res.status(500).json({message: escapeHTML("Die Anfrage konnte nicht angelegt werden.")});
       }
+    } else {
+      return res.status(400).json({message: escapeHTML("Dieser Benutzername ist nicht verfügbar.")});
     }
-  );
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({message: "Interner Serverfehler."}).end();
+  }
 });
 
 router.post("/register", function (req, res, next) {
@@ -201,9 +167,12 @@ router.post("/register", function (req, res, next) {
 
   if (password.length < 8) {
     return res.status(400).json({
-      status: "error",
       message: "Passwort muss mindestens 8 Zeichen lang sein.",
     });
+  }
+
+  try {
+    const request = await AccountRequest.fromDatabase(token);
   }
 
   db.transact("SELECT username, email FROM account_requests WHERE token = $1", [

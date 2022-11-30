@@ -1,6 +1,6 @@
 import database from "./database";
 
-class AccountRequest {
+export class AccountRequest {
     id: number;
     username: string;
     email: string;
@@ -44,6 +44,14 @@ class AccountRequest {
         } catch (error) {
             console.error(error);
             throw error;
+        }
+    }
+
+    async createAccount(password : string) {
+        try {
+            
+        } catch (error) {
+
         }
     }
 

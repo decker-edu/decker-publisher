@@ -1,4 +1,4 @@
-import express, { response } from "express";
+import express from "express";
 
 const router = express.Router();
 
@@ -153,7 +153,7 @@ router.get("/register/:token", async function (req, res, next) {
       const account_request = queryResult.rows[0];
       const username : string = account_request.username;
       const email : string = account_request.email;
-      return response.render("register", {username: username, email: email, token: tokenstring});
+      return res.render("register", {username: username, email: email, token: tokenstring});
     } else {
       res.render("error", {
         message: "Registrierungstoken wurde nicht gefunden.",
