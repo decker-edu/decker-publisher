@@ -1,4 +1,5 @@
 import database from "./database";
+import { Account } from "./account";
 
 export class AccountRequest {
     id: number;
@@ -22,7 +23,7 @@ export class AccountRequest {
                 return false;
             }
             const reserved = await database.query("SELECT * FROM account_requests WHERE username = $1", [username]);
-            if(existing.rows.length > 0) {
+            if(reserved.rows.length > 0) {
                 return false;
             }
             return true;
@@ -47,9 +48,9 @@ export class AccountRequest {
         }
     }
 
-    async createAccount(password : string) {
+    async confirm(password : string) {
         try {
-            
+            const account = Account.register(this.username, password, this.email);
         } catch (error) {
 
         }

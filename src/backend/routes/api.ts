@@ -159,11 +159,11 @@ router.post("/request", async function (req : express.Request, res : express.Res
   }
 });
 
-router.post("/register", function (req, res, next) {
-  let username = req.body.registerUsername;
-  let password = req.body.registerPassword;
-  let email = req.body.registerEmail;
-  let token = req.body.registerToken;
+router.post("/register", async function (req, res, next) {
+  const username = req.body.registerUsername;
+  const password = req.body.registerPassword;
+  const email = req.body.registerEmail;
+  const token = req.body.registerToken;
 
   if (password.length < 8) {
     return res.status(400).json({
@@ -173,9 +173,17 @@ router.post("/register", function (req, res, next) {
 
   try {
     const request = await AccountRequest.fromDatabase(token);
+    if(request) {
+      if(request.username !== username || request.email !== email) {
+        
+      }
+      request.confirm(password);
+    }
+  } catch (error) {
+    
   }
 
-  db.transact("SELECT username, email FROM account_requests WHERE token = $1", [
+  database.query("SELECT username, email FROM account_requests WHERE token = $1", [
     token,
   ])
     .then((result) => {

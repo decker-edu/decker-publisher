@@ -9,7 +9,6 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@types/showdown": "^2.0.0",
     "argon2": "^0.28.7",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
@@ -39,7 +38,9 @@
     "@types/morgan": "^1.9.3",
     "@types/node": "^18.11.2",
     "@types/pg": "^8.6.5",
+    "@types/showdown": "^2.0.0",
     "@types/yauzl": "^2.10.0",
+    "@types/yazl": "^2.4.2",
     "jest": "^29.3.1"
   }
 }

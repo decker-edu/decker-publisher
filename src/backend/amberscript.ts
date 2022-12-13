@@ -8,7 +8,7 @@ import instance from "./database";
 
 async function post(account : Account, project : string, filename : string, apiKey : string) {
   const filepath = path.join(
-    account.getUserDirectory(),
+    account.getDirectory(),
     "projects",
     project,
     filename
@@ -37,7 +37,9 @@ async function post(account : Account, project : string, filename : string, apiK
   };
   url.search = new URLSearchParams(params).toString();
   const form = new FormData();
-  form.append("file", fs.createReadStream(filepath));
+  const buffer = fs.readFileSync(filepath);
+  const contents = buffer.toString();
+  form.append("file", contents);
   fetch(url, { method: "POST", body: form })
     .then((response) => {
       if (response.ok) {
@@ -56,14 +58,16 @@ async function post(account : Account, project : string, filename : string, apiK
     });
 }
 
-async function finallizeJob(jobID, status) {}
+async function finallizeJob(jobID : number, status : string) {
 
-async function archive(account, projectname, filename, jobId, jobstate) {
+}
+
+async function archive(account : Account, projectname : string, filename : string, jobId : number, jobstate : string) {
   const user_id = account.id;
   if (!jobstate) {
     jobstate = "OPEN";
   }
-  db.transact(
+  await database.query(
     "INSERT INTO amberscript_jobs (user_id, jobId, projectname, relative_filepath, jobstate) VALUES ($1, $2, $3, $4, $5)",
     [user_id, jobId, projectname, filename, jobstate]
   );
@@ -86,50 +90,42 @@ async function getVTT(jobId : string, apiKey : string) : Promise<string> {
 }
 
 async function importVTT(jobId : string, apiKey : string) {
-  if (!jobId || jobId === "") {
-    throw "No jobId specified.";
-  }
-  if (!apiKey || apiKey === "") {
-    throw "No apiKey specified.";
-  }
-  const queryResult = await database.query("SELECT * from amberscript_jobs WHERE jobId = $1", [
-    jobId,
-  ]);
-  if (queryResult && queryResult.rows.length > 0) {
-    const job = queryResult.rows[0];
-    const user_id = job.user_id;
-    const projectname = job.projectname;
-    const filename = job.relative_filepath;
+  try {
+    if (!jobId || jobId === "") {
+      throw "No jobId specified.";
+    }
+    if (!apiKey || apiKey === "") {
+      throw "No apiKey specified.";
+    }
+    const queryResult = await database.query("SELECT * from amberscript_jobs WHERE jobId = $1", [
+      jobId,
+    ]);
+    if (queryResult && queryResult.rows.length > 0) {
+      const job = queryResult.rows[0];
+      const user_id = job.user_id;
+      const projectname = job.projectname;
+      const filename = job.relative_filepath;
+  
+      const account = await Account.fromDatabase(user_id);
+      if(!account) {
+        return;
+      }
+      const userdir = account.getDirectory();
+      const fullpath = path.join(
+            userdir,
+            "projects",
+            projectname,
+            filename
+          );
+      const dirname = path.dirname(filename);
+      const stem = path.basename(filename, path.extname(filename));
+      const subtitleFile = path.join(dirname, stem + ".vtt");
+      const text = await getVTT(jobId, apiKey);
+      fs.writeFileSync(subtitleFile, text);
+    }
+  } catch (error) {
 
-    const account = await Account.fromDatabase(user_id);
-    if(!account) {
-      return;
-    }
-    const userdir = account.getDirectory();
-    const fullpath = path.join(
-          userdir,
-          "projects",
-          projectname,
-          filename
-        );
-    const dirname = path.dirname(filename);
-    const stem = path.basename(filename, path.extname(filename));
-    const subtitleFile = path.join(dirname, stem + ".vtt");
-    const text = await getVTT(jobId, apiKey);
-    fs.writeFileSync(subtitleFile, text);
-        resolve(true);
-      })
-      .catch((error) => {
-        console.error(error);
-        reject(false);
-      });
-      .catch((error) => {
-        console.error(error);
-        reject(false);
-      });
-    }
-    });
-  });
+  }
 }
 
 
