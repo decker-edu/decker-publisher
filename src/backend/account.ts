@@ -1,4 +1,4 @@
-import { verify } from "argon2";
+import { verify, hash } from "argon2";
 import pg from "pg";
 import database from "./database";
 import config from "config.json";
@@ -50,11 +50,43 @@ export class Account {
     hash: string;
     roles?: string[];
 
+    static registerHooks : ((username: string, password: string, email: string) => Promise<void>)[] = [];
+
     constructor(id: number, username: string, hash: string, roles?: string[]) {
         this.id = id;
         this.username = username;
         this.hash = hash;
         this.roles = roles;
+    }
+
+    static on(event : string, callback : (username: string, password: string, email: string) => Promise<void>) {
+        switch(event) {
+            case "registration":
+                Account.registerHooks.push(callback);
+                break;
+            default: throw new Error("No such event");
+        }
+    }
+
+    static async register(username : string, password : string, email : string) : Promise<Account> {
+        try {
+            const passwordHash = await hash(password);
+            const result = await database.query("INSERT INTO accounts(username, hash, email, created) VALUES ($1, $2, $3, NOW()) ON CONFLICT DO NOTHING RETURNING *", [username, passwordHash, email]);
+            console.log("[accounts]", `${result.command} executed. ${result.rowCount} rows affected.`);
+            if(result.rows.length > 0) {
+                const data = result.rows[0];
+                const account = new Account(data.id, data.username, data.hash, []);
+                for(const hook of Account.registerHooks) {
+                    await hook(username, password, email);
+                }
+                return account;
+            } else {
+                throw new Error("Fehler beim Registrieren des Nutzers " + username);
+            }
+        } catch (error) {
+            console.error(error);
+            throw new Error("Fehler beim Registrieren des Nutzers " + username);
+        }
     }
 
     static async fromDatabase(source : number | string) : Promise<Account | null> {
