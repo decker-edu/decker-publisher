@@ -175,9 +175,15 @@ router.post("/register", async function (req, res, next) {
     const request = await AccountRequest.fromDatabase(token);
     if(request) {
       if(request.username !== username || request.email !== email) {
-        
+        console.error(username, email);
+        res.status(400).json({message: escapeHTML("Registrationsdaten stimmen nicht mit hinterlegten Daten überein.")}).end();
       }
-      request.confirm(password);
+      const account = request.confirm(password);
+      if(account) {
+        request.delete();
+      }
+    } else {
+      res.status(404).json({message: escapeHTML("Registrationstoken nicht gefunden")}).end();
     }
   } catch (error) {
     

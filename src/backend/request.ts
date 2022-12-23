@@ -7,6 +7,7 @@ export class AccountRequest {
     email: string;
     note: string;
     token: string;
+    valid: boolean;
     
     constructor(id: number, username: string, email: string, note: string, token: string) {
         this.id = id;
@@ -14,6 +15,7 @@ export class AccountRequest {
         this.email = email;
         this.note = note;
         this.token = token;
+        this.valid = true;
     }
 
     static async isAvailable(username: string) : Promise<boolean> {
@@ -49,10 +51,23 @@ export class AccountRequest {
     }
 
     async confirm(password : string) {
+        if(!this.valid) {
+            throw new Error("Trying to confirm an invalid request.");
+        }
         try {
             const account = Account.register(this.username, password, this.email);
+            return account;
         } catch (error) {
+            throw error;
+        }
+    }
 
+    async removeFromDatabase() {
+        try {
+            await database.query("DELETE FROM account_requests WHERE id = $1", [this.id]);
+            this.valid = false;
+        } catch (error) {
+            throw error;
         }
     }
 
