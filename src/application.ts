@@ -9,7 +9,7 @@ import cookieParser from "cookie-parser";
 import logger from "morgan";
 
 import indexRouter from "./frontend/routes/index";
-import apiRouter from "./routes/api";
+import apiRouter from "./backend/routes/api";
 import adminRouter from "./routes/admin";
 import deckRouter from "./routes/decks";
 
@@ -72,4 +72,4 @@ app.use(function (error : any, request : express.Request, response : express.Res
   response.render("error");
 });
 
-module.exports = app;
+export default app;

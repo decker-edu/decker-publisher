@@ -891,12 +891,12 @@ router.post("/amberscript", (req, res, next) => {
   }
   const project = req.body.project || req.query.project;
   const filepath = req.body.filepath || req.query.filepath;
-  const userdir = req.account.getUserDirectory();
+  const userdir = req.account.getDirectory();
   const fullpath = path.join(userdir, "projects", project, filepath);
   if (!fs.existsSync(fullpath)) {
     return res.status(404).json({ message: "Datei nicht gefunden." }).end();
   }
-  amberscript.post(req.account, project, filepath, undefined).catch((error) => {
+  amberscript.post(req.account, project, filepath, undefined).catch((error : Error) => {
     console.error(error);
     return res.status(500).end();
   });
@@ -920,4 +920,4 @@ router.post("/amberscript/callback", (req, res, next) => {
   }
 });
 
-module.exports = router;
+export default router;

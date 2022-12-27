@@ -1,4 +1,4 @@
-import application from './application.js';
+import application from './application.ts';
 import Debug from "debug";
 const debug = Debug('decker-publisher:server');
 import http = require('http');
@@ -8,13 +8,13 @@ import http = require('http');
  */
 
 var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+appplication.set('port', port);
 
 /**
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+var server = http.createServer(application);
 
 /**
  * Listen on provided port, on all network interfaces.
