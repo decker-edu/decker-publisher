@@ -1,7 +1,7 @@
-const config = require("./config.json");
-const child_process = require("child_process");
+import config from "../../config.json";
+import child_process from "child_process";
 
-function recoveryMail(recepient, token) {
+export function recoveryMail(recepient : string, token : string) {
   if (
     config.mail_config &&
     config.mail_config.mail_program &&
@@ -34,5 +34,3 @@ Mit freundlichen Grüßen\n\
     return;
   }
 }
-
-module.exports.sendRecoveryMail = recoveryMail;

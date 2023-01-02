@@ -3,7 +3,7 @@ import path from "path";
 import child_process from "child_process";
 
 import yazl from "yazl";
-import config from "config.json";
+import config from "../../config.json";
 
 import pdfjs from "pdfjs-dist";
 

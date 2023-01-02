@@ -42,58 +42,64 @@ function displayLoginDialogMessage(message, type) {
   element.innerText = message;
 }
 
-function asyncLogin() {
-  let userElement = document.getElementById("login-user");
-  let passElement = document.getElementById("login-pass");
-  let username = userElement.value;
-  let password = passElement.value;
-  fetch("/api/login", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      username: username,
-      password: password,
-    }),
-  })
-    .then((response) => {
-      return response.json();
-    })
-    .then((json) => {
-      if (json.status === "success") {
-        displayLoginDialogMessage(json.message, "success");
-        setTimeout(() => {
-          window.location.replace("/");
-        }, 3000);
-      } else {
-        displayLoginDialogMessage(json.message, "error");
-      }
+async function login() {
+  const userElement = document.getElementById("login-user");
+  const passElement = document.getElementById("login-pass");
+  const username = userElement.value;
+  const password = passElement.value;
+  try {
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: username,
+        password: password,
+      }),
     });
+    if (response.ok) {
+      const json = await response.json();
+      displayLoginDialogMessage(json.message, "success");
+      setTimeout(() => {
+        window.location.replace("/");
+      }, 1000);
+    } else {
+      const json = await response.json();
+      displayLoginDialogMessage(json.message, "error");
+    }
+  } catch (error) {
+    if (error.message) {
+      displayLoginDialogMessage(error.message, "error");
+    }
+  }
 }
 
-function asyncLogout() {
-  fetch("/api/logout", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-  })
-    .then((response) => {
-      return response.json();
-    })
-    .then((json) => {
-      if (json.status === "success") {
-        displayUserDialogMessage(json.message, "success");
-        setTimeout(() => {
-          window.location.replace("/");
-        }, 1000);
-      } else {
-        displayUserDialogMessage(json.message, "error");
-      }
+async function logout() {
+  try {
+    const response = await fetch("/api/logout", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
     });
+    if (response.ok) {
+      const json = await response.json();
+      displayUserDialogMessage(json.message, "success");
+      setTimeout(() => {
+        window.location.replace("/");
+      }, 1000);
+    } else {
+      const json = await response.json();
+      displayUserDialogMessage(json.message, "error");
+    }
+  } catch (error) {
+    if (error.message) {
+      displayUserDialogMessage(error.message, "error");
+    }
+  }
 }
 
 let loginDialog = document.getElementById("login-dialog");

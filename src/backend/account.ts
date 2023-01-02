@@ -1,11 +1,14 @@
 import { verify, hash } from "argon2";
 import pg from "pg";
 import database from "./database";
-import config from "config.json";
+import { Transaction, Query } from "./database";
+import config from "../../config.json";
 import path from "path";
 import fs from "fs";
 
 const NO_RESULT_MESSAGE : string = "Kein Resultat";
+
+type AccountCallback = (username: string, password: string, email: string) => Promise<void>;
 
 function getFiles(directory: string, filter: (arg: string) => boolean) : string[] {
     let result : string[] = [];
@@ -44,25 +47,32 @@ function getDirectories(parent : string) : string[] {
     return result;
 }
 
-export class Account {
+export class Account implements Account {
     id: number;
     username: string;
+    email: string;
     hash: string;
     roles?: string[];
 
-    static registerHooks : ((username: string, password: string, email: string) => Promise<void>)[] = [];
+    static registerHooks : AccountCallback[] = [];
+    static passwordChangeHooks : AccountCallback[] = [];
+    static emailChangeHooks : AccountCallback[] = [];
 
-    constructor(id: number, username: string, hash: string, roles?: string[]) {
+    constructor(id: number, username: string, email: string, hash: string, roles?: string[]) {
         this.id = id;
         this.username = username;
+        this.email = email;
         this.hash = hash;
         this.roles = roles;
     }
 
-    static on(event : string, callback : (username: string, password: string, email: string) => Promise<void>) {
+    static on(event : string, callback : AccountCallback) {
         switch(event) {
             case "registration":
                 Account.registerHooks.push(callback);
+                break;
+            case "passwordChange":
+                Account.passwordChangeHooks.push(callback);
                 break;
             default: throw new Error("No such event");
         }
@@ -75,7 +85,7 @@ export class Account {
             console.log("[accounts]", `${result.command} executed. ${result.rowCount} rows affected.`);
             if(result.rows.length > 0) {
                 const data = result.rows[0];
-                const account = new Account(data.id, data.username, data.hash, []);
+                const account = new Account(data.id, data.username, data.email, data.hash, []);
                 for(const hook of Account.registerHooks) {
                     await hook(username, password, email);
                 }
@@ -92,13 +102,14 @@ export class Account {
     static async fromDatabase(source : number | string) : Promise<Account | null> {
         if(typeof source === "number") {
             try {
-                const result : pg.QueryResult = await database.query("SELECT accounts.id as id, accounts.username as username, accounts.hash as hash, array(SELECT roles.name as name from roles JOIN account_roles ON roles.id = account_roles.role_id JOIN accounts ON accounts.id = account_roles.user_id WHERE accounts.id = $1) as roles FROM accounts WHERE id = $1", [source]);
+                const result : pg.QueryResult = await database.query("SELECT accounts.id as id, accounts.username as username, accounts.email as email, accounts.hash as hash, array(SELECT roles.name as name from roles JOIN account_roles ON roles.id = account_roles.role_id JOIN accounts ON accounts.id = account_roles.user_id WHERE accounts.id = $1) as roles FROM accounts WHERE id = $1", [source]);
                 if(result.rows.length > 0) {
                     const id : number = result.rows[0].id;
                     const username : string = result.rows[0].username;
+                    const email : string = result.rows[0].email;
                     const hash : string = result.rows[0].hash;
                     const roles : string[] = result.rows[0].roles;
-                    return new Account(id, username, hash, roles);
+                    return new Account(id, username, email, hash, roles);
                 } else {
                     return null;
                 }
@@ -107,19 +118,53 @@ export class Account {
             }
         } else {
             try {
-                const result : pg.QueryResult = await database.query("SELECT accounts.id as id, accounts.username as username, accounts.hash as hash, array(SELECT roles.name as name from roles JOIN account_roles ON roles.id = account_roles.role_id JOIN accounts ON accounts.id = account_roles.user_id WHERE accounts.username = $1) as roles FROM accounts WHERE username = $1", [source]);
+                const result : pg.QueryResult = await database.query("SELECT accounts.id as id, accounts.username as username, accounts.email as email, accounts.hash as hash, array(SELECT roles.name as name from roles JOIN account_roles ON roles.id = account_roles.role_id JOIN accounts ON accounts.id = account_roles.user_id WHERE accounts.username = $1) as roles FROM accounts WHERE username = $1", [source]);
                 if(result.rows.length > 0) {
                     const id : number = result.rows[0].id;
                     const username : string = result.rows[0].username;
+                    const email : string = result.rows[0].email;
                     const hash : string = result.rows[0].hash;
                     const roles : string[] = result.rows[0].roles;
-                    return new Account(id, username, hash, roles);
+                    return new Account(id, username, email, hash, roles);
                 } else {
                     return null;
                 }
             } catch (error) {
                 throw error;
             }
+        }
+    }
+
+    async changePassword(password : string) : Promise<void> {
+        try {
+            const passwordHash = await hash(password);
+            const result = await database.query("UPDATE accounts SET hash = $2 WHERE id = $1 RETURNING id", [this.id, passwordHash]);
+            if(result && result.rows.length > 0) {
+                for(const callback of Account.passwordChangeHooks) {
+                    callback(this.username, password, this.email);
+                }
+            } else {
+                throw new Error("Passwortaktuallisierung ergab kein Resultat.");
+            }
+        } catch(error) {
+            console.error(error);
+            throw new Error("Passwort konnte nicht geändert werden.");
+        }
+    }
+
+    async changeEmail(email : string) : Promise<void> {
+        try {
+            const result = await database.query("UPDATE accounts SET email = $2 WHERE id = $1 RETURNING id", [this.id, email]);
+            if(result && result.rows.length > 0) {
+                for(const callback of Account.emailChangeHooks) {
+                    callback(this.username, undefined, this.email);
+                }
+            } else {
+                throw new Error("E-Mail-Aktuallisierung ergab kein Resultat.");
+            }
+        } catch(error) {
+            console.error(error);
+            throw new Error("Passwort konnte nicht geändert werden.");
         }
     }
     
@@ -138,6 +183,15 @@ export class Account {
         } catch (error) {
             return [];
         }
+    }
+
+    async setKeys(keys : string[]) : Promise<void> {
+        const transaction = new Transaction();
+        transaction.add({query: "DELETE FROM ssh_keys WHERE username = $1", values: [this.username]});
+        for(const key of keys) {
+            transaction.add({query: "INSERT INTO ssh_keys VALUES ($1, $2) ON CONFLICT(username) DO UPDATE SET key = $2", values: [this.username, key]});
+        }
+        await database.execute(transaction);
     }
 
     getDirectory() : string {

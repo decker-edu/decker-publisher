@@ -56,7 +56,7 @@ html
               a.button-like(href="/profile")
                 i.fas.fa-wrench
                 text Profileinstellungen
-              button.logout-button(type="button" onclick="asyncLogout()")
+              button.logout-button(type="button" onclick="logout()")
                 i.fas.fa-sign-out-alt
                 text Logout
     else
@@ -73,4 +73,4 @@ html
             div.dialog-buttons
               button(type="button" onclick="closeLoginDialog()") Abbrechen
               a.button-like(href="/password-recovery") Passwort vergessen
-              button(type="button" onclick="asyncLogin()") Login
+              button(type="button" onclick="login()") Login

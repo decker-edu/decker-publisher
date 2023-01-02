@@ -1,14 +1,14 @@
-import application from './application.ts';
+import application from "./application";
 import Debug from "debug";
-const debug = Debug('decker-publisher:server');
-import http = require('http');
+const debug = Debug("decker-publisher:server");
+import http = require("http");
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
-appplication.set('port', port);
+var port = normalizePort(process.env.PORT || "3000");
+application.set("port", port);
 
 /**
  * Create HTTP server.
@@ -20,15 +20,15 @@ var server = http.createServer(application);
  * Listen on provided port, on all network interfaces.
  */
 
+server.on("error", onError);
+server.on("listening", onListening);
 server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
 
 /**
  * Normalize a port into a number, string, or false.
  */
 
-function normalizePort(val : string) {
+function normalizePort(val: string) {
   var port = parseInt(val, 10);
 
   if (isNaN(port)) {
@@ -48,23 +48,21 @@ function normalizePort(val : string) {
  * Event listener for HTTP server "error" event.
  */
 
-function onError(error : any) {
-  if (error.syscall !== 'listen') {
+function onError(error: any) {
+  if (error.syscall !== "listen") {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
+    case "EACCES":
+      console.error(bind + " requires elevated privileges");
       process.exit(1);
       break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
+    case "EADDRINUSE":
+      console.error(bind + " is already in use");
       process.exit(1);
       break;
     default:
@@ -78,8 +76,6 @@ function onError(error : any) {
 
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+  var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+  debug("Listening on " + bind);
 }

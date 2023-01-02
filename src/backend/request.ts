@@ -35,21 +35,6 @@ export class AccountRequest {
         }
     }
 
-    static async reserve(username: string, email: string, token: string, note: string) : Promise<AccountRequest> {
-        try {
-            const result = await database.query("INSERT INTO account_requests (token, username, email, created, note) VALUES ($1, $2, $3, NOW(), $4) RETURNING id", [token, username, email, note]);
-            if(result.rows.length > 0) {
-                const id = result.rows[0];
-                return new AccountRequest(id, username, email, note, token);
-            } else {
-                throw new Error("Unable to reserve account in the database.")
-            }
-        } catch (error) {
-            console.error(error);
-            throw error;
-        }
-    }
-
     async confirm(password : string) {
         if(!this.valid) {
             throw new Error("Trying to confirm an invalid request.");
@@ -67,6 +52,21 @@ export class AccountRequest {
             await database.query("DELETE FROM account_requests WHERE id = $1", [this.id]);
             this.valid = false;
         } catch (error) {
+            throw error;
+        }
+    }
+
+    static async reserve(username: string, email: string, token: string, note: string) : Promise<AccountRequest> {
+        try {
+            const result = await database.query("INSERT INTO account_requests (token, username, email, created, note) VALUES ($1, $2, $3, NOW(), $4) RETURNING id", [token, username, email, note]);
+            if(result.rows.length > 0) {
+                const id = result.rows[0];
+                return new AccountRequest(id, username, email, note, token);
+            } else {
+                throw new Error("Unable to reserve account in the database.")
+            }
+        } catch (error) {
+            console.error(error);
             throw error;
         }
     }

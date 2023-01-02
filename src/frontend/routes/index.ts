@@ -1,185 +1,282 @@
 import express from "express";
 
-const router = express.Router();
-
 import path from "path";
 import fs from "fs";
 import database from "../../backend/database";
-import config from "config.json";
+import config from "../../../config.json";
 import child_process from "child_process";
 
-function requiresLogin(req : express.Request, res : express.Response, next : express.NextFunction) {
-  if(!req.account) {
+const router = express.Router();
+
+function requiresLogin(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  if (!req.account) {
     res.redirect("/");
   } else {
     next();
   }
 }
 
-function removeHash(req : express.Request, res : express.Response, next : express.NextFunction) {
-  if(req.account) {
-    delete req.account;
-  }
-  next();
-}
-
-async function retrieveKeys(req : express.Request, res : express.Response, next : express.NextFunction) {
+async function retrieveKeys(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
   req.account.keys = await req.account.getKeys();
   next();
 }
 
 /* GET home page. */
-router.get("/", removeHash, async function (req : express.Request, res : express.Response, next : express.NextFunction) {
-    const admin = req.account.roles ? req.account.roles.includes("admin") : false;
-    res.render("index", {
-        title: "Decker",
-        admin: admin,
-        user: req.account
+router.get(
+  "/",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    const admin =
+      req.account && req.account.roles
+        ? req.account.roles.includes("admin")
+        : false;
+    return res.render("index", {
+      title: "Decker",
+      admin: admin,
+      user: req.account,
     });
-});
+  }
+);
 
 /* GET overview page. */
-router.get("/home", requiresLogin, removeHash, async function (req : express.Request, res : express.Response, next : express.NextFunction) {
-  const admin = req.account.roles ? req.account.roles.includes("admin") : false;
-    res.render("home", {
+router.get(
+  "/home",
+  requiresLogin,
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    const admin = req.account.roles
+      ? req.account.roles.includes("admin")
+      : false;
+    return res.render("home", {
       title: "Decker: Persönlicher Bereich",
       admin: admin,
       user: req.account,
     });
-});
+  }
+);
 
-router.get("/profile", requiresLogin, removeHash, retrieveKeys, (req, res, next) => {
-  const admin = req.account.roles ? req.account.roles.includes("admin") : false;
-  res.render("profile", {
-    title: "Decker: Profileinstellungen",
-    admin: admin,
-    user: req.account,
-  });
-});
-
-router.get("/configuration", requiresLogin, removeHash, (req, res, next) => {
-  const admin = req.account.roles ? req.account.roles.includes("admin") : false;
-  res.render("configuration", {
-    title: "Decker: Konfiguration",
-    admin: admin,
-    user: req.account,
-  });
-});
-
-router.get("/projects", requiresLogin, removeHash, async (req, res, next) => {
-  const projects = req.account.getProjects();
-  const admin = req.account.roles ? req.account.roles.includes("admin") : false;
-  res.render("projects", {
-          title: "Projektübersicht",
-          admin: admin,
-          user: req.account,
-          projects: projects,
-  });
-});
-
-router.get("/convert", requiresLogin, removeHash, async function (req, res, next) {
-  const admin = req.account.roles ? req.account.roles.includes("admin") : false;
-  res.render("convert", {
-    title: "Decker: PDF-Konvertierung",
-    admin: admin,
-    user: req.account,
-  });
-});
-
-router.get("/video", requiresLogin, removeHash, async function (req, res, next) {
-  const admin = req.account.roles ? req.account.roles.includes("admin") : false;
-  let project : string = req.query.project.toString();
-  let filepath :string = req.query.filepath.toString();
-  if (!project || project === "" || /\.\.(\/|\\)/g.test(project)) {
-    return res.render("error", {
-      message: "Projekt nicht oder fehlerhaft spezifiziert.",
+router.get(
+  "/profile",
+  requiresLogin,
+  retrieveKeys,
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const admin = req.account.roles
+      ? req.account.roles.includes("admin")
+      : false;
+    return res.render("profile", {
+      title: "Decker: Profileinstellungen",
+      admin: admin,
+      user: req.account,
     });
   }
-  if (!filepath || filepath === "" || /\.\.(\/|\\)/g.test(filepath)) {
-    return res.render("error", {
-      message: "Video nicht oder fehlerhaft spezifiziert.",
+);
+
+router.get(
+  "/configuration",
+  requiresLogin,
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const admin = req.account.roles
+      ? req.account.roles.includes("admin")
+      : false;
+    return res.render("configuration", {
+      title: "Decker: Konfiguration",
+      admin: admin,
+      user: req.account,
     });
   }
-  if (!req.account) {
-    return res.render("error", {
-      message: "Nicht authentifiziert.",
-      error: { status: 403 },
+);
+
+router.get(
+  "/projects",
+  requiresLogin,
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const projects = req.account.getProjects();
+    const admin = req.account.roles
+      ? req.account.roles.includes("admin")
+      : false;
+    return res.render("projects", {
+      title: "Projektübersicht",
+      admin: admin,
+      user: req.account,
+      projects: projects,
     });
   }
-  const userdir = req.account.getDirectory();
-  const fullpath = path.join(userdir, "projects", project, filepath);
-  const filename = path.basename(fullpath, path.extname(fullpath));
-  const dirname = path.dirname(fullpath);
-  const subtitles = filename + ".vtt";
-  const vttfile = path.join(dirname, subtitles);
-  let vttcontent = undefined;
-  if (fs.existsSync(vttfile)) {
-    vttcontent = fs.readFileSync(vttfile, { encoding: "utf8", flag: "r" });
+);
+
+router.get(
+  "/convert",
+  requiresLogin,
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    const admin = req.account.roles
+      ? req.account.roles.includes("admin")
+      : false;
+    return res.render("convert", {
+      title: "Decker: PDF-Konvertierung",
+      admin: admin,
+      user: req.account,
+    });
   }
-  return res.render("video", {
-    title: "Videoinformationen",
-    user: req.account,
-    admin: admin,
-    video: {
-      url: path.join("decks", req.account.username, project, filepath),
-      project: project,
-      path: filepath,
-      vtt: vttcontent,
-    },
-  });
-});
+);
 
-router.get("/data-protection", async function (req, res, next) {
-  const admin = req.account.roles ? req.account.roles.includes("admin") : false;
-  return res.render("data-protection", {
-    title: "Datenschutzhinweise",
-    admin: admin,
-    user: req.account,
-  });
-});
-
-router.get("/sync", async function (req, res, next) {
-  return res.render("sync", {
-    title: "Sync",
-    user: req.account,
-  });
-});
-
-router.get("/register/:token", async function (req, res, next) {
-  try {
-    const tokenstring : string = req.params.token;
-    const queryResult = await database.query("SELECT username, email FROM account_requests WHERE token = $1", [tokenstring]);
-    if(queryResult.rows.length > 0) {
-      const account_request = queryResult.rows[0];
-      const username : string = account_request.username;
-      const email : string = account_request.email;
-      return res.render("register", {username: username, email: email, token: tokenstring});
-    } else {
-      res.render("error", {
-        message: "Registrierungstoken wurde nicht gefunden.",
-        error: {
-          status: 404
-        }
-      })
+router.get(
+  "/video",
+  requiresLogin,
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    const admin = req.account.roles
+      ? req.account.roles.includes("admin")
+      : false;
+    let project: string = req.query.project.toString();
+    let filepath: string = req.query.filepath.toString();
+    if (!project || project === "" || /\.\.(\/|\\)/g.test(project)) {
+      return res.render("error", {
+        message: "Projekt nicht oder fehlerhaft spezifiziert.",
+      });
     }
-  } catch (error) {
-    return res.render("error", {
-      message: "Interner Datenbankfehler",
-      error: {
-        status: 500,
-        stack: error.stack
-      }
-    })
+    if (!filepath || filepath === "" || /\.\.(\/|\\)/g.test(filepath)) {
+      return res.render("error", {
+        message: "Video nicht oder fehlerhaft spezifiziert.",
+      });
+    }
+    if (!req.account) {
+      return res.render("error", {
+        message: "Nicht authentifiziert.",
+        error: { status: 403 },
+      });
+    }
+    const userdir = req.account.getDirectory();
+    const fullpath = path.join(userdir, "projects", project, filepath);
+    const filename = path.basename(fullpath, path.extname(fullpath));
+    const dirname = path.dirname(fullpath);
+    const subtitles = filename + ".vtt";
+    const vttfile = path.join(dirname, subtitles);
+    let vttcontent = undefined;
+    if (fs.existsSync(vttfile)) {
+      vttcontent = fs.readFileSync(vttfile, { encoding: "utf8", flag: "r" });
+    }
+    return res.render("video", {
+      title: "Videoinformationen",
+      user: req.account,
+      admin: admin,
+      video: {
+        url: path.join("decks", req.account.username, project, filepath),
+        project: project,
+        path: filepath,
+        vtt: vttcontent,
+      },
+    });
   }
-});
+);
 
-function getAllRecordings(directory : string, deckname : string) : Promise<string[]> {
+router.get(
+  "/data-protection",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    const admin = req.account.roles
+      ? req.account.roles.includes("admin")
+      : false;
+    return res.render("data-protection", {
+      title: "Datenschutzhinweise",
+      admin: admin,
+      user: req.account,
+    });
+  }
+);
+
+router.get(
+  "/sync",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    return res.render("sync", {
+      title: "Sync",
+      user: req.account,
+    });
+  }
+);
+
+router.get(
+  "/register/:token",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    try {
+      const tokenstring: string = req.params.token;
+      const queryResult = await database.query(
+        "SELECT username, email FROM account_requests WHERE token = $1",
+        [tokenstring]
+      );
+      if (queryResult.rows.length > 0) {
+        const account_request = queryResult.rows[0];
+        const username: string = account_request.username;
+        const email: string = account_request.email;
+        return res.render("register", {
+          username: username,
+          email: email,
+          token: tokenstring,
+        });
+      } else {
+        res.render("error", {
+          message: "Registrierungstoken wurde nicht gefunden.",
+          error: {
+            status: 404,
+          },
+        });
+      }
+    } catch (error) {
+      return res.render("error", {
+        message: "Interner Datenbankfehler",
+        error: {
+          status: 500,
+          stack: error.stack,
+        },
+      });
+    }
+  }
+);
+
+function getAllRecordings(
+  directory: string,
+  deckname: string
+): Promise<string[]> {
   return new Promise((resolve, reject) => {
     fs.readdir(directory, (err, files) => {
       if (err) {
         return reject(err);
       }
-      let result : string[] = [];
+      let result: string[] = [];
       for (const file of files) {
         if (file.endsWith(".webm") && file.includes(deckname)) {
           result.push(file);
@@ -192,7 +289,11 @@ function getAllRecordings(directory : string, deckname : string) : Promise<strin
 
 router.get(
   "/recordings/decks/:username/:project/:filename-recording.webm",
-  async function (req, res, next) {
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
     const username = req.params.username;
     const projectname = req.params.project;
     const filepart = req.params.filename;
@@ -214,7 +315,7 @@ router.get(
   }
 );
 
-async function runFFMPEG(directory : string, deckname : string) {
+async function runFFMPEG(directory: string, deckname: string) {
   getAllRecordings(directory, deckname)
     .then((recordings) => {
       let contents = "";
@@ -255,7 +356,11 @@ async function runFFMPEG(directory : string, deckname : string) {
 
 router.put(
   "/replace/decks/:username/:project/:filename-recording.webm",
-  async function (req, res, next) {
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
     try {
       const username = req.params.username;
       const projectname = req.params.project;
@@ -270,30 +375,44 @@ router.put(
       );
       const dirname = path.dirname(fullpath);
       const account = req.account;
-      if(account && account.username === username) {
-        const recordings = await getAllRecordings(path.dirname(fullpath), deckname);
-        for(const recording of recordings) {
+      if (account && account.username === username) {
+        const recordings = await getAllRecordings(
+          path.dirname(fullpath),
+          deckname
+        );
+        for (const recording of recordings) {
           const target = path.join(dirname, recording);
           fs.rm(target, (error) => {
-            if(error) {
+            if (error) {
               console.error(error);
             }
             console.log("[PUT VIDEO] removed", target);
-          })
+          });
         }
-        req.pipe(fs.createWriteStream(path.join(dirname, deckname + "-recording.webm"))).on("close", () => {
-          runFFMPEG(dirname, deckname);
-        });
+        req
+          .pipe(
+            fs.createWriteStream(
+              path.join(dirname, deckname + "-recording.webm")
+            )
+          )
+          .on("close", () => {
+            runFFMPEG(dirname, deckname);
+          });
         return res.status(200).end();
       }
     } catch (error) {
-      return res.status(500).json({message: "Interner Fehler."}).end();
+      return res.status(500).json({ message: "Interner Fehler." }).end();
     }
-  });
+  }
+);
 
 router.put(
   "/append/decks/:username/:project/:filename-recording.webm",
-  async function (req, res, next) {
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
     try {
       const username = req.params.username;
       const projectname = req.params.project;
@@ -308,8 +427,11 @@ router.put(
       );
       const dirname = path.dirname(fullpath);
       const account = req.account;
-      if(account && account.username === username) {
-        const recordings = await getAllRecordings(path.dirname(fullpath), deckname);
+      if (account && account.username === username) {
+        const recordings = await getAllRecordings(
+          path.dirname(fullpath),
+          deckname
+        );
         for (const recording of recordings) {
           if (recording === deckname + "-recording.webm") {
             fs.renameSync(
@@ -325,38 +447,42 @@ router.put(
           }
         }
         req
-        .pipe(
-          fs.createWriteStream(
-            path.join(
-              dirname,
-              deckname +
-                "-recording" +
-                (recordings.length > 0 ? "-" + recordings.length : "") +
-                ".webm"
+          .pipe(
+            fs.createWriteStream(
+              path.join(
+                dirname,
+                deckname +
+                  "-recording" +
+                  (recordings.length > 0 ? "-" + recordings.length : "") +
+                  ".webm"
+              )
             )
           )
-        )
-        .on("close", () => {
-          console.log(
-            "[PUT VIDEO] wrote",
-            path.join(
-              dirname,
-              deckname + "-recording-" + recordings.length + ".webm"
-            )
-          );
-          runFFMPEG(dirname, deckname);
-        });
+          .on("close", () => {
+            console.log(
+              "[PUT VIDEO] wrote",
+              path.join(
+                dirname,
+                deckname + "-recording-" + recordings.length + ".webm"
+              )
+            );
+            runFFMPEG(dirname, deckname);
+          });
         return res.status(200).end();
       } else {
         return res.send(403).end();
       }
     } catch (error) {
-      return res.status(500).json({message: "Interner Fehler"}).end();
+      return res.status(500).json({ message: "Interner Fehler" }).end();
     }
-  });
+  }
+);
 
-router.get("favicon.ico", (req, res, next) => {
-  return res.sendFile("public/images/favicon.png");
-});
+router.get(
+  "favicon.ico",
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return res.sendFile("static/images/favicon.png");
+  }
+);
 
 export default router;

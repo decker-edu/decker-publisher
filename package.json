@@ -1,12 +1,14 @@
 {
   "name": "decker-publisher",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "main": "dist/server",
   "private": true,
   "scripts": {
-    "start": "node --trace-warnings ./bin/www",
+    "start": "npm run build && node --trace-warnings ./dist/src/server.js",
     "test": "jest",
     "setup": "node --trace-warnings ./setup.js",
-    "build": "tsc"
+    "copy-files": "cp -r src/frontend/static/ dist/src/frontend/ && cp -r src/frontend/views/ dist/src/frontend/",
+    "build": "tsc && npm run copy-files"
   },
   "dependencies": {
     "argon2": "^0.28.7",

@@ -1,9 +1,9 @@
 import pg from "pg";
-import config from "config.json";
+import config from "../../config.json";
 
 const DATABASE_ERROR_MESSAGE : string = "Datenbankfehler";
 
-class DatabaseConfiguration {
+export class DatabaseConfiguration {
     username: string;
     password: string;
     hostname: string;
@@ -11,12 +11,12 @@ class DatabaseConfiguration {
     port: number;
 }
 
-interface Query {
+export interface Query {
   query: string;
-  values?: [any];
+  values?: any[];
 }
 
-class Transaction {
+export class Transaction {
   queries : Query[];
   constructor() {
     this.queries = [];
@@ -45,7 +45,7 @@ class Transaction {
   }
 }
 
-class Database {
+export class Database {
     pool: pg.Pool;
     constructor(config?: DatabaseConfiguration) {
       if(config) {

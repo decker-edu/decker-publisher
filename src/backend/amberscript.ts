@@ -3,7 +3,7 @@ import { Account } from "./account";
 import fs from "fs";
 import path from "path";
 import database from "./database";
-import config from "config.json";
+import config from "../../config.json";
 import instance from "./database";
 
 async function post(account : Account, project : string, filename : string, apiKey : string) {
@@ -128,12 +128,11 @@ async function importVTT(jobId : string, apiKey : string) {
   }
 }
 
+async function publishError(jobId : number, status : string) {
+  console.log("[TODO] Implement error publishing Amber");
+}
 
 
 export default {
-
+  post, archive, importVTT, finallizeJob, publishError
 };
-
-module.exports.post = post;
-module.exports.archive = archive;
-module.exports.import = importVTT;

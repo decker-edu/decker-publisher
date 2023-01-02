@@ -9,13 +9,10 @@
         "sourceMap": true,
         "outDir": "dist",
         "baseUrl": "./",
-        "typeRoots": ["src/backend/types"],
+        "typeRoots": ["src/backend/types", "src/frontend/types"],
         "paths": {
-            "config.json": [
-                "config.json"
-            ],
             "util.ts": [
-                "util.ts"
+                "src/util.ts"
             ],
             "*": [
                 "node_modules/*"
@@ -23,6 +20,7 @@
         }
     },
     "include": [
+        "config.json",
         "src/**/*"
     ]
 }

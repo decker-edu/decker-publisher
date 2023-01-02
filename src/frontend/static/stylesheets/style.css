@@ -239,6 +239,7 @@ dialog fieldset legend {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  column-gap: 0.5rem;
   width: 100%;
 }
 
