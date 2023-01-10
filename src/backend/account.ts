@@ -55,6 +55,9 @@ export class Account implements Account {
             case "passwordChange":
                 Account.passwordChangeHooks.push(callback);
                 break;
+            case "emailChange":
+                Account.emailChangeHooks.push(callback);
+                break;
             default: throw new Error("No such event");
         }
     }
@@ -138,8 +141,8 @@ export class Account implements Account {
         try {
             const result = await database.query("UPDATE accounts SET email = $2 WHERE id = $1 RETURNING id", [this.id, email]);
             if(result && result.rows.length > 0) {
-                for(const callback of Account.emailChangeHooks) {
-                    callback(this.username, undefined, this.email);
+                for(const hook of Account.emailChangeHooks) {
+                    hook(this.username, undefined, this.email);
                 }
             } else {
                 throw new Error("E-Mail-Aktuallisierung ergab kein Resultat.");
