@@ -1,6 +1,7 @@
 node_modules
 uploads
 package-lock.json
-public/downloads
 config.json
 dist
+public/downloads
+tests/test.config.json

@@ -1,27 +1,60 @@
-import express from "express";
-const router = express.Router();
-var createError = require("http-errors");
+import express from "express"
+const router = express.Router()
+var createError = require("http-errors")
 
-import fileUpload from "express-fileupload";
-import validator from "email-validator";
-import escapeHTML from "escape-html";
+import fileUpload from "express-fileupload"
+import validator from "email-validator"
+import escapeHTML from "escape-html"
 
-import argon2 from "argon2";
+import argon2 from "argon2"
+import database from "../database"
+import amberscript from "../amberscript"
 
-import database from "../database";
-import amberscript from "../amberscript";
+import fs from "fs"
+import path from "path"
+import { createHash } from "crypto"
 
-import fs from "fs";
-import path from "path";
-//const crypto = require("crypto");
+import yauzl from "yauzl"
 
-import yauzl from "yauzl";
-
-import { default as getVideoDurationInSeconds } from "get-video-duration";
-import { Account } from "../account";
+import { default as getVideoDurationInSeconds } from "get-video-duration"
+import { Account } from "../account"
 import { AccountRequest } from "../request"
-import { Converter } from "../converter";
-import { recoveryMail } from "../mailer";
+import { Converter } from "../converter"
+import { recoveryMail } from "../mailer"
+
+import { getAllFiles } from "../../util"
+
+import config from "../../../config.json"
+
+import feedback from "./feedback"
+
+declare interface FileHashEntry {
+  filename : string;
+  checksum : string;
+}
+
+export async function getChecksumFile(directory : string) : Promise<any> {
+  const checksumfile = directory + ".checksum";
+  if(!fs.existsSync(checksumfile)) {
+    await createChecksumFile(directory, checksumfile);
+  }
+  const string = fs.readFileSync(checksumfile, {encoding: "utf-8"});
+  return JSON.parse(string);
+}
+
+async function createChecksumFile(directory : string, checksumFile : string) : Promise<void> {
+  const files : string[] = getAllFiles(directory, undefined);
+  const hashes : FileHashEntry[] = [];
+  for(const file of files) {
+    const content = await fs.promises.readFile(file);
+    const hash = createHash("sha256").update(content).digest("hex");
+    const filepath = path.relative(directory, file);
+    const item : FileHashEntry = {filename: filepath, checksum: hash};
+    hashes.push(item);
+  }
+  let filecontents = JSON.stringify(hashes);
+  await fs.promises.writeFile(checksumFile, filecontents);
+}
 
 function makeRandomString(length : number, characters? : string) : string {
   let result = "";
@@ -60,6 +93,8 @@ function verifyEmail(mail : string, allowedOrigins : string[]) {
   }
   return { format: format, origin: origin };
 }
+
+router.use("/feedback", feedback);
 
 router.post("/login", function (req : express.Request, res : express.Response, next : express.NextFunction) {
   if (req.account) {
@@ -403,6 +438,26 @@ router.post("/request-recovery", async (req : express.Request, res : express.Res
   }
 });
 
+router.get("/user/:username/project/:projectname", async (req : express.Request, res : express.Response, next : express.NextFunction) => {
+  const account : Account = req.account;
+  const username = req.params.username;
+  const projectname = req.params.projectname;
+  if(account.username !== username) {
+    return res.status(401).end();
+  }
+  const userdir = account.getDirectory();
+  const projectDirectory = path.join(userdir, "projects", projectname);
+  if(!fs.existsSync(projectDirectory)) {
+    return res.status(404).end();
+  }
+  const projectChecksumFile = projectDirectory + ".checksum";
+  if(!fs.existsSync(projectChecksumFile)) {
+    await createChecksumFile(projectDirectory, projectChecksumFile);
+  }
+  const content = await fs.promises.readFile(projectChecksumFile);
+  return res.status(200).json(content).end();
+});
+
 /* POST upload */
 router.post("/project", fileUpload(), async (req : express.Request, res : express.Response, next : express.NextFunction) => {
   const account : Account = req.account;
@@ -482,7 +537,7 @@ router.post("/project", fileUpload(), async (req : express.Request, res : expres
           if (err == null) return cb();
           var parent = path.dirname(dir);
           mkdirp(parent, function () {
-            console.log("[YAUZL] Creating Directory:", dir);
+            console.log("[YAUZL] Creating Directory:", path.join(prefix, dir));
             fs.mkdir(path.join(prefix, dir), cb);
           });
         });

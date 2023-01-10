@@ -11,9 +11,6 @@
         "baseUrl": "./",
         "typeRoots": ["src/backend/types", "src/frontend/types"],
         "paths": {
-            "util.ts": [
-                "src/util.ts"
-            ],
             "*": [
                 "node_modules/*"
             ]

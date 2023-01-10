@@ -5,31 +5,12 @@ import { Transaction, Query } from "./database";
 import config from "../../config.json";
 import path from "path";
 import fs from "fs";
+import Role from "./role";
+import { getAllFiles } from "../util";
 
 const NO_RESULT_MESSAGE : string = "Kein Resultat";
 
 type AccountCallback = (username: string, password: string, email: string) => Promise<void>;
-
-function getFiles(directory: string, filter: (arg: string) => boolean) : string[] {
-    let result : string[] = [];
-    if (!fs.existsSync(directory)) {
-      return [];
-    }
-    const files = fs.readdirSync(directory);
-    for (let file of files) {
-      const filename = path.join(directory, file);
-      const stat = fs.lstatSync(filename);
-      if (stat.isDirectory()) {
-        const recusion = getFiles(filename, filter);
-        result = result.concat(recusion);
-      } else {
-        if (!filter || filter(file)) {
-          result.push(filename);
-        }
-      }
-    }
-    return result;
-}
 
 function getDirectories(parent : string) : string[] {
     let result : string[] = [];
@@ -78,12 +59,12 @@ export class Account implements Account {
         }
     }
 
-    static async register(username : string, password : string, email : string) : Promise<Account> {
+    static async register(username : string, password : string, email : string) : Promise<Account | undefined> {
         try {
             const passwordHash = await hash(password);
             const result = await database.query("INSERT INTO accounts(username, hash, email, created) VALUES ($1, $2, $3, NOW()) ON CONFLICT DO NOTHING RETURNING *", [username, passwordHash, email]);
-            console.log("[accounts]", `${result.command} executed. ${result.rowCount} rows affected.`);
             if(result.rows.length > 0) {
+                console.log("[accounts]", `${result.command} executed. ${result.rowCount}/${result.rows.length} rows affected.`);
                 const data = result.rows[0];
                 const account = new Account(data.id, data.username, data.email, data.hash, []);
                 for(const hook of Account.registerHooks) {
@@ -91,7 +72,8 @@ export class Account implements Account {
                 }
                 return account;
             } else {
-                throw new Error("Fehler beim Registrieren des Nutzers " + username);
+                console.log("[accounts]", `conflict registering: ${username} with email: ${email}`);
+                return undefined;
             }
         } catch (error) {
             console.error(error);
@@ -100,7 +82,7 @@ export class Account implements Account {
     }
 
     static async fromDatabase(source : number | string) : Promise<Account | null> {
-        if(typeof source === "number") {
+        if(typeof source === "number") { // Fetch by ID
             try {
                 const result : pg.QueryResult = await database.query("SELECT accounts.id as id, accounts.username as username, accounts.email as email, accounts.hash as hash, array(SELECT roles.name as name from roles JOIN account_roles ON roles.id = account_roles.role_id JOIN accounts ON accounts.id = account_roles.user_id WHERE accounts.id = $1) as roles FROM accounts WHERE id = $1", [source]);
                 if(result.rows.length > 0) {
@@ -116,7 +98,7 @@ export class Account implements Account {
             } catch (error) {
                 throw error;
             }
-        } else {
+        } else { // Fetch by Username
             try {
                 const result : pg.QueryResult = await database.query("SELECT accounts.id as id, accounts.username as username, accounts.email as email, accounts.hash as hash, array(SELECT roles.name as name from roles JOIN account_roles ON roles.id = account_roles.role_id JOIN accounts ON accounts.id = account_roles.user_id WHERE accounts.username = $1) as roles FROM accounts WHERE username = $1", [source]);
                 if(result.rows.length > 0) {
@@ -189,9 +171,26 @@ export class Account implements Account {
         const transaction = new Transaction();
         transaction.add({query: "DELETE FROM ssh_keys WHERE username = $1", values: [this.username]});
         for(const key of keys) {
-            transaction.add({query: "INSERT INTO ssh_keys VALUES ($1, $2) ON CONFLICT(username) DO UPDATE SET key = $2", values: [this.username, key]});
+            transaction.add(
+                {
+                    query: "INSERT INTO ssh_keys VALUES ($1, $2) ON CONFLICT(username) DO UPDATE SET key = $2",
+                    values: [this.username, key]
+                }
+            );
         }
         await database.execute(transaction);
+    }
+
+    async assignRole(role : Role) : Promise<void> {
+        const query = await database.query(
+            "INSERT INTO account_roles (user_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+            [this.id, role.id]
+        );
+        if(query && query.rowCount > 0) {
+            console.log("[account_roles]", `${query.command} executed. Assigned ${this.username} the role ${role.name}.`);
+        } else {
+            console.log("[account_roles]", `${query.command} affected nothing. Role ${role.name} was already assigned to ${this.username}.`);
+        }
     }
 
     getDirectory() : string {
@@ -212,7 +211,7 @@ export class Account implements Account {
         const directories : string[] = getDirectories(projectDir);
         const projects : Project[] = [];
         for(const directory of directories) {
-            const mp4s = getFiles(directory, (file) => {
+            const mp4s = getAllFiles(directory, (file) => {
                 const ext = path.extname(file);
                 return ext === ".mp4";
             });

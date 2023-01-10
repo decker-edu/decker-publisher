@@ -10,10 +10,10 @@ const router = express.Router();
 router.get("/:username/:project/*", (req : express.Request, res : express.Response, next : express.NextFunction) => {
   const username = req.params.username;
   const projectname = req.params.project;
-  const path = req.params[0] ? req.params[0] : "index.html";
-  return res.sendFile(path, {
-    root:
-      config.user_directory_name + "/" + username + "/projects/" + projectname,
+  const file = req.params[0] ? req.params[0] : "index.html";
+  const root = path.join(global.rootDirectory, config.user_directory_name, username, "projects", projectname);
+  return res.sendFile(file, {
+    root: root
   });
 });
 

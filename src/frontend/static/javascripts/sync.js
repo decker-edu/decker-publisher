@@ -23,27 +23,81 @@ if (
   text.innerText = "Bitte benutzen Sie einen auf Chrome basierenden Browser.";
 }
 
+const carets = document.getElementsByClassName("caret");
+for (const caret of carets) {
+  caret.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target === caret) {
+      caret.classList.toggle("active");
+    }
+  });
+}
+
+function toggleCaret(event) {
+  if (event.target === event.currentTarget) {
+    event.target.classList.toggle("active");
+  }
+}
+
 function requestFiles() {
   if (!featureAvailable) return;
   chooseDirectory().then(() => {});
 }
 
+async function appendData(dataset, list) {
+  for (const item of dataset) {
+    if (item.kind === "file") {
+      const listitem = document.createElement("li");
+      listitem.classList.add("file-item");
+      listitem.innerText = item.name;
+      list.appendChild(listitem);
+    } else if (item.kind === "directory") {
+      const listitem = document.createElement("li");
+      const innerlist = document.createElement("ul");
+      listitem.addEventListener("click", toggleCaret);
+      listitem.classList.add("directory-item");
+      listitem.classList.add("caret");
+      listitem.innerText = item.name;
+      listitem.appendChild(innerlist);
+      list.appendChild(listitem);
+      appendData(item.data, innerlist);
+    }
+  }
+}
+
 async function chooseDirectory() {
   window.showDirectoryPicker({ mode: "readwrite" }).then(async (handle) => {
-    for await (const [key, value] of handle.entries()) {
-      if (value.kind === "file") {
-        value.getFile().then(async (file) => {
-          const buffer = await file.arrayBuffer();
-          const hash = await crypto.subtle.digest("SHA-256", buffer);
-          const array = Array.from(new Uint8Array(hash));
-          const hex = array
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
-          console.log({ key, hex });
-        });
-      }
-    }
+    const checksums = await accumulateFileInformation(handle.entries());
+    const clientList = document.getElementById("client-table");
+    appendData(checksums, clientList);
   });
 }
 
-async function getHashes(dirHandle) {}
+async function accumulateFileInformation(entries) {
+  const data = [];
+  for await (const [key, value] of entries) {
+    if (value.kind === "file") {
+      const file = await value.getFile();
+      const lastModified = file.lastModified;
+      const buffer = await file.arrayBuffer();
+      const hash = await crypto.subtle.digest("SHA-256", buffer);
+      const array = Array.from(new Uint8Array(hash));
+      const hex = array.map((b) => b.toString(16).padStart(2, "0")).join("");
+      data.push({
+        kind: "file",
+        name: key,
+        modified: lastModified,
+        data: hex,
+      });
+    } else if (value.kind === "directory") {
+      const recursion = await accumulateFileInformation(value.entries());
+      data.push({
+        kind: "directory",
+        name: key,
+        modified: null,
+        data: recursion,
+      });
+    }
+  }
+  return data;
+}

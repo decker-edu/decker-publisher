@@ -49,7 +49,7 @@ router.get("/requests", async (req : express.Request, res : express.Response, ne
       title: "Anfrageadministration",
       user: req.account,
       admin: true,
-      requests: requests,
+      requests: requests.rows,
     });
   } else {
     return res.render("error", {

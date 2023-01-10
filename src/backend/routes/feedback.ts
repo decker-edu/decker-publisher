@@ -2,10 +2,13 @@ import express from "express";
 import { Request, Response, NextFunction} from "express";
 import createError from "http-errors";
 import database from "../database";
-import { randomString } from "util.ts";
+import { randomString } from "../../util";
 
 import showdown from "showdown";
 import { Account } from "../account";
+
+import cors from "cors";
+import { QueryResult } from "pg";
 
 const converter = new showdown.Converter();
 
@@ -40,13 +43,50 @@ interface Session {
 }
 
 const router = express.Router();
+router.use(express.text());
 
-export async function setup() {
-    await database.query("CREATE TABLE IF NOT EXISTS 'feedback_logins' ('id' SERIAL PRIMARY KEY, 'token' VARCHAR NOT NULL UNIQUE, 'username' VARCHAR NOT NULL UNIQUE)");
-    await database.query("CREATE TABLE IF NOT EXISTS 'feedback_persons' ('id' SERIAL PRIMARY KEY, 'token' VARCHAR NOT NULL UNIQUE)");
-    await database.query("CREATE TABLE IF NOT EXISTS 'feedback_comments' ('id' SERIAL PRIMARY KEY, 'markdown' VARCHAR NOT NULL, 'html' VARCHAR NOT NULL, 'author' INTEGER NULL REFERENCES 'feedback_persons', 'referrer' VARCHAR NULL, 'deck' VARCHAR NOT NULL, 'slide' VARCHAR NOT NULL, 'created' TIMESTAMP NOT NULL DEFAULT CURRENT_TIME)");
-    await database.query("CREATE TABLE IF NOT EXISTS 'feedback_answers' ('id' SERIAL PRIMARY KEY, 'comment' INTEGER NOT NULL REFERENCES 'feedback_comments', 'markdown' VARCHAR NULL, 'link' VARCHAR NULL, 'crated' TIMESTAMP NOT NULL DEFAULT CURRENT_TIME)");
-    await database.query("CREATE TABLE IF NOT EXISTS 'feedback_votes' ('id' SERIA PRIMARY KEY, 'comment' INTEGER NOT NULL REFERENCES 'feedback_comments', 'voter' INTEGER NOT NULL REFERENCES 'feedback_persons'");
+export async function setup_feedback() {
+    const feedback_logins = await database.query(
+        `CREATE TABLE IF NOT EXISTS feedback_logins (
+            id SERIAL PRIMARY KEY,
+            token VARCHAR NOT NULL UNIQUE,
+            username VARCHAR NOT NULL UNIQUE
+        )`
+    );
+    const feedback_persons = await database.query(
+        `CREATE TABLE IF NOT EXISTS feedback_persons (
+            id SERIAL PRIMARY KEY,
+            token VARCHAR NOT NULL UNIQUE
+        )`
+    );
+    const feedback_comments = await database.query(
+        `CREATE TABLE IF NOT EXISTS feedback_comments (
+            id SERIAL PRIMARY KEY,
+            markdown VARCHAR NOT NULL,
+            html VARCHAR NOT NULL,
+            author INTEGER NULL REFERENCES feedback_persons,
+            referrer VARCHAR NULL,
+            deck VARCHAR NOT NULL,
+            slide VARCHAR NOT NULL,
+            created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`
+    );
+    const feedback_answers = await database.query(
+        `CREATE TABLE IF NOT EXISTS feedback_answers (
+            id SERIAL PRIMARY KEY,
+            comment INTEGER NOT NULL REFERENCES feedback_comments,
+            markdown VARCHAR NULL,
+            link VARCHAR NULL,
+            created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`
+    );
+    const feedback_votes = await database.query(
+        `CREATE TABLE IF NOT EXISTS feedback_votes (
+            id SERIAL PRIMARY KEY,
+            comment INTEGER NOT NULL REFERENCES feedback_comments,
+            voter INTEGER NOT NULL REFERENCES feedback_persons
+        )`
+    );
 }
 
 async function isAdmin(token : string, deck : string) : Promise<boolean> {
@@ -58,37 +98,101 @@ async function isAdmin(token : string, deck : string) : Promise<boolean> {
     return false;
 }
 
-async function getPerson(token : string) : Promise<Person | undefined> {
-    const persons = await database.query("SELECT * FROM feedback_persons WHERE token = $1", [token]);
-    if(persons && persons.rows.length > 0) {
-        const id = persons.rows[0].id;
-        const token = persons.rows[0].token;
-        return {id, token};
+async function getPerson(input : string | number) : Promise<Person | undefined> {
+    if(typeof input === "string") {
+        const persons = await database.query("SELECT * FROM feedback_persons WHERE token = $1", [input]);
+        if(persons && persons.rows.length > 0) {
+            const id = persons.rows[0].id;
+            const token = persons.rows[0].token;
+            return {id, token};
+        }
+        return undefined;
+    } else {
+        const persons = await database.query("SELECT * FROM feedback_persons WHERE id = $1", [input]);
+        if(persons && persons.rows.length > 0) {
+            const id = persons.rows[0].id;
+            const token = persons.rows[0].token;
+            return {id, token};
+        }
     }
-    return undefined;
+}
+
+async function createPerson(token : string) : Promise<Person> {
+    const existing = await getPerson(token);
+    if(existing) {
+        return existing;
+    } else {
+        const created = await database.query("INSERT INTO feedback_persons (token) VALUES ($1) RETURNING id", [token]);
+        if(created && created.rows.length > 0) {
+            const person = created.rows[0];
+            return { id: person.id, token: token };
+        } else {
+            return { id: 0, token: token };
+        }
+    }
 }
 
 router.get("/token", async function (request : Request, response : Response, next : NextFunction) {
-    const random = randomString(9, "0123456789abcdefghijklmnopqrstuvwxyz");
-    const result = await database.query("INSERT INTO feedback_persons (token) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id", [random]);
-    if(result && result.rows.length > 0) {
-        const id = result.rows[0].id;
-    }
+    let random : string;
+    do {
+        random = randomString(9, "0123456789abcdefghijklmnopqrstuvwxyz");
+    } while(await getPerson(random));
     return response.status(200).json({random: random}).end();
 });
 
 router.post("/comments", async function (request : Request, response : Response, next : NextFunction) {
-    const token = request.body.token;
-    const markdown = request.body.markdown;
-    const deck = request.body.deck;
-    const slide = request.body.slide;
-    const referrer = request.body.referrer;
-    if(markdown) {
+    let token, markdown, deck, slide, referrer, id;
+    if(typeof request.body === "string") {
+        const json = JSON.parse(request.body);
+        token = json.token;
+        markdown = json.markdown;
+        deck = json.deck;
+        slide = json.slide;
+        referrer = json.referrer;
+        id = json.id;
+    } else {
+        token = request.body.token;
+        markdown = request.body.markdown;
+        deck = request.body.deck;
+        slide = request.body.slide;
+        referrer = request.body.referrer;
+        id = request.body.id;
+    }
+    if(markdown && token) {
+        const author = await createPerson(token);
         const html = converter.makeHtml(markdown);
-        const result = await database.query("INSERT INTO feedback_comments (markdown, html, author, referrer, deck, slide) VALUES($1, $2, $3, $4, $5) RETURNING id",
-        [markdown, html, token, referrer, deck, slide]);
+        let result;
+        if(id) {
+            const comments = await database.query("SELECT * FROM feedback_comments WHERE id = $1", [id]);
+            if(comments && comments.rows.length > 0) {
+                const comment = comments.rows[0];
+                const author : number = parseInt(comment.author);
+                const person = await getPerson(author);
+                if(token === person.token || await isAdmin(token, deck)) {
+                    result = await database.query(
+                        `UPDATE feedback_comments SET
+                            markdown = $1,
+                            html = $2
+                        WHERE id = $3 RETURNING id`,
+                        [markdown, html, id]
+                    );
+                } else {
+                    return response.status(403).end();
+                }
+            } else {
+                return response.status(404).end();
+            }
+        } else {
+            result = await database.query(
+                `INSERT INTO feedback_comments (markdown, html, author, referrer, deck, slide)
+                 VALUES($1, $2, $3, $4, $5, $6)
+                 RETURNING id`,
+            [markdown, html, author.id, referrer, deck, slide]);
+        }
         if(result && result.rows.length > 0) {
-            return response.status(200).end();
+            return response.status(200).json(result.rows[0].id).end();
+        } else {
+            return response.status(500).end();
         }
     } else {
         return response.status(400).end();
@@ -97,16 +201,31 @@ router.post("/comments", async function (request : Request, response : Response,
 });
 
 router.put("/comments", async function (request : Request, response : Response, next : NextFunction) {
-    const token = request.body.token;
-    const deck = request.body.deck;
-    const slide = request.body.slide;
+    let token, deck, slide;
+    if(typeof request.body === "string") {
+        const json = JSON.parse(request.body);
+        token = json.token;
+        deck = json.deck;
+        slide = json.slide;
+    } else {
+        token = request.body.token;
+        deck = request.body.deck;
+        slide = request.body.slide;
+    }
     try {
-        const comments = await database.query("SELECT * FROM feedback_comments WHERE deck = $1 and slide = $2", [deck, slide]);
+        const voter = await getPerson(token);
+        let comments : QueryResult<any>;
+        if(!slide) {
+            comments = await database.query("SELECT * FROM feedback_comments WHERE deck = $1", [deck]);
+        } else {
+            comments = await database.query("SELECT * FROM feedback_comments WHERE deck = $1 and slide = $2", [deck, slide]);
+        }
         if(comments) {
             const result : Comment[] = [];
             for(const comment of comments.rows) {
                 const id : number = comment.id;
-                const author : string = comment.author;
+                const author : number = comment.author;
+                const person = await getPerson(author);
                 const markdown : string = comment.markdown;
                 const html : string = comment.html;
                 const slide : string = comment.slide;
@@ -124,28 +243,46 @@ router.put("/comments", async function (request : Request, response : Response, 
                     }
                 }
                 const votesResult = await database.query("SELECT COUNT(id) FROM feedback_votes WHERE comment = $1", [comment.id]);
-                const votes = votesResult.rows[0];
-                const voteExists = await database.query("SELECT COUNT(id) FROM feedback_votes WHERE comment = $1 AND voter = $2", [comment.id, token]);
-                const didvote : boolean = voteExists.rows[0] !== 0;
+                const votes : number = parseInt(votesResult.rows[0].count);
+                let didvote : boolean = false;
+                if(voter) {
+                    const voteExists = await database.query("SELECT COUNT(id) FROM feedback_votes WHERE comment = $1 AND voter = $2", [comment.id, voter.id]);
+                    const count : number = parseInt(voteExists.rows[0].count);
+                    didvote = count !== 0;
+                }
                 result.push({
-                    id, author, markdown, html, slide, created, votes, didvote, answers
+                    id: id, author: person.token, markdown: markdown, html: html, slide: slide, created: created, votes: votes, didvote: didvote, answers: answers
                 })
             }
+            return response.status(200).json(result).end();
+        } else {
+            return response.status(200).json([]).end();
         }
     } catch (error) {
+        console.error(error);
         response.status(500).end();
     }
 });
 
 router.delete("/comments", async function (request : Request, response : Response, next : NextFunction) {
-    const id = request.body.id;
-    const token = request.body.token;
+    let id, token;
+    if(typeof request.body === "string") {
+        const json = JSON.parse(request.body);
+        id = json.key;
+        token = json.token;
+    } else {
+        id = request.body.key;
+        token = request.body.token;
+    }
     const result = await database.query("SELECT * FROM feedback_comments WHERE id = $1", [id]);
     if(result && result.rows.length > 0) {
         const comment = result.rows[0];
-        const author = comment.token;
-        if(token === author || isAdmin(token, comment.deck)) {
-            await database.query("DELETE FROM feedback_comments WHERE id = $1");
+        const author : number = parseInt(comment.author);
+        const person = await getPerson(author);
+        if(token === person.token || await isAdmin(token, comment.deck)) {
+            await database.query("DELETE FROM feedback_votes WHERE comment = $1", [id]);
+            await database.query("DELETE FROM feedback_answers WHERE comment = $1", [id]);
+            await database.query("DELETE FROM feedback_comments WHERE id = $1", [id]);
             return response.status(200).end();
         }
     }
@@ -153,9 +290,17 @@ router.delete("/comments", async function (request : Request, response : Respons
 });
 
 router.put("/login", async function (request : Request, response : Response, next : NextFunction) {
-    const login = request.body.login;
-    const password = request.body.password;
-    const deck = request.body.deck;
+    let login, password, deck;
+    if(typeof request.body === "string") {
+        const json = JSON.parse(request.body);
+        login = json.login;
+        password = json.password;
+        deck = json.deck;
+    } else {
+        login = request.body.login;
+        password = request.body.password;
+        deck = request.body.deck;
+    }
     const account = await Account.fromDatabase(login);
     const authenticated = await account.checkPassword(password);
     if(authenticated) {
@@ -163,7 +308,7 @@ router.put("/login", async function (request : Request, response : Response, nex
         if(sessions && sessions.rows.length > 0) {
             const session = sessions.rows[0];
             const token = session.token;
-            const admin = isAdmin(token, deck);
+            const admin = await isAdmin(token, deck);
             if(admin) {
                 return response.status(200).json({admin: token}).end();
             } else {
@@ -172,7 +317,12 @@ router.put("/login", async function (request : Request, response : Response, nex
         } else {
             const random = randomString(9, "0123456789abcdefghijklmnopqrstuvwxyz");
             const result = await database.query("INSERT INTO feedback_logins (username, token) VALUES ($1, $2)", [account.username, random]);
-            return response.status(200).json({admin: random}).end();
+            const admin = await isAdmin(random, deck);
+            if(admin) {
+                return response.status(200).json({admin: random}).end();
+            } else {
+                return response.status(403).end();
+            }
         }
     } else {
         return response.status(403).end();
@@ -180,35 +330,50 @@ router.put("/login", async function (request : Request, response : Response, nex
 });
 
 router.put("/vote", async function (request : Request, response : Response, next : NextFunction) {
-    const comment = request.body.comment;
-    const voter = request.body.voter;
-    const result = await database.query("SELECT * FROM feedback_votes WHERE comment = $1 AND voter = $2", [comment, voter]);
+    let comment, voter;
+    if(typeof request.body === "string") {
+        const json = JSON.parse(request.body);
+        comment = json.comment;
+        voter = json.voter;
+    } else {
+        comment = request.body.comment;
+        voter = request.body.voter;
+    }
+    const person : Person = await createPerson(voter);
+    const result = await database.query("SELECT * FROM feedback_votes WHERE comment = $1 AND voter = $2", [comment, person.id]);
     let didvote = false;
     if(result && result.rows.length > 0) {
         didvote = true;
     }
     if(didvote) {
-        await database.query("DELETE * FROM feedback_votes WHERE comment = $1 AND voter = $2", [comment, voter]);
+        await database.query("DELETE FROM feedback_votes WHERE comment = $1 AND voter = $2", [comment, person.id]);
     } else {
-        const person : Person | undefined = await getPerson(voter); 
-        if(!person) {
-            await database.query("INSERT INTO feedback_persons (token) VALUES ($1)", [voter]);
-        }
-        await database.query("INSERT INTO feedback_votes (comment, voter) VALUES ($1, $2)", [comment, voter]);
+        await database.query("INSERT INTO feedback_votes (comment, voter) VALUES ($1, $2)", [comment, person.id]);
     }
+    return response.status(200).end();
 });
 
 router.post("/answers", async function (request : Request, response : Response, next : NextFunction) {
-    const token = request.body.token;
-    const comment = request.body.comment;
-    const markdown = request.body.markdown;
-    const link = request.body.link;
+    let token, comment, markdown, link;
+    if(typeof request.body === "string") {
+        const json = JSON.parse(request.body);
+        token = json.token;
+        comment = json.comment;
+        markdown = json.markdown;
+        link = json.link;
+    } else {
+        token = request.body.token;
+        comment = request.body.comment;
+        markdown = request.body.markdown;
+        link = request.body.link;
+    }
     const commentResult = await database.query("SELECT * FROM feedback_comments WHERE id = $1", [comment]);
     if(commentResult && commentResult.rows.length > 0) {
         const deck = commentResult.rows[0].deck;
         const admin = await isAdmin(token, deck);
         if(admin) {
             await database.query("INSERT INTO feedback_answers (comment, markdown, link, created) VALUES ($1, $2, $3, NOW())", [comment, markdown, link]);
+            return response.status(200).end();
         } else {
             return response.status(403).end();
         }
@@ -218,8 +383,15 @@ router.post("/answers", async function (request : Request, response : Response, 
 });
 
 router.delete("/answers", async function (request : Request, response : Response, next : NextFunction) {
-    const token = request.body.token;
-    const id = request.body.id;
+    let token, id;
+    if(typeof request.body === "string") {
+        const json = JSON.parse(request.body);
+        token = json.token;
+        id = json.key;
+    } else {
+        token = request.body.token;
+        id = request.body.key;
+    }
     const answerResult = await database.query("SELECT * FROM feedback_answers WHERE id = $1", [id]);
     if(answerResult && answerResult.rows.length > 0) {
         const comment = answerResult.rows[0].comment;
@@ -228,11 +400,14 @@ router.delete("/answers", async function (request : Request, response : Response
             const deck = commentResult.rows[0].deck;
             const admin = await isAdmin(token, deck);
             if(admin) {
-                await database.query("DELETE * FROM feedback_answers WHERE id = $1", [id]);
+                await database.query("DELETE FROM feedback_answers WHERE id = $1", [id]);
+                return response.status(200).end();
             } else {
                 return response.status(403).end();
             }
         }
+    } else {
+        return response.status(404).end();
     }
 });
 

@@ -20,6 +20,14 @@ import config from "../config.json";
 import authenticator from "./backend/middleware/authenticator";
 import database from "./backend/database";
 
+import cors from "cors";
+
+const corsOptions : cors.CorsOptions = {
+  credentials: true,
+  origin: true,
+  preflightContinue: true
+}
+
 global.rootDirectory = path.resolve(__dirname);
 
 // view engine setup
@@ -47,7 +55,7 @@ app.use(
 app.use(authenticator);
 
 app.use("/", indexRouter);
-app.use("/api", apiRouter);
+app.use("/api", cors(), apiRouter);
 app.use("/admin", adminRouter);
 app.use("/decks", deckRouter);
 

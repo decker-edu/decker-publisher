@@ -5,6 +5,7 @@ import fs from "fs";
 import database from "../../backend/database";
 import config from "../../../config.json";
 import child_process from "child_process";
+import { getChecksumFile } from "../../backend/routes/api";
 
 const router = express.Router();
 
@@ -212,14 +213,27 @@ router.get(
 );
 
 router.get(
-  "/sync",
+  "/sync/:projectname",
   async function (
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
   ) {
+    const account = req.account;
+    const projectname = req.params.projectname;
+    if(!account) {
+      return res.redirect("/");
+    }
+    const projects = account.getProjects();
+    const project = projects.find((project, index, array) => project.name === projectname);
+    if(!project) {
+      return res.redirect("/");
+    }
+    const files = await getChecksumFile(project.directory);
+    const fileJSON = JSON.stringify(files);
     return res.render("sync", {
       title: "Sync",
+      files: fileJSON,
       user: req.account,
     });
   }

@@ -61,6 +61,10 @@ export class Database {
       }
     }
 
+    async disconnect() {
+      await this.pool.end();
+    }
+
     async execute(transaction : Transaction) : Promise<void> {
       try {
         const client : pg.PoolClient = await this.pool.connect();

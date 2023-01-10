@@ -1,11 +1,19 @@
 extends layout
 
 block scripts 
-    script(defer src="/javascripts/sync.js")
+  script(defer src="/javascripts/sync.js")
 
 block content
-    main#content
-        div
-            button(onclick="requestFiles()") Files
+  script(type="application/json" id="project-file-data").
+    const data = !{files}
+  main#content
+    div.content-block
+      button(onclick="requestFiles()") Lokalen Ordner auswählen
+      div.sync-area
+        div.file-table-wrapper
+          ul#client-table
+        i.fas.fa-rotate
+        div.file-table-wrapper
+          ul#server-table
 
 block dialogs

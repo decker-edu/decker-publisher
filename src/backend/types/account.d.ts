@@ -10,6 +10,12 @@ declare interface Account {
     changeEmail(mail : string) : Promise<void>;
     getKeys() : Promise<string[]>;
     setKeys(keys : string[]) : Promise<void>;
+    assignRole(role : Role) : Promise<void>;
     getDirectory() : string;
     getProjects() : Project[];
+}
+
+declare interface Role {
+    id: number;
+    name: string;
 }

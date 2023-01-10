@@ -588,3 +588,53 @@ input:disabled {
   background-color: #cccccc;
   color: #111111;
 }
+
+.file-table-wrapper {
+  text-align: left;
+  overflow-y: scroll;
+}
+
+.file-item {
+  list-style: none;
+  margin-left: 2rem;
+}
+
+.content-block {
+  width: 100%;
+}
+
+ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.sync-area {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: 1fr;
+  align-content: center;
+}
+
+.caret {
+  cursor: pointer;
+  list-style: none;
+}
+
+.caret::marker {
+  content: "\f105";
+  box-sizing: border-box;
+  background: gray;
+  padding-right: 1rem;
+  width: 2rem;
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+}
+
+.caret:not(.active) * {
+  display: none;
+}
+
+.caret.active::marker {
+  content: "\f107";
+}
