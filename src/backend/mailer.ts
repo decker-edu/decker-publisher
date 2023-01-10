@@ -39,7 +39,8 @@ export function new_comment_mail(
   recepient: string,
   deck: string,
   slide: string,
-  text: string
+  text: string,
+  referrer: string
 ) {
   if (
     config.mail_config &&
@@ -64,7 +65,7 @@ export function new_comment_mail(
 <head><title>Neue Frage im deck: ${deck}</title>
 <body>
 <h1>Neue Frage im deck: ${deck}</h1>
-<h2>Folie: ${slide}</h2>
+<h2>Folie: <a href=${referrer}>${slide}</a></h2>
 <div>${text}</div>
 </body>
 </html>`

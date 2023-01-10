@@ -171,14 +171,14 @@ router.post(
       markdown = json.markdown;
       deck = json.deck;
       slide = json.slide;
-      referrer = json.referrer;
+      referrer = json.location;
       id = json.id;
     } else {
       token = request.body.token;
       markdown = request.body.markdown;
       deck = request.body.deck;
       slide = request.body.slide;
-      referrer = request.body.referrer;
+      referrer = request.body.location;
       id = request.body.id;
     }
     if (markdown && token) {
@@ -219,7 +219,7 @@ router.post(
       if (result && result.rows.length > 0) {
         const owner = await Account.fromDatabase(deckPrefix(deck));
         if (owner) {
-          new_comment_mail(owner.email, deck, slide, html);
+          new_comment_mail(owner.email, deck, slide, html, referrer);
         }
         return response.status(200).json(result.rows[0].id).end();
       } else {
