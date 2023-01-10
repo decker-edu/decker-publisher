@@ -149,9 +149,11 @@ router.get(
     res: express.Response,
     next: express.NextFunction
   ) {
-    const admin = req.account.roles
-      ? req.account.roles.includes("admin")
-      : false;
+    const account = req.account;
+    let admin = false;
+    if(account) {
+      admin = account.roles ? account.roles.includes("admin") : false;
+    }
     let project: string = req.query.project.toString();
     let filepath: string = req.query.filepath.toString();
     if (!project || project === "" || /\.\.(\/|\\)/g.test(project)) {
