@@ -52,20 +52,22 @@ export function new_comment_mail(
         ["-t"]
       );
       process.stdin.write("From: " + config.mail_config.mail_from + "\n");
+      process.stdin.write("MIME-Version: 1.0\n");
+      process.stdin.write("Content-Type: text/html\n");
       process.stdin.write("To: " + recepient + "\n");
       process.stdin.write(
         "Subject: Decker: Neue Frage im deck: " + deck + "\n\n"
       );
       process.stdin.write(
-        `<!DOCTYPE HTML>\n
-<html>\n
-<head><title>Neue Frage im deck: ${deck}</title>\n
-<body>\n
-<h1>Neue Frage im deck: ${deck}</h1>\n
-<h2>Folie: ${slide}</h2>\n
-<div>${text}</div>\n
-</body>\n
-</html>\n`
+        `<!DOCTYPE HTML>
+<html>
+<head><title>Neue Frage im deck: ${deck}</title>
+<body>
+<h1>Neue Frage im deck: ${deck}</h1>
+<h2>Folie: ${slide}</h2>
+<div>${text}</div>
+</body>
+</html>`
       );
       process.stdin.end();
     } catch (error) {
