@@ -20,6 +20,8 @@ import config from "../config.json";
 import authenticator from "./backend/middleware/authenticator";
 import database from "./backend/database";
 
+import legacyFeedbackSetup from "./backend/legacy.feedback"
+
 import cors from "cors";
 
 const corsOptions : cors.CorsOptions = {
@@ -29,6 +31,8 @@ const corsOptions : cors.CorsOptions = {
 }
 
 global.rootDirectory = path.resolve(__dirname);
+
+legacyFeedbackSetup();
 
 // view engine setup
 app.set("views", path.join(__dirname, "frontend", "views"));

@@ -122,8 +122,8 @@ export class Account implements Account {
             const passwordHash = await hash(password);
             const result = await database.query("UPDATE accounts SET hash = $2 WHERE id = $1 RETURNING id", [this.id, passwordHash]);
             if(result && result.rows.length > 0) {
-                for(const callback of Account.passwordChangeHooks) {
-                    callback(this.username, password, this.email);
+                for(const hook of Account.passwordChangeHooks) {
+                    await hook(this.username, password, this.email);
                 }
             } else {
                 throw new Error("Passwortaktuallisierung ergab kein Resultat.");
