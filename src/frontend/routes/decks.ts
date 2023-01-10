@@ -11,7 +11,12 @@ router.get("/:username/:project/*", (req : express.Request, res : express.Respon
   const username = req.params.username;
   const projectname = req.params.project;
   const file = req.params[0] ? req.params[0] : "index.html";
-  const root = path.join(global.rootDirectory, config.user_directory_name, username, "projects", projectname);
+  let root;
+  if(config.user_directory_name.startsWith("/")) {
+    root = path.join(config.user_directory_name, username, "projects", projectname);
+  } else {
+    root = path.join(global.rootDirectory, config.user_directory_name, username, "projects", projectname);
+  }
   return res.sendFile(file, {
     root: root
   });
