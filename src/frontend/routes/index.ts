@@ -203,13 +203,15 @@ router.get(
     res: express.Response,
     next: express.NextFunction
   ) {
-    const admin = req.account.roles
-      ? req.account.roles.includes("admin")
-      : false;
+    let admin = false;
+    const account = req.account;
+    if(account) {
+      admin = account.roles ? account.roles.includes("admin") : false;
+    }
     return res.render("data-protection", {
       title: "Datenschutzhinweise",
       admin: admin,
-      user: req.account,
+      user: account,
     });
   }
 );
