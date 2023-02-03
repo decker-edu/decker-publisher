@@ -408,12 +408,12 @@ router.put(
         const writePath = path.join(dirname, deckname + "-recording.webm");
         const stream = fs.createWriteStream(writePath);
         req.pipe(stream);
-        req.on("finish", () => {
+        stream.on("close", () => {
           console.log("running ffmpeg", dirname, deckname);
-          stream.close();
+          res.status(200).end();
           runFFMPEG(dirname, deckname);
         });
-        return res.status(200).end();
+        return;
       }
     } catch (error) {
       return res.status(500).json({ message: "Interner Fehler." }).end();
