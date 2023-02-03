@@ -408,8 +408,9 @@ router.put(
         const writePath = path.join(dirname, deckname + "-recording.webm");
         const stream = fs.createWriteStream(writePath);
         req.pipe(stream);
-        stream.on("close", () => {
+        req.on("close", () => {
           console.log("running ffmpeg", dirname, deckname);
+          stream.close();
           runFFMPEG(dirname, deckname);
         });
         return res.status(200).end();
