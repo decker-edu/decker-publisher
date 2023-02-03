@@ -323,6 +323,7 @@ router.get(
       projectname,
       filepart + "-recording.webm"
     );
+    console.log("getting", fullpath, deckname);
     getAllRecordings(path.dirname(fullpath), deckname)
       .then((recordings) => {
         return res.status(200).json(recordings).end();
@@ -394,10 +395,7 @@ router.put(
       const dirname = path.dirname(fullpath);
       const account = req.account;
       if (account && account.username === username) {
-        const recordings = await getAllRecordings(
-          path.dirname(fullpath),
-          deckname
-        );
+        const recordings = await getAllRecordings(dirname, deckname);
         for (const recording of recordings) {
           const target = path.join(dirname, recording);
           try {
@@ -414,6 +412,7 @@ router.put(
             )
           )
           .on("close", () => {
+            console.log("running ffmpeg", dirname, deckname);
             runFFMPEG(dirname, deckname);
           });
         return res.status(200).end();
@@ -446,10 +445,7 @@ router.put(
       const dirname = path.dirname(fullpath);
       const account = req.account;
       if (account && account.username === username) {
-        const recordings = await getAllRecordings(
-          path.dirname(fullpath),
-          deckname
-        );
+        const recordings = await getAllRecordings(dirname, deckname);
         for (const recording of recordings) {
           if (recording === deckname + "-recording.webm") {
             fs.renameSync(
