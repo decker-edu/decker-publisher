@@ -405,16 +405,13 @@ router.put(
             console.error("[PUT VIDEO] error trying to remove", target);
           }
         }
-        req
-          .pipe(
-            fs.createWriteStream(
-              path.join(dirname, deckname + "-recording.webm")
-            )
-          )
-          .on("close", () => {
-            console.log("running ffmpeg", dirname, deckname);
-            runFFMPEG(dirname, deckname);
-          });
+        const writePath = path.join(dirname, deckname + "-recording.webm");
+        const stream = fs.createWriteStream(writePath);
+        req.pipe(stream);
+        stream.on("close", () => {
+          console.log("running ffmpeg", dirname, deckname);
+          runFFMPEG(dirname, deckname);
+        });
         return res.status(200).end();
       }
     } catch (error) {
