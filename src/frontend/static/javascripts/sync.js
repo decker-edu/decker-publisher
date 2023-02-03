@@ -23,16 +23,6 @@ if (
   text.innerText = "Bitte benutzen Sie einen auf Chrome basierenden Browser.";
 }
 
-const carets = document.getElementsByClassName("caret");
-for (const caret of carets) {
-  caret.addEventListener("click", (event) => {
-    const target = event.target;
-    if (target === caret) {
-      caret.classList.toggle("active");
-    }
-  });
-}
-
 function toggleCaret(event) {
   if (event.target === event.currentTarget) {
     event.target.classList.toggle("active");
@@ -49,7 +39,8 @@ async function appendData(dataset, list) {
     if (item.kind === "file") {
       const listitem = document.createElement("li");
       listitem.classList.add("file-item");
-      listitem.innerText = item.name;
+      listitem.innerText = item.filename;
+      item.reference = listitem;
       list.appendChild(listitem);
     } else if (item.kind === "directory") {
       const listitem = document.createElement("li");
@@ -57,20 +48,42 @@ async function appendData(dataset, list) {
       listitem.addEventListener("click", toggleCaret);
       listitem.classList.add("directory-item");
       listitem.classList.add("caret");
-      listitem.innerText = item.name;
+      listitem.innerText = item.filename;
       listitem.appendChild(innerlist);
+      item.reference = listitem;
       list.appendChild(listitem);
-      appendData(item.data, innerlist);
+      appendData(item.children, innerlist);
     }
   }
 }
 
+let fsHandle;
+
 async function chooseDirectory() {
   window.showDirectoryPicker({ mode: "readwrite" }).then(async (handle) => {
+    fsHandle = handle;
     const checksums = await accumulateFileInformation(handle.entries());
+    clientData = checksums;
     const clientList = document.getElementById("client-table");
-    appendData(checksums, clientList);
+    await appendData(checksums, clientList);
+    compareData();
   });
+}
+
+async function pushFile(filename, file) {
+  const buffer = await file.arrayBuffer();
+  const response = await fetch("/api/project/workshop/sync/" + filename, {
+    method: "POST",
+    body: {
+      data: buffer,
+    },
+  });
+  if (response && response.ok) {
+    return;
+  } else {
+    const status = response.status;
+    console.error("pushing file " + filename + " ended in status: " + status);
+  }
 }
 
 async function accumulateFileInformation(entries) {
@@ -85,19 +98,70 @@ async function accumulateFileInformation(entries) {
       const hex = array.map((b) => b.toString(16).padStart(2, "0")).join("");
       data.push({
         kind: "file",
-        name: key,
+        filename: key,
         modified: lastModified,
-        data: hex,
+        checksum: hex,
+        children: null,
       });
     } else if (value.kind === "directory") {
       const recursion = await accumulateFileInformation(value.entries());
       data.push({
         kind: "directory",
-        name: key,
+        filename: key,
         modified: null,
-        data: recursion,
+        checksum: null,
+        children: recursion,
       });
     }
   }
   return data;
+}
+
+window.addEventListener("load", () => {
+  const serverTable = document.getElementById("server-table");
+  const data = document.getElementById("project-file-data");
+  const json = JSON.parse(data.innerHTML);
+  serverData = json;
+  appendData(json, serverTable);
+});
+
+let serverData;
+let clientData;
+
+function compareData() {
+  compare(clientData, serverData);
+}
+
+function compare(rootA, rootB) {
+  for (const a of rootA) {
+    let contains = false;
+    for (const b of rootB) {
+      if (a.kind === b.kind) {
+        if (a.filename === b.filename) {
+          contains = true;
+          if (a.kind === "directory") {
+            compare(a.children, b.children);
+            break;
+          }
+          if (a.checksum === b.checksum) {
+            a.reference.classList.add("same");
+            b.reference.classList.add("same");
+          } else {
+            console.log(a.lastModified, b.lastModified);
+            if (a.lastModified > b.lastModified) {
+              a.reference.classList.add("newer");
+              b.reference.classList.add("older");
+            } else {
+              b.reference.classList.add("newer");
+              a.reference.classList.add("older");
+            }
+          }
+          break;
+        }
+      }
+    }
+    if (!contains) {
+      a.reference.classList.add("newer");
+    }
+  }
 }

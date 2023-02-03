@@ -29,8 +29,11 @@ import config from "../../../config.json"
 import feedback from "./feedback"
 
 declare interface FileHashEntry {
+  kind : "file" | "directory";
   filename : string;
   checksum : string;
+  modified? : Date;
+  children? : FileHashEntry[];
 }
 
 export async function getChecksumFile(directory : string) : Promise<any> {
@@ -42,16 +45,28 @@ export async function getChecksumFile(directory : string) : Promise<any> {
   return JSON.parse(string);
 }
 
-async function createChecksumFile(directory : string, checksumFile : string) : Promise<void> {
-  const files : string[] = getAllFiles(directory, undefined);
-  const hashes : FileHashEntry[] = [];
-  for(const file of files) {
-    const content = await fs.promises.readFile(file);
-    const hash = createHash("sha256").update(content).digest("hex");
-    const filepath = path.relative(directory, file);
-    const item : FileHashEntry = {filename: filepath, checksum: hash};
-    hashes.push(item);
+function gatherFileData(directory : string) : FileHashEntry[] {
+  const result : FileHashEntry[] = [];
+  const entries = fs.readdirSync(directory);
+  for(const entry of entries) {
+    const filepath = path.join(directory, entry);
+    const stat = fs.statSync(filepath);
+    if(stat.isDirectory()) {
+      const sub = gatherFileData(filepath);
+      const fhe : FileHashEntry = {kind: "directory", filename: entry, checksum: "", modified: stat.mtime, children: sub };
+      result.push(fhe);
+    } else {
+      const content = fs.readFileSync(filepath);
+      const hash = createHash("sha256").update(content).digest("hex");
+      const fhe : FileHashEntry = {kind: "file", filename: entry, checksum: hash, modified: stat.mtime, children: null }
+      result.push(fhe);
+    }
   }
+  return result;
+}
+
+async function createChecksumFile(directory : string, checksumFile : string) : Promise<void> {
+  const hashes : FileHashEntry[] = gatherFileData(directory);
   let filecontents = JSON.stringify(hashes);
   await fs.promises.writeFile(checksumFile, filecontents);
 }

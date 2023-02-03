@@ -8,5 +8,7 @@ block content
     if error
       if error.status
         h2= error.status
+      else
+        h2 500
       if error.stack
-        pre #{error.stack}
+        pre= error.stack

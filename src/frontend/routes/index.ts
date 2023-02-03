@@ -1,5 +1,7 @@
 import express from "express";
 
+import { Request, Response, NextFunction } from "express";
+
 import path from "path";
 import fs from "fs";
 import database from "../../backend/database";
@@ -33,11 +35,7 @@ async function retrieveKeys(
 /* GET home page. */
 router.get(
   "/",
-  async function (
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) {
+  async function (req: Request, res: Response, next: NextFunction) {
     const admin =
       req.account && req.account.roles
         ? req.account.roles.includes("admin")
@@ -151,7 +149,7 @@ router.get(
   ) {
     const account = req.account;
     let admin = false;
-    if(account) {
+    if (account) {
       admin = account.roles ? account.roles.includes("admin") : false;
     }
     let project: string = req.query.project.toString();
@@ -205,7 +203,7 @@ router.get(
   ) {
     let admin = false;
     const account = req.account;
-    if(account) {
+    if (account) {
       admin = account.roles ? account.roles.includes("admin") : false;
     }
     return res.render("data-protection", {
@@ -225,12 +223,14 @@ router.get(
   ) {
     const account = req.account;
     const projectname = req.params.projectname;
-    if(!account) {
+    if (!account) {
       return res.redirect("/");
     }
     const projects = account.getProjects();
-    const project = projects.find((project, index, array) => project.name === projectname);
-    if(!project) {
+    const project = projects.find(
+      (project, index, array) => project.name === projectname
+    );
+    if (!project) {
       return res.redirect("/");
     }
     const files = await getChecksumFile(project.directory);
@@ -497,10 +497,28 @@ router.put(
 );
 
 router.get(
-  "favicon.ico",
-  (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    return res.sendFile("static/images/favicon.png");
+  "/favicon.ico",
+  (req: Request, res: Response, next: NextFunction) => {
+    const root = rootDirectory;
+    const filepath = path.join(
+      rootDirectory,
+      "frontend",
+      "static",
+      "images",
+      "favicon.png"
+    );
+    return res.sendFile(filepath);
   }
 );
+
+router.get("/error", (req: Request, res: Response, next: NextFunction) => {
+  const account = req.account;
+  const admin = account.roles.includes("admin");
+  return res.render("index", {
+    title: "Decker",
+    admin: admin,
+    user: req.account,
+  });
+});
 
 export default router;

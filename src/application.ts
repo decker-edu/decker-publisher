@@ -1,6 +1,8 @@
 import createError from "http-errors";
 
 import express from "express";
+import { Request, Response, NextFunction } from "express";
+
 import session from "express-session";
 
 import path from "path";
@@ -20,15 +22,15 @@ import config from "../config.json";
 import authenticator from "./backend/middleware/authenticator";
 import database from "./backend/database";
 
-import legacyFeedbackSetup from "./backend/legacy.feedback"
+import legacyFeedbackSetup from "./backend/legacy.feedback";
 
 import cors from "cors";
 
-const corsOptions : cors.CorsOptions = {
+const corsOptions: cors.CorsOptions = {
   credentials: true,
   origin: true,
-  preflightContinue: true
-}
+  preflightContinue: true,
+};
 
 global.rootDirectory = path.resolve(__dirname);
 
@@ -64,20 +66,16 @@ app.use("/admin", adminRouter);
 app.use("/decks", deckRouter);
 
 // catch 404 and forward to error handler
-app.use(function (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
+app.use(function (req: Request, res: Response, next: NextFunction) {
   next(createError(404));
 });
 
 // error handler
 app.use(function (
   error: any,
-  request: express.Request,
-  response: express.Response,
-  next: express.NextFunction
+  request: Request,
+  response: Response,
+  next: NextFunction
 ) {
   // set locals, only providing error in development
   response.locals.message = error.message;

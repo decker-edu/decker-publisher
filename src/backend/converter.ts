@@ -19,7 +19,6 @@ declare type pdfInformation = {
 
 function expandItems(items: any[], result: any[]) {
   for (let item of items) {
-    console.log(item);
     result.push(item);
     if (item.items) {
       expandItems(item.items, result);
@@ -55,6 +54,7 @@ async function extractMeta(
   filename: string
 ) {
   const meta = await pdf.getMetadata().catch((error) => {
+    console.error(error);
     return null;
   });
   if (meta && meta.info) {
@@ -110,6 +110,7 @@ async function extractMeta(
     deckerSource += `author: ${
       pdfInfo.author ? pdfInfo.author : "Unknown Author"
     }\n`;
+    deckerSource += `reveal:\n  width: ${pdfInfo.width}\n  height: ${pdfInfo.height}\n`;
     deckerSource += "---\n\n";
     for (let page = 1; page <= pdfInfo.pages; page++) {
       const pagenumber = String(page).padStart(3, "0");
@@ -147,13 +148,9 @@ async function extractMeta(
 }
 
 export function Converter(filepath: string) {
-  console.log(filepath);
   const directory = path.dirname(filepath);
-  console.log(directory);
   const basename = path.basename(filepath);
-  console.log(basename);
   const filename = basename.substring(0, basename.lastIndexOf("."));
-  console.log(filename);
   // disableWorker = true;
   if (!filepath.endsWith(".pdf")) {
     console.error("[convert] Not a PDF.");
@@ -161,8 +158,8 @@ export function Converter(filepath: string) {
   }
   const dataBuffer = fs.readFileSync(filepath);
   let pdfInfo: pdfInformation = {
-    author: "unknown",
-    pdfTitle: "unknown",
+    author: "Unknown Author",
+    pdfTitle: "Unknown Presentation Title",
     pageTitles: [],
     pages: 0,
     width: 0,
@@ -170,9 +167,7 @@ export function Converter(filepath: string) {
     entries: [],
   };
   getPDFDocument(dataBuffer).promise.then(async (pdf) => {
-    console.log("[convert] read pdf");
     pdfInfo.pages = pdf.numPages;
-    console.log("[convert] pages found: ", pdfInfo.pages);
     for (let pageNum = 1; pageNum <= pdfInfo.pages; pageNum++) {
       const page = await pdf.getPage(pageNum);
       const viewport = page.getViewport({ scale: 1.0 });
@@ -180,12 +175,9 @@ export function Converter(filepath: string) {
       pdfInfo.height = Math.max(pdfInfo.height, viewport.height);
     }
     pdf.getOutline().then(async (outline) => {
-      console.log("[convert] reading outline");
-      console.log(outline);
       if (outline) {
         let items: any[] = [];
         expandItems(outline, items);
-        console.log("[convert] expanded items");
         let promises = [];
         for (let item of items) {
           const destination = item.dest;
@@ -224,7 +216,6 @@ export function Converter(filepath: string) {
           }
         });
       } else {
-        console.error("[convert] No outline.");
         pdfInfo.entries = [];
         await extractMeta(pdf, pdfInfo, directory, filepath, filename);
       }
