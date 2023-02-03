@@ -409,7 +409,6 @@ router.put(
         const stream = fs.createWriteStream(writePath);
         req.pipe(stream);
         stream.on("close", () => {
-          console.log("running ffmpeg", dirname, deckname);
           res.status(200).end();
           runFFMPEG(dirname, deckname);
         });
@@ -458,29 +457,27 @@ router.put(
             );
           }
         }
-        req
-          .pipe(
-            fs.createWriteStream(
-              path.join(
-                dirname,
-                deckname +
-                  "-recording" +
-                  (recordings.length > 0 ? "-" + recordings.length : "") +
-                  ".webm"
-              )
+        const writePath = path.join(
+          dirname,
+          deckname +
+            "-recording" +
+            (recordings.length > 0 ? "-" + recordings.length : "") +
+            ".webm"
+        );
+        const stream = fs.createWriteStream(writePath);
+        req.pipe(stream);
+        stream.on("close", () => {
+          console.log(
+            "[PUT VIDEO] wrote",
+            path.join(
+              dirname,
+              deckname + "-recording-" + recordings.length + ".webm"
             )
-          )
-          .on("close", () => {
-            console.log(
-              "[PUT VIDEO] wrote",
-              path.join(
-                dirname,
-                deckname + "-recording-" + recordings.length + ".webm"
-              )
-            );
-            runFFMPEG(dirname, deckname);
-          });
-        return res.status(200).end();
+          );
+          res.status(200).end();
+          runFFMPEG(dirname, deckname);
+        });
+        return;
       } else {
         return res.send(403).end();
       }
