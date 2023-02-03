@@ -400,12 +400,12 @@ router.put(
         );
         for (const recording of recordings) {
           const target = path.join(dirname, recording);
-          fs.rm(target, (error) => {
-            if (error) {
-              console.error(error);
-            }
+          try {
+            fs.rmSync(target);
             console.log("[PUT VIDEO] removed", target);
-          });
+          } catch (error) {
+            console.error("[PUT VIDEO] error trying to remove", target);
+          }
         }
         req
           .pipe(
