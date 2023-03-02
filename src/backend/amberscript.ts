@@ -6,7 +6,12 @@ import database from "./database";
 import config from "../../config.json";
 import instance from "./database";
 
-async function post(account : Account, project : string, filename : string, apiKey : string) {
+async function post(
+  account: Account,
+  project: string,
+  filename: string,
+  apiKey: string
+) {
   const filepath = path.join(
     account.getDirectory(),
     "projects",
@@ -58,11 +63,31 @@ async function post(account : Account, project : string, filename : string, apiK
     });
 }
 
-async function finallizeJob(jobID : number, status : string) {
-
+async function finallizeJob(jobId: string, status: string) {
+  if (status != "DONE") {
+    return;
+  }
+  const jobQuery = await database.query(
+    "SELECT * FROM amberscript_jobs WHERE jobId = $1",
+    [jobId]
+  );
+  if (jobQuery && jobQuery.rows.length > 0) {
+    const job = jobQuery.rows[0];
+    await database.query(
+      "UPDATE amberscript_jobs SET status = $1 WHERE jobId = $2",
+      [status, jobId]
+    );
+    await importVTT(jobId, undefined);
+  }
 }
 
-async function archive(account : Account, projectname : string, filename : string, jobId : number, jobstate : string) {
+async function archive(
+  account: Account,
+  projectname: string,
+  filename: string,
+  jobId: number,
+  jobstate: string
+) {
   const user_id = account.id;
   if (!jobstate) {
     jobstate = "OPEN";
@@ -73,7 +98,7 @@ async function archive(account : Account, projectname : string, filename : strin
   );
 }
 
-async function getVTT(jobId : string, apiKey : string) : Promise<string> {
+async function getVTT(jobId: string, apiKey: string): Promise<string> {
   let url = new URL("https://api.amberscript.com/api/jobs/export-vtt");
   const params = {
     jobId: jobId,
@@ -89,7 +114,7 @@ async function getVTT(jobId : string, apiKey : string) : Promise<string> {
   }
 }
 
-async function importVTT(jobId : string, apiKey : string) {
+async function importVTT(jobId: string, apiKey: string) {
   try {
     if (!jobId || jobId === "") {
       throw "No jobId specified.";
@@ -97,42 +122,39 @@ async function importVTT(jobId : string, apiKey : string) {
     if (!apiKey || apiKey === "") {
       throw "No apiKey specified.";
     }
-    const queryResult = await database.query("SELECT * from amberscript_jobs WHERE jobId = $1", [
-      jobId,
-    ]);
+    const queryResult = await database.query(
+      "SELECT * from amberscript_jobs WHERE jobId = $1",
+      [jobId]
+    );
     if (queryResult && queryResult.rows.length > 0) {
       const job = queryResult.rows[0];
       const user_id = job.user_id;
       const projectname = job.projectname;
       const filename = job.relative_filepath;
-  
+
       const account = await Account.fromDatabase(user_id);
-      if(!account) {
+      if (!account) {
         return;
       }
       const userdir = account.getDirectory();
-      const fullpath = path.join(
-            userdir,
-            "projects",
-            projectname,
-            filename
-          );
+      const fullpath = path.join(userdir, "projects", projectname, filename);
       const dirname = path.dirname(filename);
       const stem = path.basename(filename, path.extname(filename));
       const subtitleFile = path.join(dirname, stem + ".vtt");
       const text = await getVTT(jobId, apiKey);
       fs.writeFileSync(subtitleFile, text);
     }
-  } catch (error) {
-
-  }
+  } catch (error) {}
 }
 
-async function publishError(jobId : number, status : string) {
+async function publishError(jobId: number, status: string) {
   console.log("[TODO] Implement error publishing Amber");
 }
 
-
 export default {
-  post, archive, importVTT, finallizeJob, publishError
+  post,
+  archive,
+  importVTT,
+  finallizeJob,
+  publishError,
 };

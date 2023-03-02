@@ -80,3 +80,47 @@ export function new_comment_mail(
     return;
   }
 }
+
+export function requestMail(
+  recepient: string,
+  accountname: string,
+  email: string,
+  comment: string
+) {
+  if (
+    config.mail_config &&
+    config.mail_config.mail_program &&
+    config.mail_config.mail_program !== ""
+  ) {
+    try {
+      const process = child_process.spawn(
+        `${config.mail_config.mail_program}`,
+        ["-t"]
+      );
+      process.stdin.write("From: " + config.mail_config.mail_from + "\n");
+      process.stdin.write("MIME-Version: 1.0\n");
+      process.stdin.write("Content-Type: text/html\n");
+      process.stdin.write("To: " + recepient + "\n");
+      process.stdin.write("Subject: Decker: Neue Accountanfrage\n\n");
+      process.stdin.write(
+        `<!DOCTYPE HTML>
+<html>
+<head><title>Neue Accountanfrage</title>
+<body>
+<h1>Neue Accountanfrage</h1>
+<div><p>Accountname: ${accountname}</p></div>
+<div><p>E-Mail: ${email}</p></div>
+<div><p>Anmerkung: ${comment}</p></div>
+</body>
+</html>`
+      );
+      process.stdin.end();
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+  } else {
+    console.error("Kein Mailprogramm konfiguriert.");
+    return;
+  }
+}
