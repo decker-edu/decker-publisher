@@ -7,7 +7,7 @@ import fs from "fs";
 import database from "../../backend/database";
 import config from "../../../config.json";
 import child_process from "child_process";
-import { getChecksumFile } from "../../backend/routes/api";
+import { getChecksums } from "../../backend/routes/api";
 
 const router = express.Router();
 
@@ -233,7 +233,7 @@ router.get(
     if (!project) {
       return res.redirect("/");
     }
-    const files = await getChecksumFile(project.directory);
+    const files = getChecksums(project.directory);
     const fileJSON = JSON.stringify(files);
     return res.render("sync", {
       title: "Sync",
