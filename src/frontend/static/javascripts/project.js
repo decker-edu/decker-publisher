@@ -43,7 +43,7 @@ function deleteSelectedProject() {
         displayDeleteMessage(json.message, "success");
         setTimeout(() => {
           location.reload();
-        }, 3000);
+        }, 1000);
       }
     });
 }

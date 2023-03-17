@@ -4,6 +4,7 @@ block scripts
     script(defer src="/javascripts/upload.js")
     script(defer src="/javascripts/video.js")
     script(defer src="/javascripts/project.js")
+    script(defer src="/javascripts/dialog.js")
 
 block content
   header 
@@ -67,7 +68,7 @@ block dialogs
             button(type="button" onclick="deleteSelectedProject()")
               i.fas.fa-trash
               text Löschen
-            button(type="button" onclick="closeVideoDialog()")
+            button(type="button" onclick="closeDialog('delete-dialog')")
               i.fas.fa-ban
               text Dialog schließen
   dialog#video-dialog
