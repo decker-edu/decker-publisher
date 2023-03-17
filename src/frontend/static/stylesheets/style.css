@@ -505,6 +505,10 @@ main.admin {
 
 main section {
   width: 100%;
+  box-sizing: content-box;
+  padding: 0.5rem;
+  border: 1px inset rgba(0, 0, 0, 0.1);
+  border-radius: 1rem;
 }
 
 section p {

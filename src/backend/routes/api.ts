@@ -38,54 +38,36 @@ declare interface FileHashEntry {
   children?: FileHashEntry[];
 }
 
-export async function getChecksumFile(directory: string): Promise<any> {
-  const checksumfile = directory + ".checksum";
-  if (!fs.existsSync(checksumfile)) {
-    await createChecksumFile(directory, checksumfile);
-  }
-  const string = fs.readFileSync(checksumfile, { encoding: "utf-8" });
-  return JSON.parse(string);
-}
-
-function gatherFileData(directory: string): FileHashEntry[] {
+export function getChecksums(directory: string): FileHashEntry[] {
   const result: FileHashEntry[] = [];
   const entries = fs.readdirSync(directory);
   for (const entry of entries) {
     const filepath = path.join(directory, entry);
     const stat = fs.statSync(filepath);
     if (stat.isDirectory()) {
-      const sub = gatherFileData(filepath);
-      const fhe: FileHashEntry = {
+      const sub = getChecksums(filepath);
+      const subtree: FileHashEntry = {
         kind: "directory",
         filename: entry,
         checksum: "",
         modified: stat.mtime,
         children: sub,
       };
-      result.push(fhe);
+      result.push(subtree);
     } else {
       const content = fs.readFileSync(filepath);
       const hash = createHash("sha256").update(content).digest("hex");
-      const fhe: FileHashEntry = {
+      const data: FileHashEntry = {
         kind: "file",
         filename: entry,
         checksum: hash,
         modified: stat.mtime,
         children: null,
       };
-      result.push(fhe);
+      result.push(data);
     }
   }
   return result;
-}
-
-async function createChecksumFile(
-  directory: string,
-  checksumFile: string
-): Promise<void> {
-  const hashes: FileHashEntry[] = gatherFileData(directory);
-  let filecontents = JSON.stringify(hashes);
-  await fs.promises.writeFile(checksumFile, filecontents);
 }
 
 function makeRandomString(length: number, characters?: string): string {
@@ -390,11 +372,7 @@ router.get(
     if (!fs.existsSync(projectDirectory)) {
       return res.status(404).end();
     }
-    const projectChecksumFile = projectDirectory + ".checksum";
-    if (!fs.existsSync(projectChecksumFile)) {
-      await createChecksumFile(projectDirectory, projectChecksumFile);
-    }
-    const content = await fs.promises.readFile(projectChecksumFile);
+    const content = getChecksums(projectDirectory);
     return res.status(200).json(content).end();
   }
 );
