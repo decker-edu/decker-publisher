@@ -385,15 +385,15 @@ router.put(
       const projectname = req.params.project;
       const filepart = req.params.filename;
       const deckname = path.basename(filepart);
+      const account = req.account;
+      const userdir = account.getDirectory();
       const fullpath = path.join(
-        config.user_directory_name,
-        username,
+        userdir,
         "projects",
         projectname,
         filepart + "-recording.webm"
       );
       const dirname = path.dirname(fullpath);
-      const account = req.account;
       if (account && account.username === username) {
         const recordings = await getAllRecordings(dirname, deckname);
         for (const recording of recordings) {
@@ -415,6 +415,7 @@ router.put(
         return;
       }
     } catch (error) {
+      console.error(error);
       return res.status(500).json({ message: "Interner Fehler." }).end();
     }
   }
@@ -432,15 +433,15 @@ router.put(
       const projectname = req.params.project;
       const filepart = req.params.filename;
       const deckname = path.basename(filepart);
+      const account = req.account;
+      const userdir = account.getDirectory();
       const fullpath = path.join(
-        config.user_directory_name,
-        username,
+        userdir,
         "projects",
         projectname,
         filepart + "-recording.webm"
       );
       const dirname = path.dirname(fullpath);
-      const account = req.account;
       if (account && account.username === username) {
         const recordings = await getAllRecordings(dirname, deckname);
         for (const recording of recordings) {

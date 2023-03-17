@@ -212,6 +212,7 @@ router.put(
     const confirmed = await account.checkPassword(passwordConfirmation);
     if (confirmed) {
       account.changeEmail(newEmail);
+      return res.status(200).json({ message: escapeHTML("E-Mail geändert.") });
     } else {
       return res
         .status(403)
