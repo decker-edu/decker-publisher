@@ -418,6 +418,10 @@ a.button-like i.fas {
   margin: 1rem;
 }
 
+progress {
+  width: 100%;
+}
+
 label.fileinput {
   position: relative;
   background-color: var(--tu-green);
