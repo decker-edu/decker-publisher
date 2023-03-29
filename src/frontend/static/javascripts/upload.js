@@ -81,7 +81,7 @@ function upload() {
   data.append("file", input.files[0]);
   data.append("projectName", projectName.value);
   const xhr = new XMLHttpRequest();
-  xhr.addEventListener("progress", updateProgress);
+  xhr.upload.addEventListener("progress", updateProgress);
   xhr.addEventListener("loadstart", initProgress);
   xhr.addEventListener("loadend", endProgress);
   xhr.open("POST", "/api/project");

@@ -413,6 +413,8 @@ router.put(
           runFFMPEG(dirname, deckname);
         });
         return;
+      } else {
+        return res.send(403).end();
       }
     } catch (error) {
       console.error(error);
