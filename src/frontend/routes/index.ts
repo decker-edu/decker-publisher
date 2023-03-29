@@ -414,7 +414,7 @@ router.put(
         });
         return;
       } else {
-        return res.send(403).end();
+        return res.status(403).end();
       }
     } catch (error) {
       console.error(error);

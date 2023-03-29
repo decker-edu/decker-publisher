@@ -54,7 +54,7 @@ router.put(
         }
       }
     } else {
-      return res.status(403);
+      return res.status(403).end();
     }
   }
 );
@@ -84,7 +84,7 @@ router.put(
         }
       }
     } else {
-      return res.status(403);
+      return res.status(403).end();
     }
   }
 );
