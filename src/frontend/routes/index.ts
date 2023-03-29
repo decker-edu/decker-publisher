@@ -323,7 +323,6 @@ router.get(
       projectname,
       filepart + "-recording.webm"
     );
-    console.log("getting", fullpath, deckname);
     getAllRecordings(path.dirname(fullpath), deckname)
       .then((recordings) => {
         return res.status(200).json(recordings).end();
@@ -386,15 +385,15 @@ router.put(
       const filepart = req.params.filename;
       const deckname = path.basename(filepart);
       const account = req.account;
-      const userdir = account.getDirectory();
-      const fullpath = path.join(
-        userdir,
-        "projects",
-        projectname,
-        filepart + "-recording.webm"
-      );
-      const dirname = path.dirname(fullpath);
       if (account && account.username === username) {
+        const userdir = account.getDirectory();
+        const fullpath = path.join(
+          userdir,
+          "projects",
+          projectname,
+          filepart + "-recording.webm"
+        );
+        const dirname = path.dirname(fullpath);
         const recordings = await getAllRecordings(dirname, deckname);
         for (const recording of recordings) {
           const target = path.join(dirname, recording);
@@ -436,15 +435,15 @@ router.put(
       const filepart = req.params.filename;
       const deckname = path.basename(filepart);
       const account = req.account;
-      const userdir = account.getDirectory();
-      const fullpath = path.join(
-        userdir,
-        "projects",
-        projectname,
-        filepart + "-recording.webm"
-      );
-      const dirname = path.dirname(fullpath);
       if (account && account.username === username) {
+        const userdir = account.getDirectory();
+        const fullpath = path.join(
+          userdir,
+          "projects",
+          projectname,
+          filepart + "-recording.webm"
+        );
+        const dirname = path.dirname(fullpath);
         const recordings = await getAllRecordings(dirname, deckname);
         for (const recording of recordings) {
           if (recording === deckname + "-recording.webm") {
