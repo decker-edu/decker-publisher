@@ -181,6 +181,19 @@ router.post(
       referrer = request.body.location;
       id = request.body.id;
     }
+    if (!deck) {
+      if (referrer) {
+        const url = new URL(referrer);
+        url.hash = "";
+        url.search = "";
+        url.username = "";
+        url.password = "";
+        deck = url.toString();
+      } else {
+        console.error("deck null");
+        deck = "unknown";
+      }
+    }
     if (markdown && token) {
       const author = await createPerson(token);
       const html = converter.makeHtml(markdown);
