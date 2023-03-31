@@ -222,12 +222,17 @@ router.post(
           return response.status(404).end();
         }
       } else {
-        result = await database.query(
-          `INSERT INTO feedback_comments (markdown, html, author, referrer, deck, slide)
-                 VALUES($1, $2, $3, $4, $5, $6)
-                 RETURNING id`,
-          [markdown, html, author.id, referrer, deck, slide]
-        );
+        try {
+          result = await database.query(
+            `INSERT INTO feedback_comments (markdown, html, author, referrer, deck, slide)
+                   VALUES($1, $2, $3, $4, $5, $6)
+                   RETURNING id`,
+            [markdown, html, author.id, referrer, deck, slide]
+          );
+        } catch (error) {
+          console.error(error);
+          return response.status(500).end();
+        }
       }
       if (result && result.rows.length > 0) {
         const owner = await Account.fromDatabase(deckPrefix(deck));
