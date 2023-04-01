@@ -264,6 +264,7 @@ router.put(
       deck = request.body.deck;
       slide = request.body.slide;
     }
+    console.log("[PUT] referrer: " + request.get("Referrer"));
     console.log(token, deck, slide);
     try {
       const voter = await getPerson(token);
