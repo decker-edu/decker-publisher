@@ -183,6 +183,7 @@ router.post(
     }
     if (!deck) {
       if (referrer) {
+        console.log("[FEEDBACK] deck was null, setting deck to referrer");
         const url = new URL(referrer);
         url.hash = "";
         url.search = "";
