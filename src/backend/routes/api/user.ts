@@ -222,8 +222,8 @@ router.put(
   }
 );
 
-router.put(
-  "/:username/sshkey/:keyname",
+router.post(
+  "/:username/sshkey",
   requireBody("passwordConfirmation"),
   requireBody("newKey"),
   async (
@@ -249,8 +249,61 @@ router.put(
     const newKey = req.body.newKey;
     const confirmed = await account.checkPassword(passwordConfirmation);
     if (confirmed) {
-      account.setKeys([newKey]);
-      return res.status(200).end();
+      try {
+        const keys = await account.getKeys();
+        keys.push(newKey);
+        account.setKeys(keys);
+        return res.status(200).end();
+      } catch {
+        return res
+          .status(500)
+          .json({ message: escapeHTML("Interner Fehler.") });
+      }
+    } else {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Passwortbestätigung fehlgeschlagen.") });
+    }
+  }
+);
+
+router.delete(
+  "/:username/sshkey",
+  requireBody("passwordConfirmation"),
+  requireBody("delKey"),
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const account = req.account;
+    if (!account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const username = req.params.username;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const passwordConfirmation = req.body.passwordConfirmation;
+    const delKey = req.body.delKey;
+    const confirmed = await account.checkPassword(passwordConfirmation);
+    if (confirmed) {
+      try {
+        const keys = await account.getKeys();
+        const filtered = keys.filter((key) => key !== delKey);
+        account.setKeys(filtered);
+        return res.status(200).end();
+      } catch {
+        return res
+          .status(500)
+          .json({ message: escapeHTML("Interner Fehler.") });
+      }
     } else {
       return res
         .status(403)

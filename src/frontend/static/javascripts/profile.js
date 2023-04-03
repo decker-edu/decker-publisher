@@ -1,3 +1,13 @@
+let selectedKey;
+
+function openRemoveKeyDialog(key) {
+  const deleteDialog = document.getElementById("remove-ssh-key-dialog");
+  const deleteArea = document.getElementById("remove-ssh-key-textarea");
+  deleteArea.value = key;
+  selectedKey = key;
+  deleteDialog.showModal();
+}
+
 function passwordChanged() {
   const pw1Input = document.getElementById("change-password-new");
   const pw2Input = document.getElementById("change-password-new-repeat");
@@ -27,12 +37,26 @@ function emailChanged() {
 }
 
 function sshkeyChanged() {
-  const form = document.getElementById("change-ssh-key-form");
-  const button = document.getElementById("change-ssh-key-button");
+  const form = document.getElementById("add-ssh-key-form");
+  const button = document.getElementById("add-ssh-key-button");
   if (!form.checkValidity()) {
     button.disabled = true;
+    return false;
   } else {
     button.disabled = false;
+    return true;
+  }
+}
+
+function deleteChanged() {
+  const form = document.getElementById("remove-ssh-key-form");
+  const button = document.getElementById("remove-ssh-key-button");
+  if (!form.checkValidity()) {
+    button.disabled = true;
+    return false;
+  } else {
+    button.disabled = false;
+    return true;
   }
 }
 
@@ -104,11 +128,11 @@ function changeEmail(username) {
     });
 }
 
-function changeSSHKey(username) {
-  const textarea = document.getElementById("change-ssh-key-textarea");
-  const passwordInput = document.getElementById("change-ssh-key-confirmation");
+function addKey(username) {
+  const textarea = document.getElementById("add-ssh-key-textarea");
+  const passwordInput = document.getElementById("add-ssh-key-confirmation");
   fetch(`/api/user/${username}/sshkey`, {
-    method: "PUT",
+    method: "POST",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
@@ -120,12 +144,42 @@ function changeSSHKey(username) {
   })
     .then((response) => {
       if (response.ok) {
+        displayMessage("Schlüssel übernommen.");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
         response.json().then((json) => {
-          displayMessage(json.message);
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
+          displayMessage(`${response.status}: ${json.message}`);
         });
+      }
+    })
+    .catch((error) => {
+      displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
+      console.error(error);
+    });
+}
+
+function removeKey(username) {
+  const textarea = document.getElementById("remove-ssh-key-textarea");
+  const passwordInput = document.getElementById("remove-ssh-key-confirmation");
+  fetch(`/api/user/${username}/sshkey`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      passwordConfirmation: passwordInput.value,
+      delKey: textarea.value,
+    }),
+  })
+    .then((response) => {
+      if (response.ok) {
+        displayMessage("Schlüssel gelöscht.");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         response.json().then((json) => {
           displayMessage(`${response.status}: ${json.message}`);
