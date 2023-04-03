@@ -160,6 +160,15 @@ function addKey(username) {
     });
 }
 
+function displayRemovalMessage(message) {
+  const text = document.getElementById("remove-ssh-key-message");
+  if (text) {
+    text.innerText = message;
+  } else {
+    console.error("Can not find id: remove-ssh-key-message.");
+  }
+}
+
 function removeKey(username) {
   const textarea = document.getElementById("remove-ssh-key-textarea");
   const passwordInput = document.getElementById("remove-ssh-key-confirmation");
@@ -176,18 +185,18 @@ function removeKey(username) {
   })
     .then((response) => {
       if (response.ok) {
-        displayMessage("Schlüssel gelöscht.");
+        displayRemovalMessage("Schlüssel gelöscht.");
         setTimeout(() => {
           window.location.reload();
         }, 1000);
       } else {
         response.json().then((json) => {
-          displayMessage(`${response.status}: ${json.message}`);
+          displayRemovalMessage(`${response.status}: ${json.message}`);
         });
       }
     })
     .catch((error) => {
-      displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
+      displayRemovalMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
       console.error(error);
     });
 }
