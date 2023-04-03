@@ -218,7 +218,6 @@ export class Account implements Account {
   }
 
   async setKeys(keys: string[]): Promise<void> {
-    console.log(this.username, keys[0]);
     const transaction = new Transaction();
     transaction.add({
       query: "DELETE FROM ssh_keys WHERE username = $1",
