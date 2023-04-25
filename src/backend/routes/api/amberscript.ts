@@ -8,7 +8,11 @@ import amberscript from "../../amberscript";
 
 router.post(
   "/",
-  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
     if (!req.account) {
       return res.status(403).end();
     }
@@ -20,10 +24,13 @@ router.post(
     if (!fs.existsSync(fullpath)) {
       return res.status(404).json({ message: "Datei nicht gefunden." }).end();
     }
-    amberscript.post(req.account, project, filepath).catch((error: Error) => {
+    try {
+      await amberscript.post(req.account, project, filepath);
+      return res.status(200).end();
+    } catch (error) {
       console.error(error);
       return res.status(500).end();
-    });
+    }
   }
 );
 

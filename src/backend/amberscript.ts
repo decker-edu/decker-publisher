@@ -42,22 +42,19 @@ async function post(account: Account, project: string, filename: string) {
   const buffer = fs.readFileSync(filepath);
   const contents = buffer.toString();
   form.append("file", contents);
-  fetch(url, { method: "POST", body: form })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw "Request not accepted: " + response.status;
-      }
-    })
-    .then((json) => {
+  try {
+    const response = await fetch(url, { method: "POST", body: form });
+    if (response.ok) {
+      const json = await response.json();
       const status = json.jobStatus;
       const jobID = status.jobId;
       archive(account, project, filename, jobID, status);
-    })
-    .catch((error) => {
-      throw error;
-    });
+    } else {
+      throw "Request not accepted: " + response.status;
+    }
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function finallizeJob(jobId: string, status: string) {
