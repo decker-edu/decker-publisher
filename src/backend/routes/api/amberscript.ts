@@ -39,7 +39,7 @@ router.post(
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const message = req.body;
     console.log(message);
-    if (!message.jobStatus) {
+    if (!message.status) {
       return res.status(400).end();
     }
     if (message.jobStatus && message.jobStatus.jobId) {
