@@ -47,7 +47,7 @@ async function post(account: Account, project: string, filename: string) {
   try {
     const response = await fetch(url, { method: "POST", body: form });
     if (response.ok) {
-      const json : any = await response.json();
+      const json: any = await response.json();
       const status = json.jobStatus;
       const jobID = json.jobId;
       archive(account, project, filename, jobID, status);
@@ -89,9 +89,10 @@ async function archive(
     jobstate = "OPEN";
   }
   await database.query(
-    "INSERT INTO amberscript_jobs (user_id, jobId, projectname, relative_filepath, jobstate) VALUES ($1, $2, $3, $4, $5)",
-    [user_id, jobId, projectname, filename, jobstate]
+    "INSERT INTO amberscript_jobs (job_id, user_id, projectname, relative_filepath, state) VALUES ($1, $2, $3, $4, $5)",
+    [jobId, user_id, projectname, filename, jobstate]
   );
+  console.log("[amberscript] new job created at: ", Date.now());
 }
 
 async function getVTT(jobId: string): Promise<string> {
@@ -121,7 +122,7 @@ async function importVTT(jobId: string) {
     }
 
     const queryResult = await database.query(
-      "SELECT * from amberscript_jobs WHERE jobId = $1",
+      "SELECT * from amberscript_jobs WHERE job_id = $1",
       [jobId]
     );
     if (queryResult && queryResult.rows.length > 0) {

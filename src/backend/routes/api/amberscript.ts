@@ -38,6 +38,7 @@ router.post(
   "/callback",
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const message = req.body;
+    console.log(message);
     if (!message.jobStatus) {
       return res.status(400).end();
     }
