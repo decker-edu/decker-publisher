@@ -188,7 +188,7 @@ async function setup_amberscript() {
 
   const amberscript_jobs = await database.query(
     `CREATE TABLE IF NOT EXISTS amberscript_jobs (
-      job_id integer PRIMARY KEY UNIQUE NOT NULL,
+      job_id VARCHAR(255) PRIMARY KEY UNIQUE NOT NULL,
       user_id integer NOT NULL,
       projectname VARCHAR(255) NOT NULL,
       relative_filepath VARCHAR NOT NULL,

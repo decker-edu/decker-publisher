@@ -48,6 +48,7 @@ async function post(account: Account, project: string, filename: string) {
     const response = await fetch(url, { method: "POST", body: form });
     if (response.ok) {
       const json: any = await response.json();
+      console.log(json);
       const status = json.jobStatus;
       const jobID = json.jobId;
       archive(account, project, filename, jobID, status);
@@ -85,13 +86,16 @@ async function archive(
   account: Account,
   projectname: string,
   filename: string,
-  jobId: number,
+  jobId: string,
   jobstate: string
 ) {
   const user_id = account.id;
   if (!jobstate) {
     jobstate = "OPEN";
   }
+  console.log(
+    `[amberscript] creating new job: ${jobId}, ${user_id}, ${projectname}, ${filename}, ${jobstate}`
+  );
   await database.query(
     "INSERT INTO amberscript_jobs (job_id, user_id, projectname, relative_filepath, state) VALUES ($1, $2, $3, $4, $5)",
     [jobId, user_id, projectname, filename, jobstate]
@@ -150,7 +154,7 @@ async function importVTT(jobId: string) {
   } catch (error) {}
 }
 
-async function publishError(jobId: number, status: string) {
+async function publishError(jobId: string, status: string) {
   console.log("[TODO] Implement error publishing Amber");
 }
 
