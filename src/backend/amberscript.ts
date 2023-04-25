@@ -6,12 +6,7 @@ import database from "./database";
 import config from "../../config.json";
 import instance from "./database";
 
-async function post(
-  account: Account,
-  project: string,
-  filename: string,
-  apiKey: string
-) {
+async function post(account: Account, project: string, filename: string) {
   const filepath = path.join(
     account.getDirectory(),
     "projects",
@@ -22,6 +17,8 @@ async function post(
   if (!config.amberscriptCallbackUrl || config.amberscriptCallbackUrl === "") {
     throw "No Amberscript Callback URL specified.";
   }
+
+  const apiKey = config.amberscriptAPIKey;
 
   if (!apiKey || apiKey === "") {
     throw "No API Key available.";

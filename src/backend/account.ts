@@ -270,7 +270,8 @@ export class Account implements Account {
     for (const directory of directories) {
       const mp4s = getAllFiles(directory, (file) => {
         const ext = path.extname(file);
-        return ext === ".mp4";
+        const name = path.basename(file, ext);
+        return ext === ".mp4" && name.endsWith("recording");
       });
       const videoData: VideoLinkData[] = mp4s.map((video) => {
         return {

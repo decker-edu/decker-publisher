@@ -20,12 +20,10 @@ router.post(
     if (!fs.existsSync(fullpath)) {
       return res.status(404).json({ message: "Datei nicht gefunden." }).end();
     }
-    amberscript
-      .post(req.account, project, filepath, undefined)
-      .catch((error: Error) => {
-        console.error(error);
-        return res.status(500).end();
-      });
+    amberscript.post(req.account, project, filepath).catch((error: Error) => {
+      console.error(error);
+      return res.status(500).end();
+    });
   }
 );
 
