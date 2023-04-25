@@ -184,6 +184,7 @@ async function setup_amberscript() {
       FOREIGN KEY (caused_by) REFERENCES accounts(id) ON DELETE CASCADE
     )`
   );
+  console.log(`[amberscript_charges] ${amberscript_charges.command} executed.`);
 
   const amberscript_jobs = await database.query(
     `CREATE TABLE IF NOT EXISTS amberscript_jobs (
@@ -194,6 +195,7 @@ async function setup_amberscript() {
       FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE
     )`
   );
+  console.log(`[amberscript_jobs] ${amberscript_jobs.command} executed.`);
 }
 
 (async () => {
