@@ -63,17 +63,21 @@ async function finallizeJob(jobId: string, status: string) {
   if (status != "DONE") {
     return;
   }
-  const jobQuery = await database.query(
-    "SELECT * FROM amberscript_jobs WHERE jobId = $1",
-    [jobId]
-  );
-  if (jobQuery && jobQuery.rows.length > 0) {
-    const job = jobQuery.rows[0];
-    await database.query(
-      "UPDATE amberscript_jobs SET status = $1 WHERE jobId = $2",
-      [status, jobId]
+  try {
+    const jobQuery = await database.query(
+      "SELECT * FROM amberscript_jobs WHERE job_id = $1",
+      [jobId]
     );
-    await importVTT(jobId);
+    if (jobQuery && jobQuery.rows.length > 0) {
+      const job = jobQuery.rows[0];
+      await database.query(
+        "UPDATE amberscript_jobs SET status = $1 WHERE job_id = $2",
+        [status, jobId]
+      );
+      await importVTT(jobId);
+    }
+  } catch (error) {
+    console.error(error);
   }
 }
 

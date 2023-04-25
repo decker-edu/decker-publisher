@@ -42,9 +42,9 @@ router.post(
     if (!message.status) {
       return res.status(400).end();
     }
-    if (message.jobStatus && message.jobStatus.jobId) {
-      const jobId = message.jobStatus.jobId;
-      const status = message.jobStatus.status;
+    if (message.status && message.jobId) {
+      const status = message.status;
+      const jobId = message.jobId;
       if (status === "DONE") {
         amberscript.finallizeJob(jobId, status);
       } else if (status === "ERROR") {
