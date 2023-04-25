@@ -1,6 +1,7 @@
 import { Account } from "./account";
 
 import FormData from "form-data";
+import fetch from "node-fetch";
 
 import fs from "fs";
 import path from "path";
@@ -46,9 +47,9 @@ async function post(account: Account, project: string, filename: string) {
   try {
     const response = await fetch(url, { method: "POST", body: form });
     if (response.ok) {
-      const json = await response.json();
+      const json : any = await response.json();
       const status = json.jobStatus;
-      const jobID = status.jobId;
+      const jobID = json.jobId;
       archive(account, project, filename, jobID, status);
     } else {
       throw "Request not accepted: " + response.status;
