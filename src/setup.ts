@@ -1,14 +1,14 @@
-import config from "../config.json"
+import config from "../config.json";
 import { Account } from "./backend/account";
-import database from "./backend/database"
+import database from "./backend/database";
 import Role from "./backend/role";
 
 import { setup_feedback } from "./backend/routes/feedback";
 
 import readline from "readline";
 
-function exists(value : any) : boolean {
-  if(!value || value === "") {
+function exists(value: any): boolean {
+  if (!value || value === "") {
     return false;
   } else {
     return true;
@@ -70,7 +70,7 @@ async function setup_database() {
       key VARCHAR NOT NULL,
       FOREIGN KEY(username) REFERENCES accounts(username) ON DELETE CASCADE
     )`
-  )
+  );
   console.log(`[ssh_keys] ${ssh_keys.command} executed.`);
   const sessions = await database.query(
     `CREATE TABLE IF NOT EXISTS sessions (
@@ -82,11 +82,11 @@ async function setup_database() {
   console.log(`[sessions] ${sessions.command} executed.`);
 
   try {
-    const role : Role = await Role.create("admin");
-    if(role) {
+    const role: Role = await Role.create("admin");
+    if (role) {
       console.log(`[admin role] created.`);
     } else {
-      console.log("[admin role] already exists.")
+      console.log("[admin role] already exists.");
     }
   } catch (error) {
     console.error(error);
@@ -94,51 +94,70 @@ async function setup_database() {
 
   const input = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 
-  let admin_username : string = config.setup_admin && config.setup_admin.username ? config.setup_admin.username : undefined;
-  if(!admin_username) {
-    console.log("[config.setup_admin.username] not specified. Please enter the admin username:");
+  let admin_username: string =
+    config.setup_admin && config.setup_admin.username
+      ? config.setup_admin.username
+      : undefined;
+  if (!admin_username) {
+    console.log(
+      "[config.setup_admin.username] not specified. Please enter the admin username:"
+    );
     process.stdout.write("> ");
     const it = input[Symbol.asyncIterator]();
     const line = await it.next();
     admin_username = line.value;
   }
-  let admin_password : string = config.setup_admin && config.setup_admin.password ? config.setup_admin.password : undefined;
-  if(!admin_password) {
-    console.log("[config.setup_admin.password] not specified. Please enter the admin password:");
+  let admin_password: string =
+    config.setup_admin && config.setup_admin.password
+      ? config.setup_admin.password
+      : undefined;
+  if (!admin_password) {
+    console.log(
+      "[config.setup_admin.password] not specified. Please enter the admin password:"
+    );
     process.stdout.write("> ");
     const it = input[Symbol.asyncIterator]();
     const line = await it.next();
     admin_password = line.value;
   }
-  let admin_email : string = config.setup_admin && config.setup_admin.email ? config.setup_admin.email : undefined;
-  if(!admin_email) {
-    console.log("[config.setup_admin.email] not specified. Please enter the admin email:");
+  let admin_email: string =
+    config.setup_admin && config.setup_admin.email
+      ? config.setup_admin.email
+      : undefined;
+  if (!admin_email) {
+    console.log(
+      "[config.setup_admin.email] not specified. Please enter the admin email:"
+    );
     process.stdout.write("> ");
     const it = input[Symbol.asyncIterator]();
     const line = await it.next();
     admin_email = line.value;
   }
 
-  if(exists(admin_username) && exists(admin_password) && exists(admin_email)) {
+  if (exists(admin_username) && exists(admin_password) && exists(admin_email)) {
     try {
-      const admin : Account | undefined = await Account.register(config.setup_admin.username, config.setup_admin.password, config.setup_admin.email);
-      if(admin) {
+      const admin: Account | undefined = await Account.register(
+        config.setup_admin.username,
+        config.setup_admin.password,
+        config.setup_admin.email
+      );
+      if (admin) {
         console.log(`[admin account] created`);
       } else {
-        console.log(`[admin account] already exists.`)
+        console.log(`[admin account] already exists.`);
       }
     } catch (error) {
       console.error(error);
     }
   }
 
-  const role : Role = await Role.get("admin");
+  const role: Role = await Role.get("admin");
   const admin = await Account.fromDatabase(config.setup_admin.username);
   await admin.assignRole(role);
-  
+
   input.close();
 }
 
@@ -149,7 +168,8 @@ async function setup_legacy_feedback() {
       username VARCHAR(64) UNIQUE NOT NULL,
       hash VARCHAR NOT NULL,
       salt VARCHAR(16) NOT NULL,
-      email VARCHAR(255) NOT NULL )`)
+      email VARCHAR(255) NOT NULL )`
+  );
 }
 
 async function setup_amberscript() {
@@ -179,5 +199,6 @@ async function setup_amberscript() {
 (async () => {
   await setup_database();
   await setup_feedback();
+  await setup_amberscript();
   database.pool.end();
-})()
+})();
