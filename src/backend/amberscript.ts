@@ -152,13 +152,16 @@ async function importVTT(jobId: string) {
       }
       const userdir = account.getDirectory();
       const fullpath = path.join(userdir, "projects", projectname, filename);
-      const dirname = path.dirname(filename);
+      const dirname = path.dirname(fullpath);
       const stem = path.basename(filename, path.extname(filename));
       const subtitleFile = path.join(dirname, stem + ".vtt");
       const text = await getVTT(jobId);
       fs.writeFileSync(subtitleFile, text);
+      console.log(`[amberscript] written to file ${subtitleFile}`);
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 async function publishError(jobId: string, status: string) {
