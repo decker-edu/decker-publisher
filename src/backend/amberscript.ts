@@ -48,9 +48,8 @@ async function post(account: Account, project: string, filename: string) {
     const response = await fetch(url, { method: "POST", body: form });
     if (response.ok) {
       const json: any = await response.json();
-      console.log(json);
-      const status = json.jobStatus;
-      const jobID = json.jobId;
+      const status = json.jobStatus.status;
+      const jobID = json.jobStatus.jobId;
       archive(account, project, filename, jobID, status);
     } else {
       throw "Request not accepted: " + response.status;
@@ -89,6 +88,10 @@ async function archive(
   jobId: string,
   jobstate: string
 ) {
+  if (!account || !projectname || !filename || !jobId || !jobstate) {
+    console.error("Not enough data to archive job.");
+    return;
+  }
   const user_id = account.id;
   if (!jobstate) {
     jobstate = "OPEN";
@@ -96,11 +99,15 @@ async function archive(
   console.log(
     `[amberscript] creating new job: ${jobId}, ${user_id}, ${projectname}, ${filename}, ${jobstate}`
   );
-  await database.query(
-    "INSERT INTO amberscript_jobs (job_id, user_id, projectname, relative_filepath, state) VALUES ($1, $2, $3, $4, $5)",
-    [jobId, user_id, projectname, filename, jobstate]
-  );
-  console.log("[amberscript] new job created at: ", Date.now());
+  try {
+    await database.query(
+      "INSERT INTO amberscript_jobs (job_id, user_id, projectname, relative_filepath, state) VALUES ($1, $2, $3, $4, $5)",
+      [jobId, user_id, projectname, filename, jobstate]
+    );
+    console.log("[amberscript] new job created at: ", Date.now());
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 async function getVTT(jobId: string): Promise<string> {
