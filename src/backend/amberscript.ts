@@ -38,6 +38,7 @@ async function post(account: Account, project: string, filename: string) {
     numberOfSpeakers: "1",
   };
   url.search = new URLSearchParams(params).toString();
+  console.log(url);
   const form = new FormData();
   const buffer = fs.readFileSync(filepath);
   const contents = buffer.toString();
