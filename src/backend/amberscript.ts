@@ -74,7 +74,7 @@ async function finallizeJob(jobId: string, status: string) {
       "UPDATE amberscript_jobs SET status = $1 WHERE jobId = $2",
       [status, jobId]
     );
-    await importVTT(jobId, undefined);
+    await importVTT(jobId);
   }
 }
 
@@ -95,8 +95,12 @@ async function archive(
   );
 }
 
-async function getVTT(jobId: string, apiKey: string): Promise<string> {
-  let url = new URL("https://api.amberscript.com/api/jobs/export-vtt");
+async function getVTT(jobId: string): Promise<string> {
+  const url = new URL("https://api.amberscript.com/api/jobs/export-vtt");
+  const apiKey = config.amberscriptAPIKey;
+  if (!apiKey || apiKey === "") {
+    throw "No API Key specified";
+  }
   const params = {
     jobId: jobId,
     apiKey: apiKey,
@@ -111,14 +115,12 @@ async function getVTT(jobId: string, apiKey: string): Promise<string> {
   }
 }
 
-async function importVTT(jobId: string, apiKey: string) {
+async function importVTT(jobId: string) {
   try {
     if (!jobId || jobId === "") {
       throw "No jobId specified.";
     }
-    if (!apiKey || apiKey === "") {
-      throw "No apiKey specified.";
-    }
+
     const queryResult = await database.query(
       "SELECT * from amberscript_jobs WHERE jobId = $1",
       [jobId]
@@ -138,7 +140,7 @@ async function importVTT(jobId: string, apiKey: string) {
       const dirname = path.dirname(filename);
       const stem = path.basename(filename, path.extname(filename));
       const subtitleFile = path.join(dirname, stem + ".vtt");
-      const text = await getVTT(jobId, apiKey);
+      const text = await getVTT(jobId);
       fs.writeFileSync(subtitleFile, text);
     }
   } catch (error) {}
