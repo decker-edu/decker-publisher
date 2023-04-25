@@ -373,7 +373,7 @@ async function runFFMPEG(directory: string, deckname: string) {
 }
 
 router.put(
-  "/replace/decks/:username/:project/:filename-recording.webm",
+  "/replace/decks/:username/:project/:filename(*)-recording.webm",
   async function (
     req: express.Request,
     res: express.Response,
@@ -423,7 +423,7 @@ router.put(
 );
 
 router.put(
-  "/append/decks/:username/:project/:filename-recording.webm",
+  "/append/decks/:username/:project/:filename(*)-recording.webm",
   async function (
     req: express.Request,
     res: express.Response,
