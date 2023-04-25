@@ -1,5 +1,7 @@
 import { Account } from "./account";
 
+import FormData from "form-data";
+
 import fs from "fs";
 import path from "path";
 import database from "./database";
@@ -28,21 +30,19 @@ async function post(account: Account, project: string, filename: string) {
     throw "File not Found";
   }
 
-  let url = new URL("https://api.amberscript.com/api/jobs/upload-media");
+  const url = new URL("https://api.amberscript.com/api/jobs/upload-media");
   const params = {
     apiKey: apiKey,
     transcriptionType: "captions",
     jobType: "direct",
     language: "de",
-    callbackUrl: config.amberscriptCallbackUrl,
     numberOfSpeakers: "1",
+    callbackUrl: config.amberscriptCallbackUrl,
   };
   url.search = new URLSearchParams(params).toString();
-  console.log(url);
   const form = new FormData();
-  const buffer = fs.readFileSync(filepath);
-  const contents = buffer.toString();
-  form.append("file", contents);
+  const stream = fs.createReadStream(filepath);
+  form.append("file", stream);
   try {
     const response = await fetch(url, { method: "POST", body: form });
     if (response.ok) {
