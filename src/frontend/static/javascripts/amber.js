@@ -1,39 +1,45 @@
 let amberProject = undefined;
 let amberFilepath = undefined;
 
-function requestAmber() {
-  fetch("/api/amberscript", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      project: amberProject,
-      filepath: amberFilepath,
-    }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw { status: response.status, message: "Fehler." };
-      }
-    })
-    .then((json) => {
-      showAmberDialogMessage(json.message, "success");
+async function requestAmber() {
+  try {
+    const response = await fetch("/api/amberscript", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        project: amberProject,
+        filepath: amberFilepath,
+      }),
+    });
+    if (response && response.ok) {
+      showAmberDialogMessage(
+        "Ihre Anfrage wurde erfolgreich übermittelt.",
+        "success"
+      );
       setTimeout(() => {
         closeAmberDialog();
         window.location.replace("/ambers");
       }, 3000);
-    })
-    .catch((error) => {
-      if (error.message) {
-        showAmberDialogMessage(error.message, "error");
+    } else {
+      if (response && response.status) {
+        showAmberDialogMessage(`Anfragefehler: ${response.status}`, "error");
       } else {
-        showAmberDialogMessage("Fehler.", "error");
+        showAmberDialogMessage(`Anfragefehler: Keine Fehlernummer.`, "error");
       }
-    });
+    }
+  } catch (error) {
+    if (error.message) {
+      showAmberDialogMessage(`Anfragefehler: ${error.message}`, "error");
+    } else {
+      showAmberDialogMessage(
+        `Es ist ein nicht nachvollziehbarer Fehler aufgetreten. Bitte melden Sie sich bei den Administratoren.`,
+        "error"
+      );
+    }
+  }
 }
 
 function showAmberDialogMessage(message, type) {

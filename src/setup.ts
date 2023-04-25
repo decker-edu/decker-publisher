@@ -192,7 +192,7 @@ async function setup_amberscript() {
       user_id integer NOT NULL,
       projectname VARCHAR(255) NOT NULL,
       relative_filepath VARCHAR NOT NULL,
-      state VARCHAR NOT NULL,
+      status VARCHAR NOT NULL,
       FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE
     )`
   );

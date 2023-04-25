@@ -86,23 +86,23 @@ async function archive(
   projectname: string,
   filename: string,
   jobId: string,
-  jobstate: string
+  status: string
 ) {
-  if (!account || !projectname || !filename || !jobId || !jobstate) {
+  if (!account || !projectname || !filename || !jobId || !status) {
     console.error("Not enough data to archive job.");
     return;
   }
   const user_id = account.id;
-  if (!jobstate) {
-    jobstate = "OPEN";
+  if (!status) {
+    status = "OPEN";
   }
   console.log(
-    `[amberscript] creating new job: ${jobId}, ${user_id}, ${projectname}, ${filename}, ${jobstate}`
+    `[amberscript] creating new job: ${jobId}, ${user_id}, ${projectname}, ${filename}, ${status}`
   );
   try {
     await database.query(
-      "INSERT INTO amberscript_jobs (job_id, user_id, projectname, relative_filepath, state) VALUES ($1, $2, $3, $4, $5)",
-      [jobId, user_id, projectname, filename, jobstate]
+      "INSERT INTO amberscript_jobs (job_id, user_id, projectname, relative_filepath, status) VALUES ($1, $2, $3, $4, $5)",
+      [jobId, user_id, projectname, filename, status]
     );
     console.log("[amberscript] new job created at: ", Date.now());
   } catch (error) {
