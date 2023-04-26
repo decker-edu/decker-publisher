@@ -306,7 +306,7 @@ function getAllRecordings(
 }
 
 router.get(
-  "/recordings/decks/:username/:project/:filename-recording.webm",
+  "/recordings/decks/:username/:project/:filename(*)-recording.webm",
   async function (
     req: express.Request,
     res: express.Response,
