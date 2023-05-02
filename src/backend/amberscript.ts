@@ -164,6 +164,26 @@ async function importVTT(jobId: string) {
   }
 }
 
+async function getJobs(account: Account) {
+  const jobs = [];
+  try {
+    const result = await database.query(
+      "SELECT * FROM amberscript_jobs WHERE user_id = $1",
+      [account.id]
+    );
+    if (result) {
+      // job_id, user_id, projectname, relative_filepath, status
+      for (const job of result.rows) {
+        jobs.push(job);
+      }
+    }
+    return jobs;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
 async function publishError(jobId: string, status: string) {
   console.log("[TODO] Implement error publishing Amber");
 }
@@ -174,4 +194,5 @@ export default {
   importVTT,
   finallizeJob,
   publishError,
+  getJobs,
 };

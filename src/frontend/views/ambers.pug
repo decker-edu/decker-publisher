@@ -1,0 +1,26 @@
+extends layout
+
+block scripts 
+
+block content
+  header 
+    h1 Amberscriptaufträge
+  main
+    table
+      thead
+          tr
+            th Jobnummer
+            th Projektname
+            th Dateiname
+            th Status
+            th Aktionen
+        tbody
+          each job in jobs
+            tr
+              td = job.job_id
+              td = job.projectname
+              td = job.relative_filepath
+              td = status
+              td
+                text Nothing
+block dialogs

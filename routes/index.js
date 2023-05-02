@@ -237,7 +237,7 @@ router.get("/register/:token", async function (req, res, next) {
   });
 });
 
-function getAllRecordings(directory, deckname) {
+async function getAllRecordings(directory, deckname) {
   return new Promise((resolve, reject) => {
     fs.readdir(directory, (err, files) => {
       if (err) {

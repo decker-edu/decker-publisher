@@ -8,6 +8,7 @@ import database from "../../backend/database";
 import config from "../../../config.json";
 import child_process from "child_process";
 import { getChecksums } from "../../backend/routes/api";
+import amberscript from "../../backend/amberscript";
 
 const router = express.Router();
 
@@ -195,6 +196,31 @@ router.get(
 );
 
 router.get(
+  "/ambers",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    let admin = false;
+    let jobs = [];
+    const account = req.account;
+    if (account) {
+      admin = account.roles ? account.roles.includes("admin") : false;
+      jobs = await amberscript.getJobs(account);
+      return res.render("ambers", {
+        title: "Amberscript Videos",
+        admin: admin,
+        user: account,
+        jobs: jobs,
+      });
+    } else {
+      return res.redirect("/");
+    }
+  }
+);
+
+router.get(
   "/data-protection",
   async function (
     req: express.Request,
@@ -348,7 +374,7 @@ async function runFFMPEG(directory: string, deckname: string) {
         "ffmpeg -nostdin -v fatal -y -f concat -safe 0 -i " +
         (deckname + "-recording.mp4.list") +
         " -pix_fmt yuv420p -crf 27 -preset veryslow -tune stillimage -ac 1 -movflags +faststart -vcodec libx264 -r 30 -metadata comment=decker-crunched -acodec aac " +
-        (deckname + "-recording.mp4");
+        (deckname + "-recording-tmp.mp4");
       console.log("[EXEC]", command);
       child_process.exec(
         command,
@@ -364,6 +390,16 @@ async function runFFMPEG(directory: string, deckname: string) {
             console.log(stderr);
           }
           console.log("[PUT VIDEO] ffmpeg finished");
+          fs.rename(
+            deckname + "-recording-tmp.mp4",
+            deckname + "-recording.mp4",
+            (err) => {
+              if (err) {
+                console.error(err);
+              }
+              console.log("[PUT VIDEO] moved file");
+            }
+          );
         }
       );
     })
