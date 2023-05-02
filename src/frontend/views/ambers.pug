@@ -20,7 +20,14 @@ block content
             td= job.job_id
             td= job.projectname
             td= job.relative_filepath
-            td= status
+            td 
+              case job.status
+                when "DONE"
+                  text Erledigt
+                when "OPEN"
+                  text Ausstehend
+                when "ERROR"
+                  text Fehlerhaft
             td
               text Nothing
 block dialogs
