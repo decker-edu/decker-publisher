@@ -17,10 +17,10 @@ block content
       tbody
         each job in jobs
           tr
-            td = job.job_id
-            td = job.projectname
-            td = job.relative_filepath
-            td = status
+            td= job.job_id
+            td= job.projectname
+            td= job.relative_filepath
+            td= status
             td
               text Nothing
 block dialogs
