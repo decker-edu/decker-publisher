@@ -208,7 +208,6 @@ router.get(
     if (account) {
       admin = account.roles ? account.roles.includes("admin") : false;
       jobs = await amberscript.getJobs(account);
-      console.log(jobs);
       return res.render("ambers", {
         title: "Amberscript Videos",
         admin: admin,
