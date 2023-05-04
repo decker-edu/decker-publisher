@@ -206,7 +206,9 @@ async function setup_amberscript() {
       FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE
     )`
   );
-  console.log(`[amberscript_jobs] ${amberscript_glossaries.command} executed.`);
+  console.log(
+    `[amberscript_glossaries] ${amberscript_glossaries.command} executed.`
+  );
 }
 
 (async () => {

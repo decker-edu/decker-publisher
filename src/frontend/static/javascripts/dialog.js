@@ -9,10 +9,17 @@ function openDialog(id) {
 }
 
 function closeDialog(id) {
-  const element = document.getElementById(id);
-  if (element && element.tagName === "DIALOG") {
-    element.close();
-    currentDialog = undefined;
+  if (id) {
+    const element = document.getElementById(id);
+    if (element && element.tagName === "DIALOG") {
+      element.close();
+      currentDialog = undefined;
+    }
+  } else {
+    if (currentDialog) {
+      currentDialog.close();
+      currentDialog = undefined;
+    }
   }
 }
 

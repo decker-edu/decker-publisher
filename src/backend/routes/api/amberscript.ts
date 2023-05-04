@@ -152,14 +152,19 @@ router.delete(
     if (!account) {
       return res.status(401).end();
     }
+    const confirmation = req.body.passwordConfirmation;
     const id = req.params.id;
-    if (!id || id === "") {
+    if (!id || id === "" || !confirmation || confirmation === "") {
       return res.status(400).end();
     }
     try {
       const owner = await amberscript.glossaryOwner(id);
       if (owner != account.id) {
-        return res.status(403).end();
+        return res.status(403).json({ message: "Keine Berechtigung." }).end();
+      }
+      const confirmed = await account.checkPassword(confirmation);
+      if (!confirmed) {
+        return res.status(403).json({ message: "Falsches Passwort." }).end();
       }
       await amberscript.deleteGlossary(id);
       return res.status(200).end();

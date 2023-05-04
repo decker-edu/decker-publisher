@@ -220,6 +220,50 @@ router.get(
   }
 );
 
+interface GlossaryData {
+  name: string;
+  id: string;
+}
+
+router.get(
+  "/glossaries",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    let admin = false;
+    let glossaries: GlossaryData[] = [];
+    const account = req.account;
+    if (account) {
+      try {
+        const query = await database.query(
+          "SELECT * from amberscript_glossaries WHERE user_id = $1",
+          [account.id]
+        );
+        if (query && query.rows.length > 0) {
+          for (const entry of query.rows) {
+            glossaries.push({ name: entry.name, id: entry.glossary_id });
+          }
+        }
+        glossaries.push({ name: "TEST", id: "f5f5f5" });
+        admin = account.roles ? account.roles.includes("admin") : false;
+        return res.render("glossaries", {
+          title: "Amberscript Glossarübersicht",
+          admin: admin,
+          user: account,
+          glossaries: glossaries,
+        });
+      } catch (error) {
+        console.error(error);
+        return res.render("error", error);
+      }
+    } else {
+      return res.redirect("/");
+    }
+  }
+);
+
 router.get(
   "/amberscript/glossary/new",
   async function (
