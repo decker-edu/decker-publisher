@@ -181,6 +181,20 @@ router.get(
     if (fs.existsSync(vttfile)) {
       vttcontent = fs.readFileSync(vttfile, { encoding: "utf8", flag: "r" });
     }
+    let glossaries = [];
+    try {
+      const result = await database.query(
+        "SELECT * FROM amberscript_glossaries WHERE user_id = $1",
+        [account.id]
+      );
+      if (result && result.rows.length > 0) {
+        for (const glossary of result.rows) {
+          glossaries.push({ id: glossary.glossary_id, name: glossary.name });
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
     return res.render("video", {
       title: "Videoinformationen",
       user: req.account,
