@@ -697,3 +697,40 @@ li.caret:not(.active) * {
 li.caret.active::marker {
   content: "\f107";
 }
+
+#names-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+#names-container .name-entry {
+  display: flex;
+  flex-direction: row;
+  gap: 0.4rem;
+}
+
+#names-container .name-entry input {
+  flex-grow: 1;
+}
+
+#items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+#items-container .item-container {
+  display: flex;
+  flex-direction: row;
+  gap: 0.4rem;
+}
+
+#items-container .item-container .input-container {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  padding: 0.4rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  flex-grow: 1;
+}

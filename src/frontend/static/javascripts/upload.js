@@ -72,6 +72,7 @@ function endProgress(event) {
   //  clearInsertArea();
   const div = document.getElementById("insert-area");
   div.appendChild(document.createTextNode("Datei erfolgreich hochgeladen."));
+  setTimeout(() => window.location.reload(), 3000);
 }
 
 function upload() {

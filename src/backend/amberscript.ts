@@ -7,7 +7,11 @@ import fs from "fs";
 import path from "path";
 import database from "./database";
 import config from "../../config.json";
-import instance from "./database";
+
+const NO_API_KEY_ERROR_MESSAGE =
+  "Es wurde vom Administrator kein Amberscript-API-Schlüssel konfiguriert.";
+const NO_CALLBACK_URL_ERROR_MESSAGE =
+  "Es wurde vom Administrator keine Antwort-URL für Amberscript konfiguriert.";
 
 async function post(account: Account, project: string, filename: string) {
   const filepath = path.join(
@@ -18,17 +22,17 @@ async function post(account: Account, project: string, filename: string) {
   );
 
   if (!config.amberscriptCallbackUrl || config.amberscriptCallbackUrl === "") {
-    throw "No Amberscript Callback URL specified.";
+    throw NO_CALLBACK_URL_ERROR_MESSAGE;
   }
 
   const apiKey = config.amberscriptAPIKey;
 
   if (!apiKey || apiKey === "") {
-    throw "No API Key available.";
+    throw NO_API_KEY_ERROR_MESSAGE;
   }
 
   if (!fs.existsSync(filepath)) {
-    throw "File not Found";
+    throw "Datei nicht gefunden.";
   }
 
   const url = new URL("https://api.amberscript.com/api/jobs/upload-media");
@@ -188,6 +192,202 @@ async function publishError(jobId: string, status: string) {
   console.log("[TODO] Implement error publishing Amber");
 }
 
+interface Glossary {
+  id: string;
+  name: string;
+  names: string[];
+  items: GlossaryItem[];
+}
+
+interface GlossaryItem {
+  name: string;
+  description: string;
+}
+
+async function getGlossaries(): Promise<Glossary[]> {
+  const url = new URL("https://api.amberscript.com/api/glossary");
+  const apiKey = config.amberscriptAPIKey;
+  if (!apiKey || apiKey === "") {
+    throw NO_API_KEY_ERROR_MESSAGE;
+  }
+  const params = {
+    apiKey: apiKey,
+  };
+  url.search = new URLSearchParams(params).toString();
+  try {
+    const response = await fetch(url);
+    if (response.ok) {
+      const json = await response.json();
+      const result: Glossary[] = [];
+      for (const glossary of json) {
+        result.push({
+          id: glossary.id,
+          name: glossary.name,
+          names: glossary.names,
+          items: glossary.items,
+        });
+      }
+      return result;
+    } else {
+      throw "Konnte Glossarliste nicht empfangen.";
+    }
+  } catch (error) {
+    console.error(error);
+    throw "Konnte Glossarliste nicht empfangen.";
+  }
+}
+
+async function getGlossary(glossary_id: string): Promise<Glossary> {
+  const glossaries = await getGlossaries();
+  const found = glossaries.find((glossary) => (glossary.id = glossary_id));
+  if (found) {
+    return found;
+  } else {
+    throw `Kein Glossar mit ID ${glossary_id} gefunden.`;
+  }
+}
+
+async function createGlossary(
+  account: Account,
+  name: string,
+  names: string[],
+  items: GlossaryItem[]
+) {
+  const url = new URL("https://api.amberscript.com/api/glossary");
+  const apiKey = config.amberscriptAPIKey;
+  if (!apiKey || apiKey === "") {
+    throw "Es wurde vom Administrator kein Amberscript API Schlüssel konfiguriert.";
+  }
+  const params = {
+    apiKey: apiKey,
+  };
+  url.search = new URLSearchParams(params).toString();
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: JSON.stringify({
+        name: name,
+        names: names,
+        items: items,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.id) {
+        try {
+          await database.query(
+            "INSERT INTO amberscript_glossaries (glossary_id, user_id, name) VALUES ($1, $2, $3)",
+            [data.id, account.id, name]
+          );
+          console.log(
+            `[amberscript] created glossary (${data.id}) for user ${account.username}`
+          );
+        } catch (error) {
+          console.error(error);
+          throw "Konnte Datenbankeintrag des Glossars nicht anlegen.";
+        }
+      } else {
+        throw "Konnte Glossar nicht anlegen.";
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    throw "Konnte Glossar nicht anlegen.";
+  }
+}
+
+async function glossaryOwner(id: string): Promise<number> {
+  try {
+    const owner = await database.query(
+      "SELECT user_id FROM amberscript_glossaries WHERE glossary_id = $1",
+      [id]
+    );
+    if (owner && owner.rows.length > 0) {
+      return owner.rows[0].user_id;
+    } else {
+      return -1;
+    }
+  } catch (error) {
+    console.error(error);
+    throw "Datenbankfehler";
+  }
+}
+
+async function updateGlossary(
+  id: string,
+  name: string,
+  names: string[],
+  items: GlossaryItem[]
+) {
+  const url = new URL("https://api.amberscript.com/api/glossary/" + id);
+  const apiKey = config.amberscriptAPIKey;
+  if (!apiKey || apiKey === "") {
+    throw "Es wurde vom Administrator kein Amberscript API Schlüssel konfiguriert.";
+  }
+  const params = {
+    apiKey: apiKey,
+  };
+  url.search = new URLSearchParams(params).toString();
+  try {
+    const response = await fetch(url, {
+      method: "PUT",
+      body: JSON.stringify({
+        name: name,
+        names: names,
+        items: items,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+    if (response.ok) {
+      try {
+        await database.query(
+          "UPDATE amberscript_glossaries SET name = $1 WHERE glossary_id = $2",
+          [name, id]
+        );
+        console.log(`[amberscript] glossary ${id} has been updated`);
+      } catch (error) {
+        throw "Konnte Datenbankeintrag des Glossars nicht aktuallisieren.";
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    throw "Konnte Glossar nicht aktuallisieren.";
+  }
+}
+
+async function deleteGlossary(id: string) {
+  const url = new URL("https://api.amberscript.com/api/glossary/" + id);
+  const apiKey = config.amberscriptAPIKey;
+  if (!apiKey || apiKey === "") {
+    throw "Es wurde vom Administrator kein Amberscript API Schlüssel konfiguriert.";
+  }
+  const params = {
+    apiKey: apiKey,
+  };
+  url.search = new URLSearchParams(params).toString();
+  try {
+    const response = await fetch(url, {
+      method: "DELETE",
+    });
+    if (response.ok) {
+      try {
+        await database.query(
+          "DELETE FROM amberscript_glossaries WHERE glossary_id = $1",
+          [id]
+        );
+        console.log(`[amberscript] glossary ${id} has been deleted.`);
+      } catch (error) {
+        console.error(error);
+        throw "Konnte Datenbankeintrag des Glossars nicht löschen.";
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    throw "Konnte Glossar nicht löschen.";
+  }
+}
+
 export default {
   post,
   archive,
@@ -195,4 +395,10 @@ export default {
   finallizeJob,
   publishError,
   getJobs,
+  getGlossary,
+  getGlossaries,
+  createGlossary,
+  updateGlossary,
+  deleteGlossary,
+  glossaryOwner,
 };

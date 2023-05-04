@@ -39,7 +39,7 @@ router.post(
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const message = req.body;
     if (!message.status) {
-      return res.status(400).end();
+      return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
     }
     if (message.status && message.jobId) {
       const status = message.status;
@@ -53,6 +53,119 @@ router.post(
       }
     }
     return res.status(200).end();
+  }
+);
+
+router.post(
+  "/glossary",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const account = req.account;
+    if (!account) {
+      return res.status(401).end();
+    }
+    const name = req.body.name;
+    const names = req.body.names;
+    const items = req.body.items;
+    if (!name || name === "" || !names || !items) {
+      return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
+    }
+    try {
+      await amberscript.createGlossary(account, name, names, items);
+      return res.status(200).end();
+    } catch (error) {
+      return res.status(500).json({ message: error }).end();
+    }
+  }
+);
+
+router.get(
+  "/glossary/:id",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const account = req.account;
+    if (!account) {
+      return res.status(401).end();
+    }
+    const id = req.params.id;
+    if (!id || id === "") {
+      return res.status(400).end();
+    }
+    try {
+      const owner = await amberscript.glossaryOwner(id);
+      if (owner != account.id) {
+        return res.status(403).end();
+      }
+      const glossary = await amberscript.getGlossary(id);
+      return res.status(200).json(glossary).end();
+    } catch (error) {
+      return res.status(500).json({ message: error }).end();
+    }
+  }
+);
+
+router.put(
+  "/glossary/:id",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const account = req.account;
+    if (!account) {
+      return res.status(401).end();
+    }
+    const id = req.params.id;
+    const name = req.body.name;
+    const names = req.body.names;
+    const items = req.body.items;
+    if (!id || id === "" || !name || name === "" || !names || !items) {
+      return res.status(400).end();
+    }
+    try {
+      const owner = await amberscript.glossaryOwner(id);
+      if (owner != account.id) {
+        return res.status(403).end();
+      }
+      await amberscript.updateGlossary(id, name, names, items);
+      return res.status(200).end();
+    } catch (error) {
+      return res.status(500).json({ message: error }).end();
+    }
+  }
+);
+
+router.delete(
+  "/glossary/:id",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const account = req.account;
+    if (!account) {
+      return res.status(401).end();
+    }
+    const id = req.params.id;
+    if (!id || id === "") {
+      return res.status(400).end();
+    }
+    try {
+      const owner = await amberscript.glossaryOwner(id);
+      if (owner != account.id) {
+        return res.status(403).end();
+      }
+      await amberscript.deleteGlossary(id);
+      return res.status(200).end();
+    } catch (error) {
+      return res.status(500).json({ message: error }).end();
+    }
   }
 );
 

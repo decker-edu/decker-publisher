@@ -221,6 +221,57 @@ router.get(
 );
 
 router.get(
+  "/amberscript/glossary/new",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    let admin = false;
+    const account = req.account;
+    if (account) {
+      admin = account.roles ? account.roles.includes("admin") : false;
+      return res.render("edit-glossary", {
+        title: "Amberscript Glossar",
+        admin: admin,
+        user: account,
+      });
+    } else {
+      return res.redirect("/");
+    }
+  }
+);
+
+router.get(
+  "/amberscript/glossary/:id",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    let admin = false;
+    const account = req.account;
+    const glossary_id = req.params.id;
+    if (account) {
+      const owner = await amberscript.glossaryOwner(glossary_id);
+      if (account.id != owner) {
+        return res.redirect("/");
+      }
+      const glossary = await amberscript.getGlossary(glossary_id);
+      admin = account.roles ? account.roles.includes("admin") : false;
+      return res.render("edit-glossary", {
+        title: "Amberscript Glossar",
+        admin: admin,
+        user: account,
+        glossary: glossary,
+      });
+    } else {
+      return res.redirect("/");
+    }
+  }
+);
+
+router.get(
   "/data-protection",
   async function (
     req: express.Request,

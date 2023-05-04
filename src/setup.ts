@@ -197,6 +197,16 @@ async function setup_amberscript() {
     )`
   );
   console.log(`[amberscript_jobs] ${amberscript_jobs.command} executed.`);
+
+  const amberscript_glossaries = await database.query(
+    `CREATE TABLE IF NOT EXISTS amberscript_glossaries (
+      glossary_id VARCHAR(255) PRIMARY KEY UNIQUE NOT NULL,
+      user_id integer NOT NULL,
+      name VARCHAR NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE
+    )`
+  );
+  console.log(`[amberscript_jobs] ${amberscript_glossaries.command} executed.`);
 }
 
 (async () => {
