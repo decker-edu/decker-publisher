@@ -13,7 +13,14 @@ const NO_API_KEY_ERROR_MESSAGE =
 const NO_CALLBACK_URL_ERROR_MESSAGE =
   "Es wurde vom Administrator keine Antwort-URL für Amberscript konfiguriert.";
 
-async function post(account: Account, project: string, filename: string) {
+async function post(
+  account: Account,
+  project: string,
+  filename: string,
+  speakers: string,
+  language: string,
+  glossary: string
+) {
   const filepath = path.join(
     account.getDirectory(),
     "projects",
@@ -40,8 +47,9 @@ async function post(account: Account, project: string, filename: string) {
     apiKey: apiKey,
     transcriptionType: "captions",
     jobType: "direct",
-    language: "de",
-    numberOfSpeakers: "1",
+    language: language,
+    numberOfSpeakers: speakers,
+    glossaryId: glossary,
     callbackUrl: config.amberscriptCallbackUrl,
   };
   url.search = new URLSearchParams(params).toString();

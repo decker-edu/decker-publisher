@@ -3,6 +3,9 @@ let amberFilepath = undefined;
 
 async function requestAmber() {
   try {
+    const speakers = document.getElementById("amberscript-speakers").value;
+    const language = document.getElementById("amberscript-language").value;
+    const glossary = document.getElementById("amberscript-glossary").value;
     const response = await fetch("/api/amberscript", {
       method: "POST",
       headers: {
@@ -12,6 +15,9 @@ async function requestAmber() {
       body: JSON.stringify({
         project: amberProject,
         filepath: amberFilepath,
+        speakers: speakers,
+        language: language,
+        glossary: glossary,
       }),
     });
     if (response && response.ok) {

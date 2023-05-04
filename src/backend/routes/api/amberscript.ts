@@ -18,6 +18,9 @@ router.post(
     }
     const project = req.body.project || req.query.project;
     const filepath = req.body.filepath || req.query.filepath;
+    const speakers = req.body.speakers || req.query.speakers;
+    const language = req.body.language || req.query.language;
+    const glossary = req.body.glossary || req.query.glossary;
     const userdir = req.account.getDirectory();
     const fullpath = path.join(userdir, "projects", project, filepath);
 
@@ -25,7 +28,14 @@ router.post(
       return res.status(404).json({ message: "Datei nicht gefunden." }).end();
     }
     try {
-      await amberscript.post(req.account, project, filepath);
+      await amberscript.post(
+        req.account,
+        project,
+        filepath,
+        speakers,
+        language,
+        glossary
+      );
       return res.status(200).end();
     } catch (error) {
       console.error(error);
