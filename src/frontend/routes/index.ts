@@ -246,7 +246,6 @@ router.get(
             glossaries.push({ name: entry.name, id: entry.glossary_id });
           }
         }
-        glossaries.push({ name: "TEST", id: "f5f5f5" });
         admin = account.roles ? account.roles.includes("admin") : false;
         return res.render("glossaries", {
           title: "Amberscript Glossarübersicht",
