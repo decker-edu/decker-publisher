@@ -204,8 +204,8 @@ router.get(
         project: project,
         path: filepath,
         vtt: vttcontent,
-        glossaries: glossaries,
       },
+      glossaries: glossaries,
     });
   }
 );
