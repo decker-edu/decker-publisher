@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 
 import Project from "../../project";
+import { getChecksums } from "../api";
 
 function isSet(value: any): boolean {
   if (!value || value === "") {
@@ -36,7 +37,18 @@ function requireBody(name: string) {
 }
 
 router.get(
-  ":username/:project/:filename(*)",
+  "/",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    return res.status(200).json({ message: "dummy" }).end();
+  }
+);
+
+router.get(
+  "/:username/:project/:filename(*)",
   async (
     req: express.Request,
     res: express.Response,
@@ -59,5 +71,38 @@ router.get(
         .end();
     }
     const project = new Project(account, projectname);
+    return res.status(200).json({ message: "dummy" }).end();
   }
 );
+
+router.get(
+  "/:project/filetree",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account = req.account;
+    const projectname = req.params.project;
+    const projects = account.getProjects();
+    const project = projects.find(
+      (project, index, array) => project.name === projectname
+    );
+    if (!project) {
+      return res
+        .status(404)
+        .json({ message: escapeHTML("Projekt nicht gefunden.") })
+        .end();
+    }
+    const files = getChecksums(project.directory);
+    return res.status(200).json(files).end();
+  }
+);
+
+export default router;

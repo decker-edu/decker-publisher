@@ -4,14 +4,16 @@ block scripts
   script(defer src="/javascripts/sync.js")
 
 block content
-  script(type="application/json" id="project-file-data").
-    !{files}
   main#content
     div.content-block
-      button(onclick="requestFiles()") Lokalen Ordner auswählen
+      div.control-area
+        button(onclick="requestDirectoryAccess()") Lokalen Ordner auswählen
+        div.message-area
+          span#error-message
+        div.expanded-controls
+          button(disabled onclick="compareData()") Ordner miteinander vergleichen
       div.sync-area
         div.file-table#client-table
         div.file-table#server-table
-      button(onclick="compareData()") Ordner miteinander vergleichen
 
 block dialogs

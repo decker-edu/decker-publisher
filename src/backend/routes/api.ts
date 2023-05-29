@@ -27,6 +27,7 @@ import { getAllFiles } from "../../util";
 import config from "../../../config.json";
 
 import userAPI from "./api/user";
+import projectAPI from "./api/project";
 import amberAPI from "./api/amberscript";
 import feedback from "./feedback";
 
@@ -34,7 +35,7 @@ declare interface FileHashEntry {
   kind: "file" | "directory";
   filename: string;
   checksum: string;
-  modified?: Date;
+  modified?: number;
   children?: FileHashEntry[];
 }
 
@@ -50,7 +51,7 @@ export function getChecksums(directory: string): FileHashEntry[] {
         kind: "directory",
         filename: entry,
         checksum: "",
-        modified: stat.mtime,
+        modified: Math.floor(stat.mtime.getTime()),
         children: sub,
       };
       result.push(subtree);
@@ -61,7 +62,7 @@ export function getChecksums(directory: string): FileHashEntry[] {
         kind: "file",
         filename: entry,
         checksum: hash,
-        modified: stat.mtime,
+        modified: Math.floor(stat.mtime.getTime()),
         children: null,
       };
       result.push(data);
@@ -113,6 +114,7 @@ function verifyEmail(mail: string, allowedOrigins: string[]) {
 
 router.use("/feedback", feedback);
 router.use("/user", userAPI);
+router.use("/project", projectAPI);
 router.use("/amberscript", amberAPI);
 
 router.post(

@@ -4,6 +4,26 @@ if (
   typeof window.showDirectoryPicker !== "function"
 ) {
   featureAvailable = false;
+  displayChromeRequired();
+}
+
+async function fetchProjectData() {
+  const project = window.location.href.substring(
+    window.location.href.lastIndexOf("/") + 1
+  );
+  const response = await fetch(`/api/project/${project}/filetree`);
+  if (response.ok) {
+    const json = await response.json();
+    serverData = json;
+    appendData(json, document.getElementById("server-table"));
+  } else {
+    const json = await response.json();
+    const message = json.message;
+    displayError(message);
+  }
+}
+
+function displayChromeRequired() {
   const main = document.getElementById("content");
   while (main.firstChild) {
     main.removeChild(main.lastChild);
@@ -29,7 +49,12 @@ function toggleCaret(event) {
   }
 }
 
-function requestFiles() {
+function displayError(message) {
+  const span = document.getElementById("error-message");
+  span.innerText = message;
+}
+
+function requestDirectoryAccess() {
   if (!featureAvailable) return;
   chooseDirectory().then(() => {});
 }
@@ -57,12 +82,37 @@ async function appendData(dataset, list) {
   }
 }
 
-let fsHandle;
+let clientFileHandle;
+let publicDirHandle;
 
 async function chooseDirectory() {
   window.showDirectoryPicker({ mode: "readwrite" }).then(async (handle) => {
-    fsHandle = handle;
-    const checksums = await accumulateFileInformation(handle.entries());
+    if (!handle) {
+      displayError("Kein Ordner ausgewählt.");
+    }
+    const entries = handle.entries();
+    let hasDeckerYaml = false;
+    let hasPublicDir = false;
+    for await (const [path, entry] of entries) {
+      console.log(path, entry);
+      if (entry.kind === "file" && path === "decker.yaml") {
+        hasDeckerYaml = true;
+      }
+      if (entry.kind === "directory" && path === "public") {
+        publicDirHandle = entry;
+        hasPublicDir = true;
+      }
+    }
+    if (!hasDeckerYaml || !hasPublicDir) {
+      displayError(
+        "Das gewählte Verzeichnis ist kein übersetztes Decker-Verzeichnis."
+      );
+      return;
+    }
+    clientFileHandle = handle;
+    const checksums = await accumulateFileInformation(
+      publicDirHandle.entries()
+    );
     clientData = checksums;
     const clientList = document.getElementById("client-table");
     await appendData(checksums, clientList);
@@ -117,18 +167,15 @@ async function accumulateFileInformation(entries) {
   return data;
 }
 
-window.addEventListener("load", () => {
-  const serverTable = document.getElementById("server-table");
-  const data = document.getElementById("project-file-data");
-  const json = JSON.parse(data.innerHTML);
-  serverData = json;
-  appendData(json, serverTable);
-});
-
 let serverData;
 let clientData;
 
+let toUpload;
+let toDownload;
+
 function compareData() {
+  toUpload = [];
+  toDownload = [];
   compare(clientData, serverData);
 }
 
@@ -147,11 +194,12 @@ function compare(rootA, rootB) {
             a.reference.classList.add("same");
             b.reference.classList.add("same");
           } else {
-            console.log(a.lastModified, b.lastModified);
-            if (a.lastModified > b.lastModified) {
+            if (new Date(a.modified) > new Date(b.modified)) {
+              toUpload.push(a);
               a.reference.classList.add("newer");
               b.reference.classList.add("older");
             } else {
+              toDownload.push(b);
               b.reference.classList.add("newer");
               a.reference.classList.add("older");
             }
@@ -161,7 +209,12 @@ function compare(rootA, rootB) {
       }
     }
     if (!contains) {
+      toUpload.push(a);
       a.reference.classList.add("newer");
     }
   }
 }
+
+window.addEventListener("load", () => {
+  fetchProjectData();
+});
