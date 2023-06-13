@@ -34,22 +34,24 @@ import feedback from "./feedback";
 declare interface FileHashEntry {
   kind: "file" | "directory";
   filename: string;
+  filepath: string;
   checksum: string;
   modified?: number;
   children?: FileHashEntry[];
 }
 
-export function getChecksums(directory: string): FileHashEntry[] {
+export function getChecksums(root: string, directory: string): FileHashEntry[] {
   const result: FileHashEntry[] = [];
   const entries = fs.readdirSync(directory);
   for (const entry of entries) {
     const filepath = path.join(directory, entry);
     const stat = fs.statSync(filepath);
     if (stat.isDirectory()) {
-      const sub = getChecksums(filepath);
+      const sub = getChecksums(root, filepath);
       const subtree: FileHashEntry = {
         kind: "directory",
         filename: entry,
+        filepath: path.relative(root, path.join(directory, entry)),
         checksum: "",
         modified: Math.floor(stat.mtime.getTime()),
         children: sub,
@@ -61,6 +63,7 @@ export function getChecksums(directory: string): FileHashEntry[] {
       const data: FileHashEntry = {
         kind: "file",
         filename: entry,
+        filepath: path.relative(root, path.join(directory, entry)),
         checksum: hash,
         modified: Math.floor(stat.mtime.getTime()),
         children: null,
@@ -353,29 +356,6 @@ router.post(
     } else {
       return res.status(200).json({ message: "Anfrage gesendet." }).end();
     }
-  }
-);
-
-router.get(
-  "/user/:username/project/:projectname",
-  async (
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    const account: Account = req.account;
-    const username = req.params.username;
-    const projectname = req.params.projectname;
-    if (account.username !== username) {
-      return res.status(401).end();
-    }
-    const userdir = account.getDirectory();
-    const projectDirectory = path.join(userdir, "projects", projectname);
-    if (!fs.existsSync(projectDirectory)) {
-      return res.status(404).end();
-    }
-    const content = getChecksums(projectDirectory);
-    return res.status(200).json(content).end();
   }
 );
 

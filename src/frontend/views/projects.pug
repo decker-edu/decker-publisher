@@ -14,23 +14,29 @@ block content
       table 
         thead
           tr
-            th Projektname
+            th Foliensatz
             th Aufzeichnungen
             th Aktionen
         tbody
           each project in projects
             tr
               td
-                a(href="/decks/" + user.username + "/" + project.name + "/")= project.name
+                a.button-like(href="/decks/" + account.username + "/" + project.name + "/")
+                  i.fas.fa-external-link
+                  text= project.name
               td
                 each video in project.videos
                   button.video-button(onclick="openVideoDialog('"+project.name+"', '"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
                     i.fas.fa-film
                     text= video.filename
               td
-                button(onclick="openDeleteProjectDialog('"+project.name+"')" aria-label="Projekt "+project.name+" löschen") 
-                  i.fas.fa-trash
-                  text Löschen
+                div.actions
+                  button(onclick="openDeleteProjectDialog('"+project.name+"')" aria-label="Projekt "+project.name+" löschen") 
+                    i.fas.fa-trash
+                    text Löschen
+                  a.button-like(href="/sync/" + account.username + "/" + project.name)
+                    i.fas.fa-tasks-alt
+                    text Verwalten
     div#upload-area
       button(onclick="addUpload()" aria-label="Neues Projekt hochladen")
         i.fas.fa-plus

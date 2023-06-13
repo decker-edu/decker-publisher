@@ -75,7 +75,7 @@ router.post(
   ) => {
     const account = req.account;
     if (!account) {
-      return res.status(401).end();
+      return res.status(403).end();
     }
     const name = req.body.name;
     const names = req.body.names;
@@ -101,7 +101,7 @@ router.get(
   ) => {
     const account = req.account;
     if (!account) {
-      return res.status(401).end();
+      return res.status(403).end();
     }
     const id = req.params.id;
     if (!id || id === "") {
@@ -129,7 +129,7 @@ router.put(
   ) => {
     const account = req.account;
     if (!account) {
-      return res.status(401).end();
+      return res.status(403).end();
     }
     const id = req.params.id;
     const name = req.body.name;
@@ -160,7 +160,7 @@ router.delete(
   ) => {
     const account = req.account;
     if (!account) {
-      return res.status(401).end();
+      return res.status(403).end();
     }
     const confirmation = req.body.passwordConfirmation;
     const id = req.params.id;

@@ -7,7 +7,6 @@ import fs from "fs";
 import database from "../../backend/database";
 import config from "../../../config.json";
 import child_process from "child_process";
-import { getChecksums } from "../../backend/routes/api";
 import amberscript from "../../backend/amberscript";
 
 const router = express.Router();
@@ -44,7 +43,6 @@ router.get(
     return res.render("index", {
       title: "Decker",
       admin: admin,
-      user: req.account,
     });
   }
 );
@@ -64,7 +62,6 @@ router.get(
     return res.render("home", {
       title: "Decker: Persönlicher Bereich",
       admin: admin,
-      user: req.account,
     });
   }
 );
@@ -80,7 +77,6 @@ router.get(
     return res.render("profile", {
       title: "Decker: Profileinstellungen",
       admin: admin,
-      user: req.account,
     });
   }
 );
@@ -95,7 +91,6 @@ router.get(
     return res.render("configuration", {
       title: "Decker: Konfiguration",
       admin: admin,
-      user: req.account,
     });
   }
 );
@@ -115,7 +110,6 @@ router.get(
     return res.render("projects", {
       title: "Projektübersicht",
       admin: admin,
-      user: req.account,
       projects: projects,
     });
   }
@@ -135,7 +129,6 @@ router.get(
     return res.render("convert", {
       title: "Decker: PDF-Konvertierung",
       admin: admin,
-      user: req.account,
     });
   }
 );
@@ -197,7 +190,6 @@ router.get(
     }
     return res.render("video", {
       title: "Videoinformationen",
-      user: req.account,
       admin: admin,
       video: {
         url: path.join("decks", req.account.username, project, filepath),
@@ -226,7 +218,6 @@ router.get(
       return res.render("ambers", {
         title: "Amberscript Videos",
         admin: admin,
-        user: account,
         jobs: jobs,
       });
     } else {
@@ -265,7 +256,6 @@ router.get(
         return res.render("glossaries", {
           title: "Amberscript Glossarübersicht",
           admin: admin,
-          user: account,
           glossaries: glossaries,
         });
       } catch (error) {
@@ -292,7 +282,6 @@ router.get(
       return res.render("edit-glossary", {
         title: "Amberscript Glossar",
         admin: admin,
-        user: account,
       });
     } else {
       return res.redirect("/");
@@ -320,7 +309,6 @@ router.get(
       return res.render("edit-glossary", {
         title: "Amberscript Glossar",
         admin: admin,
-        user: account,
         glossary: glossary,
       });
     } else {
@@ -344,36 +332,50 @@ router.get(
     return res.render("data-protection", {
       title: "Datenschutzhinweise",
       admin: admin,
-      user: account,
     });
   }
 );
 
 router.get(
-  "/sync/:projectname",
+  "/sync/:username/:projectname",
   async function (
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
   ) {
     const account = req.account;
+    const username = req.params.username;
     const projectname = req.params.projectname;
     if (!account) {
-      return res.redirect("/");
+      return res.render("error", {
+        message: "Sie sind nicht eingeloggt.",
+        error: {
+          status: 403,
+        },
+      });
+    }
+    if (account.username !== username) {
+      return res.render("error", {
+        message: "Sie haben keine Berechtigung diese Seite zu besuchen.",
+        error: {
+          status: 403,
+        },
+      });
     }
     const projects = account.getProjects();
     const project = projects.find(
       (project, index, array) => project.name === projectname
     );
     if (!project) {
-      return res.redirect("/");
+      return res.render("error", {
+        message: "Kein solches Projekt gefunden.",
+        error: {
+          status: 404,
+        },
+      });
     }
-    const files = getChecksums(project.directory);
-    const fileJSON = JSON.stringify(files);
     return res.render("sync", {
-      title: "Sync",
-      files: fileJSON,
-      user: req.account,
+      title: "Dateiverwaltung für Projekt " + projectname,
     });
   }
 );
@@ -500,8 +502,8 @@ async function runFFMPEG(directory: string, deckname: string) {
           }
           console.log("[PUT VIDEO] ffmpeg finished");
           fs.rename(
-            deckname + "-recording-tmp.mp4",
-            deckname + "-recording.mp4",
+            path.join(directory, deckname + "-recording-tmp.mp4"),
+            path.join(directory, deckname + "-recording.mp4"),
             (err) => {
               if (err) {
                 console.error(err);
@@ -655,7 +657,6 @@ router.get("/error", (req: Request, res: Response, next: NextFunction) => {
   return res.render("index", {
     title: "Decker",
     admin: admin,
-    user: req.account,
   });
 });
 

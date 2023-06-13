@@ -21,9 +21,10 @@ block content
       | speech-recognition-language: "de-DE"
     h2 rsync
     pre.code
-      | rsync-destination:
-      |   host: "decker-#{user.username}@decker.cs.tu-dortmund.de"
-      |   path: '"~/decks/projektname"'
-      |   options: "-av"
+      | publish:
+      |   rsync:
+      |     destination: 'decker-#{account.username}@decker.cs.tu-dortmund.de:/home/decker-#{account.username}/decks/projectname'
+      |     options:
+      |       - '-av'
 
 block dialogs

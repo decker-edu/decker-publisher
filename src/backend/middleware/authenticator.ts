@@ -11,8 +11,10 @@ export default async function (
     try {
       const account = await Account.fromDatabase(userId);
       request.account = account;
+      response.locals.account = account;
     } catch (error) {
       request.account = undefined;
+      response.locals.account = undefined;
     } finally {
       return next();
     }
@@ -25,12 +27,19 @@ export default async function (
         const verified: boolean = await account.checkPassword(password);
         if (verified) {
           request.account = account;
+          response.locals.account = account;
         } else {
           request.account = undefined;
+          response.locals.account = undefined;
         }
+      } else {
+        request.account = undefined;
+        response.locals.account = undefined;
       }
     } catch (error) {
+      console.error(error);
       request.account = undefined;
+      response.locals.account = undefined;
     } finally {
       return next();
     }

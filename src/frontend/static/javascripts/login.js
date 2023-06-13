@@ -102,21 +102,44 @@ async function logout() {
   }
 }
 
-let loginDialog = document.getElementById("login-dialog");
-if (loginDialog) {
-  loginDialog.addEventListener("keypress", (event) => {
-    let usernameField = document.getElementById("login-user");
-    let passwordField = document.getElementById("login-pass");
-    if (event.key === "Enter") {
+window.addEventListener("load", (event) => {
+  let loginButton = document.getElementById("login-button");
+  if (loginButton) {
+    loginButton.addEventListener("click", (event) => {
       event.preventDefault();
-      if (document.activeElement && document.activeElement === usernameField) {
-        passwordField.focus();
-        return;
+      login();
+    });
+  }
+
+  let loginDialog = document.getElementById("login-dialog");
+  if (loginDialog) {
+    loginDialog.addEventListener("close", (event) => {
+      const buttonName = loginDialog.returnValue;
+      if (buttonName === "login-button") {
+        login();
+        event.preventDefault();
       }
-      if (document.activeElement && document.activeElement === passwordField) {
-        asyncLogin();
-        return;
+    });
+    loginDialog.addEventListener("keypress", (event) => {
+      let usernameField = document.getElementById("login-user");
+      let passwordField = document.getElementById("login-pass");
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (
+          document.activeElement &&
+          document.activeElement === usernameField
+        ) {
+          passwordField.focus();
+          return;
+        }
+        if (
+          document.activeElement &&
+          document.activeElement === passwordField
+        ) {
+          login();
+          return;
+        }
       }
-    }
-  });
-}
+    });
+  }
+});

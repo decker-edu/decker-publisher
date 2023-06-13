@@ -9,6 +9,7 @@ import path from "path";
 
 import Project from "../../project";
 import { getChecksums } from "../api";
+import fileUpload from "express-fileupload";
 
 function isSet(value: any): boolean {
   if (!value || value === "") {
@@ -71,12 +72,59 @@ router.get(
         .end();
     }
     const project = new Project(account, projectname);
-    return res.status(200).json({ message: "dummy" }).end();
+    // const content = project.readFile(filename);
+    return res.sendFile(path.join(project.directory, filename));
+  }
+);
+
+router.post(
+  "/:username/:project/:filename(*)",
+  fileUpload(),
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (
+      !req.files ||
+      Object.keys(req.files).length === 0 ||
+      Array.isArray(req.files.file)
+    ) {
+      return res.status(400).end();
+    }
+    const file: fileUpload.UploadedFile = req.files.file;
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account = req.account;
+    const username = req.params.username;
+    const projectname = req.params.project;
+    const filename = req.params.filename;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const project = new Project(account, projectname);
+    // const content = project.readFile(filename);
+    try {
+      if (project.writeFile(filename, file.data)) {
+        return res.status(200).end();
+      } else {
+        return res.status(500).end();
+      }
+    } catch (error) {
+      return res.status(500).end();
+    }
   }
 );
 
 router.get(
-  "/:project/filetree",
+  "/:username/:project",
   async (
     req: express.Request,
     res: express.Response,
@@ -89,6 +137,13 @@ router.get(
         .end();
     }
     const account = req.account;
+    const username = req.params.username;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
     const projectname = req.params.project;
     const projects = account.getProjects();
     const project = projects.find(
@@ -100,7 +155,7 @@ router.get(
         .json({ message: escapeHTML("Projekt nicht gefunden.") })
         .end();
     }
-    const files = getChecksums(project.directory);
+    const files = getChecksums(project.directory, project.directory);
     return res.status(200).json(files).end();
   }
 );

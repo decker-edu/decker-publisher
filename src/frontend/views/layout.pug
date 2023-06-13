@@ -22,7 +22,7 @@ html
         a.navigation.button-like(href="/") 
           i.fas.fa-home
           text Hauptseite
-        if user
+        if account
           a.navigation.button-like(href="/home") 
             i.fas.fa-cog
             text Persönliche Seite 
@@ -31,10 +31,10 @@ html
             i.fas.fa-toolbox
             text Administration
       div.user-navigation
-        if user
+        if account
           button.user-menu-button(onclick="openUserDialog()")
             i.fas.fa-user
-            text= user.username
+            text= account.username
         else
           button.login-button(onclick="openLoginDialog()")
             i.fas.fa-sign-in-alt
@@ -45,11 +45,11 @@ html
       a(href="https://www.tu-dortmund.de/impressum") Impressum
       a(href="/data-protection") Datenschutz
     block dialogs
-    if user
+    if account
       dialog#user-dialog
         form#user-form
           fieldset#user-fieldset
-            legend= user.username
+            legend= account.username
             div#user-message.dialog-message
             div#user-inputs.dialog-input-area
             div.dialog-buttons
@@ -61,7 +61,7 @@ html
                 text Logout
     else
       dialog#login-dialog
-        form#login-form
+        form#login-form(method="dialog")
           fieldset#login-fieldset
             legend Login
             div#login-message.dialog-message
@@ -73,4 +73,4 @@ html
             div.dialog-buttons
               button(type="button" onclick="closeLoginDialog()") Abbrechen
               a.button-like(href="/password-recovery") Passwort vergessen
-              button(type="button" onclick="login()") Login
+              button#login-button(type="submit" name="login-button") Login

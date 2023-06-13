@@ -7,11 +7,14 @@ if (
   displayChromeRequired();
 }
 
+const locationParts = window.location.href.split("/");
+
+const project = locationParts[locationParts.length - 1];
+
+const username = locationParts[locationParts.length - 2];
+
 async function fetchProjectData() {
-  const project = window.location.href.substring(
-    window.location.href.lastIndexOf("/") + 1
-  );
-  const response = await fetch(`/api/project/${project}/filetree`);
+  const response = await fetch(`/api/project/${username}/${project}`);
   if (response.ok) {
     const json = await response.json();
     serverData = json;
@@ -59,12 +62,19 @@ function requestDirectoryAccess() {
   chooseDirectory().then(() => {});
 }
 
+function clearElement(element) {
+  while (element.firstChild) {
+    element.removeChild(element.lastChild);
+  }
+}
+
 async function appendData(dataset, list) {
   for (const item of dataset) {
     if (item.kind === "file") {
       const listitem = document.createElement("li");
       listitem.classList.add("file-item");
       listitem.innerText = item.filename;
+      listitem.title = new Date(item.modified);
       item.reference = listitem;
       list.appendChild(listitem);
     } else if (item.kind === "directory") {
@@ -82,19 +92,47 @@ async function appendData(dataset, list) {
   }
 }
 
-let clientFileHandle;
+let clientRootHandle;
 let publicDirHandle;
+
+async function fetchFile(filepath) {
+  try {
+    const response = await fetch(
+      `/api/project/${username}/${project}/${filepath}`
+    );
+    if (response && response.ok) {
+      return response.arrayBuffer();
+    } else {
+      const json = await response.json();
+      console.error(response.status, json.message);
+      return null;
+    }
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+async function readClientData() {
+  const checksums = await accumulateFileInformation(
+    publicDirHandle.entries(),
+    ""
+  );
+  clientData = checksums;
+  const clientList = document.getElementById("client-table");
+  await appendData(checksums, clientList);
+}
 
 async function chooseDirectory() {
   window.showDirectoryPicker({ mode: "readwrite" }).then(async (handle) => {
     if (!handle) {
       displayError("Kein Ordner ausgewählt.");
     }
+    clearElement(document.getElementById("client-table"));
     const entries = handle.entries();
     let hasDeckerYaml = false;
     let hasPublicDir = false;
     for await (const [path, entry] of entries) {
-      console.log(path, entry);
       if (entry.kind === "file" && path === "decker.yaml") {
         hasDeckerYaml = true;
       }
@@ -104,41 +142,39 @@ async function chooseDirectory() {
       }
     }
     if (!hasDeckerYaml || !hasPublicDir) {
-      displayError(
-        "Das gewählte Verzeichnis ist kein übersetztes Decker-Verzeichnis."
-      );
+      displayError("Das gewählte Verzeichnis ist kein Projektverzeichnis.");
       return;
     }
-    clientFileHandle = handle;
-    const checksums = await accumulateFileInformation(
-      publicDirHandle.entries()
-    );
-    clientData = checksums;
-    const clientList = document.getElementById("client-table");
-    await appendData(checksums, clientList);
+    clientRootHandle = handle;
+    await readClientData();
     compareData();
+    document.getElementById("upload-button").disabled = false;
+    document.getElementById("download-button").disabled = false;
   });
 }
 
-async function pushFile(filename, file) {
-  const buffer = await file.arrayBuffer();
-  const response = await fetch("/api/project/workshop/sync/" + filename, {
-    method: "POST",
-    body: {
-      data: buffer,
-    },
-  });
+async function pushFile(filepath, file) {
+  const data = new FormData();
+  data.append("file", file);
+  const response = await fetch(
+    `/api/project/${username}/${project}/${filepath}`,
+    {
+      method: "POST",
+      body: data,
+    }
+  );
   if (response && response.ok) {
     return;
   } else {
     const status = response.status;
-    console.error("pushing file " + filename + " ended in status: " + status);
+    console.error("pushing file " + filepath + " ended in status: " + status);
   }
 }
 
-async function accumulateFileInformation(entries) {
+async function accumulateFileInformation(entries, rootPath) {
   const data = [];
   for await (const [key, value] of entries) {
+    const path = rootPath + key;
     if (value.kind === "file") {
       const file = await value.getFile();
       const lastModified = file.lastModified;
@@ -149,15 +185,20 @@ async function accumulateFileInformation(entries) {
       data.push({
         kind: "file",
         filename: key,
+        filepath: path,
         modified: lastModified,
         checksum: hex,
         children: null,
       });
     } else if (value.kind === "directory") {
-      const recursion = await accumulateFileInformation(value.entries());
+      const recursion = await accumulateFileInformation(
+        value.entries(),
+        path + "/"
+      );
       data.push({
         kind: "directory",
         filename: key,
+        filepath: path,
         modified: null,
         checksum: null,
         children: recursion,
@@ -173,38 +214,95 @@ let clientData;
 let toUpload;
 let toDownload;
 
+function isGeneratedFile(filename) {
+  const regex =
+    /.+(-recording.webm|-recording.mp4|-recording.mp4.list|-annot.json|-recording-[0-9]+.webm|-times.json)$/;
+  return regex.test(filename);
+}
+
+async function download() {
+  try {
+    for (const entry of toDownload) {
+      let targetDir = clientRootHandle;
+      if (isGeneratedFile(entry.filename)) {
+        console.log(entry.filepath.split("/"));
+        const buffer = await fetchFile(entry.filepath);
+        if (!buffer) {
+          continue;
+        }
+        const parts = entry.filepath.split("/");
+        while (parts.length > 1) {
+          const dir = parts.shift();
+          targetDir = await targetDir.getDirectoryHandle(dir);
+        }
+        const file = await targetDir.getFileHandle(parts[0], { create: true });
+        const writable = await file.createWritable();
+        await writable.write(buffer);
+        await writable.close();
+      }
+    }
+    clearElement(document.getElementById("client-table"));
+    await readClientData();
+    compareData();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function upload() {
+  try {
+    for (const entry of toUpload) {
+      let targetDir = await clientRootHandle.getDirectoryHandle("public");
+      const parts = entry.filepath.split("/");
+      while (parts.length > 1) {
+        const dir = parts.shift();
+        targetDir = await targetDir.getDirectoryHandle(dir);
+      }
+      const handle = await targetDir.getFileHandle(parts[0]);
+      const file = await handle.getFile();
+      if (file) {
+        await pushFile(entry.filepath, file);
+      }
+    }
+    clearElement(document.getElementById("server-table"));
+    await fetchProjectData();
+    compareData();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 function compareData() {
   toUpload = [];
   toDownload = [];
   compare(clientData, serverData);
 }
 
-function compare(rootA, rootB) {
-  for (const a of rootA) {
+function compare(clientList, serverList) {
+  const handled = new Set();
+  for (const a of clientList) {
     let contains = false;
-    for (const b of rootB) {
-      if (a.kind === b.kind) {
-        if (a.filename === b.filename) {
-          contains = true;
-          if (a.kind === "directory") {
-            compare(a.children, b.children);
-            break;
-          }
-          if (a.checksum === b.checksum) {
-            a.reference.classList.add("same");
-            b.reference.classList.add("same");
-          } else {
-            if (new Date(a.modified) > new Date(b.modified)) {
-              toUpload.push(a);
-              a.reference.classList.add("newer");
-              b.reference.classList.add("older");
-            } else {
-              toDownload.push(b);
-              b.reference.classList.add("newer");
-              a.reference.classList.add("older");
-            }
-          }
+    for (const b of serverList) {
+      if (a.filename === b.filename && a.kind === b.kind) {
+        contains = true;
+        if (a.kind === "directory") {
+          compare(a.children, b.children);
           break;
+        }
+        handled.add(b);
+        if (a.checksum === b.checksum) {
+          a.reference.classList.add("same");
+          b.reference.classList.add("same");
+        } else {
+          if (new Date(a.modified).getTime() > new Date(b.modified).getTime()) {
+            toUpload.push(a);
+            a.reference.classList.add("newer");
+            b.reference.classList.add("older");
+          } else {
+            toDownload.push(b);
+            b.reference.classList.add("newer");
+            a.reference.classList.add("older");
+          }
         }
       }
     }
@@ -212,6 +310,18 @@ function compare(rootA, rootB) {
       toUpload.push(a);
       a.reference.classList.add("newer");
     }
+  }
+  markServerFilesAsNew(handled, serverList);
+}
+
+function markServerFilesAsNew(handled, serverList) {
+  for (const b of serverList) {
+    if (handled.has(b)) continue;
+    if (b.kind === "directory") {
+      continue;
+    }
+    toDownload.push(b);
+    b.reference.classList.add("newer");
   }
 }
 

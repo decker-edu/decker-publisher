@@ -12,12 +12,12 @@ block content
       form
         div.form-grid
           label(for="profile-username") Nutzername
-          input#profile-username(disabled pattern="*" type="text" value=user.username)
+          input#profile-username(disabled pattern="*" type="text" value=account.username)
           label(for="profile-email") E-Mail
-          input#profile-email(disabled pattern=".+@.+\\..{2,3}" type="email" value=user.email)
+          input#profile-email(disabled pattern=".+@.+\\..{2,3}" type="email" value=account.email)
           label(for="profile-sshkey") SSH-Schlüssel
           div.key-area
-            each key in user.keys
+            each key in account.keys
               div.key-entry
                 textarea#profile-sshkey(disabled style="resize: none; width: 100%; overflow: hidden; min-height: 12.5em;")= key
                 button(type="button" onclick="openRemoveKeyDialog(\""+key+"\")")
@@ -46,7 +46,7 @@ block dialogs
           label(for="change-password-new-repeat") Neues Passwort Wiederholen
           input#change-password-new-repeat(type="password" required pattern="^.{8,}" placeholder="Passwort Wiederholen" onkeyup="passwordChanged()")
       div.dialog-buttons
-        button#change-password-button(disabled type="button" onclick="changePassword(\""+user.username+"\")")
+        button#change-password-button(disabled type="button" onclick="changePassword(\""+account.username+"\")")
           i.fas.fa-key
           text Passwort Ändern
         button(type="button" onclick="closeDialog(\"change-password\")")
@@ -64,7 +64,7 @@ block dialogs
           label(for="change-email-confirmation") Mit Passwort bestätigen
           input#change-email-confirmation(type="password" required pattern="^.{8,}" placeholder="Passwort" onkeyup="emailChanged()")
       div.dialog-buttons
-        button#change-email-button(disabled type="button" onclick="changeEmail(\""+user.username+"\")")
+        button#change-email-button(disabled type="button" onclick="changeEmail(\""+account.username+"\")")
           i.fas.fa-envelope
           text E-Mail-Adresse ändern
         button(type="button" onclick="closeDialog(\"change-email\")")
@@ -82,7 +82,7 @@ block dialogs
           label(for="remove-ssh-key-confirmation") Mit Passwort bestätigen
           input#remove-ssh-key-confirmation(required name="password" type="password" pattern="^.{8,}" placeholder="Passwort" onkeyup="deleteChanged()")
       div.dialog-buttons
-        button#remove-ssh-key-button(disabled type="button" onclick="removeKey(\""+user.username+"\")")
+        button#remove-ssh-key-button(disabled type="button" onclick="removeKey(\""+account.username+"\")")
           i.fas.fa-trash
           text SSH-Schlüssel entfernen
         button(type="button" onclick="closeDialog(\"remove-ssh-key-dialog\")")
@@ -101,7 +101,7 @@ block dialogs
           label(for="add-ssh-key-confirmation") Mit Passwort bestätigen
           input#add-ssh-key-confirmation(required name="password" type="password" pattern="^.{8,}" placeholder="Passwort" onkeyup="sshkeyChanged()")
       div.dialog-buttons
-        button#add-ssh-key-button(disabled type="button" onclick="addKey(\""+user.username+"\")")
+        button#add-ssh-key-button(disabled type="button" onclick="addKey(\""+account.username+"\")")
           i.fas.fa-key
           text SSH-Schlüssel hinzufügen
         button(type="button" onclick="closeDialog(\"add-ssh-key\")")
@@ -120,7 +120,7 @@ block dialogs
           label(for="delete-account-confirmation") Mit Passwort bestätigen
           input#delete-account-confirmation(required name="password" type="password" pattern="^.{8,}" placeholder="Passwort" onchange="sshkeyChanged()")
     div.dialog-buttons
-      //button#delete-account-button(disabled type="button" onclick="deleteAccount(\""+user.username+"\")")
+      //button#delete-account-button(disabled type="button" onclick="deleteAccount(\""+account.username+"\")")
         i.fas.fa-trash
         text Konto löschen
       button(type="button" onclick="closeDialog(\"delete-account\")")

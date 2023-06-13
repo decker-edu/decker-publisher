@@ -11,7 +11,8 @@ block content
         div.message-area
           span#error-message
         div.expanded-controls
-          button(disabled onclick="compareData()") Ordner miteinander vergleichen
+          button#upload-button(disabled onclick="upload()") Lokale Dateien hochladen
+          button#download-button(disabled onclick="download()") Generierte Dateien herunterladen
       div.sync-area
         div.file-table#client-table
         div.file-table#server-table

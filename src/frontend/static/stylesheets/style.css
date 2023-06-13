@@ -366,10 +366,13 @@ main a.button-like {
   border: none;
   border-radius: 0.5rem;
   padding: 0.5rem;
-  font-weight: bold;
   cursor: pointer;
 
   text-decoration: none;
+}
+
+main a.button-like text {
+  line-height: 2rem;
 }
 
 main a.button-like:hover {
