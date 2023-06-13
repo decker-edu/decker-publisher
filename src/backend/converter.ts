@@ -70,81 +70,83 @@ async function extractMeta(
     fs.mkdirSync(pagesDirectory, { recursive: true });
   }
   const pdf2svg = runPDF2SVG(filepath, pagesDirectory, filename);
-  pdf2svg.then(([stdout, stderr]) => {
-    if (stdout) console.log(stdout);
-    if (stderr) console.error(stderr);
-    pdfInfo.pageTitles = [];
-    for (const entry of pdfInfo.entries) {
-      if (pdfInfo.pageTitles[entry.page]) {
-        console.log(
-          "[pdf] Duplicate Bookmark Target:",
-          entry,
-          pdfInfo.pageTitles[entry.page]
-        );
-        continue;
-      } else {
-        pdfInfo.pageTitles[entry.page] = entry.title;
-      }
-    }
-    let mostRecentTitle = "Unknown Title";
-    let mostRecentPageWithTitle = 1;
-    for (let page = 1; page <= pdfInfo.pages; page++) {
-      if (pdfInfo.pageTitles[page]) {
-        mostRecentTitle = pdfInfo.pageTitles[page];
-        mostRecentPageWithTitle = page;
-      } else {
-        if (page === 1) {
-          pdfInfo.pageTitles[page] = mostRecentTitle;
+  pdf2svg
+    .then(([stdout, stderr]) => {
+      if (stdout) console.log(stdout);
+      if (stderr) console.error(stderr);
+      pdfInfo.pageTitles = [];
+      for (const entry of pdfInfo.entries) {
+        if (pdfInfo.pageTitles[entry.page]) {
+          console.log(
+            "[pdf] Duplicate Bookmark Target:",
+            entry,
+            pdfInfo.pageTitles[entry.page]
+          );
+          continue;
         } else {
-          pdfInfo.pageTitles[page - 1] =
-            mostRecentTitle + ` (${page - mostRecentPageWithTitle})`;
-          pdfInfo.pageTitles[page] =
-            mostRecentTitle + ` (${page - mostRecentPageWithTitle + 1})`;
+          pdfInfo.pageTitles[entry.page] = entry.title;
         }
       }
-    }
-    let deckerSource = "---\n";
-    deckerSource += `title: ${
-      pdfInfo.pdfTitle ? pdfInfo.pdfTitle : "Unknown Presentation Title"
-    }\n`;
-    deckerSource += `author: ${
-      pdfInfo.author ? pdfInfo.author : "Unknown Author"
-    }\n`;
-    deckerSource += `reveal:\n  width: ${pdfInfo.width}\n  height: ${pdfInfo.height}\n`;
-    deckerSource += "---\n\n";
-    for (let page = 1; page <= pdfInfo.pages; page++) {
-      const pagenumber = String(page).padStart(3, "0");
-      deckerSource += `# { menu-title="${pdfInfo.pageTitles[page]}" }\n\n`;
-      deckerSource += `![](pages/${filename}-page-${pagenumber}.svg){width=var(--slide-width) height=var(--slide-height)}\n\n`;
-    }
-    const yamlPath = path.join(directory, "decker.yaml");
-    fs.writeFileSync(yamlPath, "resource-pack: exe:tudo\n");
-    const mdPath = path.join(directory, filename + "-deck.md");
-    fs.writeFile(mdPath, deckerSource, (error) => {
-      if (error) console.error(error);
-      let zipfile = new yazl.ZipFile();
-      zipfile.addFile(mdPath, path.basename(mdPath));
-      zipfile.addFile(yamlPath, path.basename(yamlPath));
+      let mostRecentTitle = "Unknown Title";
+      let mostRecentPageWithTitle = 1;
+      for (let page = 1; page <= pdfInfo.pages; page++) {
+        if (pdfInfo.pageTitles[page]) {
+          mostRecentTitle = pdfInfo.pageTitles[page];
+          mostRecentPageWithTitle = page;
+        } else {
+          if (page === 1) {
+            pdfInfo.pageTitles[page] = mostRecentTitle;
+          } else {
+            pdfInfo.pageTitles[page - 1] =
+              mostRecentTitle + ` (${page - mostRecentPageWithTitle})`;
+            pdfInfo.pageTitles[page] =
+              mostRecentTitle + ` (${page - mostRecentPageWithTitle + 1})`;
+          }
+        }
+      }
+      let deckerSource = "---\n";
+      deckerSource += `title: ${
+        pdfInfo.pdfTitle ? pdfInfo.pdfTitle : "Unknown Presentation Title"
+      }\n`;
+      deckerSource += `author: ${
+        pdfInfo.author ? pdfInfo.author : "Unknown Author"
+      }\n`;
+      deckerSource += `reveal:\n  width: ${pdfInfo.width}\n  height: ${pdfInfo.height}\n`;
+      deckerSource += "---\n\n";
       for (let page = 1; page <= pdfInfo.pages; page++) {
         const pagenumber = String(page).padStart(3, "0");
-        const pagefilename = `${filename}-page-${pagenumber}.svg`;
-        const pagefile = path.join(pagesDirectory, pagefilename);
-        zipfile.addFile(pagefile, `pages/${pagefilename}`);
+        deckerSource += `# { menu-title="${pdfInfo.pageTitles[page]}" }\n\n`;
+        deckerSource += `![](pages/${filename}-page-${pagenumber}.svg){width=var(--slide-width) height=var(--slide-height)}\n\n`;
       }
-      const zippath = path.join(directory, filename + ".tmp.zip");
-      zipfile.outputStream
-        .pipe(fs.createWriteStream(zippath))
-        .on("close", function () {
-          console.log("[yazl] Written file:", zippath);
-          fs.rmSync(pagesDirectory, { recursive: true, force: true });
-          fs.rmSync(mdPath, { force: true });
-          fs.rmSync(yamlPath, { force: true });
-          fs.renameSync(zippath, path.join(directory, filename + ".zip"));
-          fs.rmSync(filepath);
-        });
-      zipfile.end();
-    });
-  });
+      const yamlPath = path.join(directory, "decker.yaml");
+      fs.writeFileSync(yamlPath, "resource-pack: exe:tudo\n");
+      const mdPath = path.join(directory, filename + "-deck.md");
+      fs.writeFile(mdPath, deckerSource, (error) => {
+        if (error) console.error(error);
+        let zipfile = new yazl.ZipFile();
+        zipfile.addFile(mdPath, path.basename(mdPath));
+        zipfile.addFile(yamlPath, path.basename(yamlPath));
+        for (let page = 1; page <= pdfInfo.pages; page++) {
+          const pagenumber = String(page).padStart(3, "0");
+          const pagefilename = `${filename}-page-${pagenumber}.svg`;
+          const pagefile = path.join(pagesDirectory, pagefilename);
+          zipfile.addFile(pagefile, `pages/${pagefilename}`);
+        }
+        const zippath = path.join(directory, filename + ".tmp.zip");
+        zipfile.outputStream
+          .pipe(fs.createWriteStream(zippath))
+          .on("close", function () {
+            console.log("[yazl] Written file:", zippath);
+            fs.rmSync(pagesDirectory, { recursive: true, force: true });
+            fs.rmSync(mdPath, { force: true });
+            fs.rmSync(yamlPath, { force: true });
+            fs.renameSync(zippath, path.join(directory, filename + ".zip"));
+            fs.rmSync(filepath);
+          });
+        zipfile.end();
+      });
+    })
+    .catch((error) => console.log(error));
 }
 
 export function Converter(filepath: string) {
