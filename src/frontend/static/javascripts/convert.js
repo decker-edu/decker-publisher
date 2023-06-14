@@ -84,7 +84,9 @@ async function upload() {
 function connect() {
   if (!g_filename) return;
   let zipname = g_filename.substring(0, g_filename.lastIndexOf(".")) + ".zip";
-  const source = new EventSource(`/api/convert/events?file=${zipname}`);
+  const source = new EventSource(
+    `/api/convert/events?file=${encodeURIComponent(zipname)}`
+  );
   source.addEventListener("open", (event) => {
     addToLocalLog("Verbindung zum Server hergestellt ...");
   });
@@ -117,9 +119,12 @@ function connect() {
 async function download(retry) {
   if (!g_filename) return;
   let zipname = g_filename.substring(0, g_filename.lastIndexOf(".")) + ".zip";
-  const response = await fetch("/api/convert?file=" + zipname, {
-    method: "GET",
-  });
+  const response = await fetch(
+    "/api/convert?file=" + encodeURIComponent(zipname),
+    {
+      method: "GET",
+    }
+  );
   if (response && response.ok) {
     addToLocalLog("Download verfügbar.");
     const blob = await response.blob();
