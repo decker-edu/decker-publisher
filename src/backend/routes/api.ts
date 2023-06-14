@@ -759,7 +759,6 @@ router.post(
           })
           .end();
       }
-      res.status(200).json({ message: "Konvertierung gestartet." }).end();
       const id: string =
         account.username + ":" + path.basename(file.name, ".pdf");
       events.set(id, new EventEmitter());
@@ -767,7 +766,10 @@ router.post(
       emitter.on("start", () => {
         Converter(uploadPath, emitter);
       });
-      return;
+      return res
+        .status(200)
+        .json({ message: "Konvertierung gestartet." })
+        .end();
     });
   }
 );
