@@ -644,6 +644,7 @@ let events: Map<string, EventEmitter> = new Map();
 router.get(
   "/convert/events",
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.log(req.query);
     const filequery: string = req.query.file.toString();
     if (!filequery) {
       return res.status(400).end();
@@ -663,7 +664,6 @@ router.get(
     const emitter = events.get(id);
     if (!emitter) {
       res.write("event: error\ndata: Kein Prozess gefunden.\n\n");
-      res.end();
     }
     emitter.on("info", (event) => {
       res.write(`event: info\ndata: ${event.message}\n\n`);
