@@ -102,13 +102,16 @@ function connect() {
     source.close();
     addToLocalLog("Verbindung zum Server getrennt.");
   });
-  const div = document.getElementById("explanation");
-  let cog = document.createElement("i");
-  cog.id = "waitingcog";
-  cog.classList.add("fas");
-  cog.classList.add("fa-cog");
-  cog.classList.add("turning");
-  div.appendChild(cog);
+  let cog = document.getElementById("waitingcog");
+  if (cog) {
+    cog.className = "fas fa-cog turning";
+  } else {
+    const div = document.getElementById("explanation");
+    cog = document.createElement("i");
+    cog.id = "waitingcog";
+    cog.className = "fas fa-cog turning";
+    div.appendChild(cog);
+  }
 }
 
 async function download(retry) {
@@ -129,9 +132,7 @@ async function download(retry) {
     a.remove();
     const cog = document.getElementById("waitingcog");
     if (cog) {
-      cog.classList.remove("fa-cog");
-      cog.classList.remove("turning");
-      cog.classList.add("fa-check");
+      cog.className = "fas fa-check";
     }
   } else {
     addToLocalLog("Download fehlgeschlagen.");
@@ -141,9 +142,7 @@ async function download(retry) {
     } else {
       const cog = document.getElementById("waitingcog");
       if (cog) {
-        cog.classList.remove("fa-cog");
-        cog.classList.remove("turning");
-        cog.classList.add("fa-times");
+        cog.className = "fas fa-times";
       }
     }
   }

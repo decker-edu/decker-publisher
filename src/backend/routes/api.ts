@@ -681,7 +681,6 @@ router.get(
     const emitter = events.get(id);
     if (!emitter) {
       res.write("event: error\ndata: Kein Prozess gefunden.\n\n");
-      res.end();
     }
     emitter.on("info", (event) => {
       res.write(`event: info\ndata: ${event.message}\n\n`);
