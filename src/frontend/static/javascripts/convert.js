@@ -20,7 +20,37 @@ function passOn(event) {
 
 let timer = undefined;
 
-function upload() {
+function cleanLocalLog() {
+  const div = document.getElementById("local-log");
+  while (div.firstChild) {
+    div.removeChild(div.lastChild);
+  }
+}
+
+function cleanServerLog() {
+  const div = document.getElementById("server-log");
+  while (div.firstChild) {
+    div.removeChild(div.lastChild);
+  }
+}
+
+function addToLocalLog(text) {
+  const div = document.getElementById("local-log");
+  const insert = document.createElement("span");
+  insert.innerText = text;
+  div.appendChild(insert);
+}
+
+function addToServerLog(text) {
+  const div = document.getElementById("server-log");
+  const insert = document.createElement("span");
+  insert.innerText = text;
+  div.appendChild(insert);
+}
+
+async function upload() {
+  cleanLocalLog();
+  cleanServerLog();
   const input = document.querySelector("#file-upload-input");
   const data = new FormData();
   data.append("file", input.files[0]);
@@ -28,66 +58,93 @@ function upload() {
     method: "POST",
     body: data,
   });
-  fetch(request)
-    .then((response) => {
-      if (response.ok) {
-        console.log("ok");
-        return response.json();
-      } else {
-        console.log("not ok");
-        return response.json();
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const json = await response.json();
+      addToLocalLog("Datei erfolgreich hochgeladen.");
+      if (json.message) {
+        addToLocalLog(json.message);
       }
-    })
-    .then((json) => {
-      const div = document.getElementById("insert-area");
-      while (div.firstChild) {
-        div.removeChild(div.lastChild);
+      connect();
+    } else {
+      const json = await response.json();
+      addToLocalLog("Ein Fehler ist aufgetreten.");
+      if (json.message) {
+        addToLocalLog(json.message);
       }
-      div.appendChild(document.createTextNode(json.message));
-      timer = setInterval(check, 1000);
-    })
-    .catch((error) => {
-      const div = document.getElementById("insert-area");
-      while (div.firstChild) {
-        div.removeChild(div.lastChild);
-      }
-      div.appendChild(document.createTextNode("Interner Fehler"));
-    });
+    }
+  } catch (error) {
+    console.log(error);
+    addToLocalLog("Ein Fehler ist beim übertragen der Daten aufgetreten.");
+    addText(error);
+  }
 }
 
-function check() {
+function connect() {
   if (!g_filename) return;
   let zipname = g_filename.substring(0, g_filename.lastIndexOf(".")) + ".zip";
-  fetch("/api/convert?file=" + zipname, {
-    method: "GET",
-  }).then((response) => {
-    if (response.ok) {
-      const div = document.getElementById("insert-area");
-      while (div.firstChild) {
-        div.removeChild(div.lastChild);
-      }
-      div.appendChild(document.createTextNode("Konvertierung fertig."));
-      clearInterval(timer);
-      response.blob().then((blob) => {
-        var url = window.URL.createObjectURL(blob);
-        var a = document.createElement("a");
-        a.href = url;
-        a.download = zipname;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      });
-    } else {
-      const div = document.getElementById("insert-area");
-      while (div.firstChild) {
-        div.removeChild(div.lastChild);
-      }
-      div.appendChild(document.createTextNode("Konvertierung im Gange."));
-      let cog = document.createElement("i");
-      cog.classList.add("fas");
-      cog.classList.add("fa-cog");
-      cog.classList.add("turning");
-      div.appendChild(cog);
-    }
+  const source = new EventSource(`/api/convert/events?file=${zipname}`);
+  source.addEventListener("open", (event) => {
+    addToLocalLog("Verbindung zum Server hergestellt ...");
   });
+  source.addEventListener("info", (event) => {
+    addToServerLog(event.data);
+  });
+  source.addEventListener("done", (event) => {
+    addToServerLog(event.data);
+    download();
+    source.close();
+    addToLocalLog("Verbindung zum Server getrennt.");
+  });
+  source.addEventListener("error", (event) => {
+    addToServerLog(event.data);
+    source.close();
+    addToLocalLog("Verbindung zum Server getrennt.");
+  });
+  const div = document.getElementById("explanation");
+  let cog = document.createElement("i");
+  cog.id = "waitingcog";
+  cog.classList.add("fas");
+  cog.classList.add("fa-cog");
+  cog.classList.add("turning");
+  div.appendChild(cog);
+}
+
+async function download(retry) {
+  if (!g_filename) return;
+  let zipname = g_filename.substring(0, g_filename.lastIndexOf(".")) + ".zip";
+  const response = await fetch("/api/convert?file=" + zipname, {
+    method: "GET",
+  });
+  if (response && response.ok) {
+    addToLocalLog("Download verfügbar.");
+    const blob = await response.blob();
+    var url = window.URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = zipname;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    const cog = document.getElementById("waitingcog");
+    if (cog) {
+      cog.classList.remove("fa-cog");
+      cog.classList.remove("turning");
+      cog.classList.add("fa-check");
+    }
+  } else {
+    addToLocalLog("Download fehlgeschlagen.");
+    if (!retry) {
+      addToLocalLog("Versuche in 3 Sekunden einen erneuten Download ...");
+      setTimeout(() => download(true), 3000);
+    } else {
+      const cog = document.getElementById("waitingcog");
+      if (cog) {
+        cog.classList.remove("fa-cog");
+        cog.classList.remove("turning");
+        cog.classList.add("fa-times");
+      }
+    }
+  }
 }

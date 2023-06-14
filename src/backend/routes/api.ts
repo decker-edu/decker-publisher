@@ -30,6 +30,7 @@ import userAPI from "./api/user";
 import projectAPI from "./api/project";
 import amberAPI from "./api/amberscript";
 import feedback from "./feedback";
+import { EventEmitter } from "stream";
 
 declare interface FileHashEntry {
   kind: "file" | "directory";
@@ -621,6 +622,7 @@ router.get(
     }
     const userdir = account.getDirectory();
     const filepath = path.join(userdir, "uploads", "pdf", filequery);
+    console.log(`[convert] Download for file ${filepath} requested.`);
     if (!fs.existsSync(filepath)) {
       return res.status(404).end();
     } else {
@@ -637,6 +639,50 @@ router.get(
   }
 );
 
+let events: Map<string, EventEmitter> = new Map();
+
+router.get(
+  "/convert/events",
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const filequery: string = req.query.file.toString();
+    if (!filequery) {
+      return res.status(400).end();
+    }
+    const account = req.account;
+    if (!account) {
+      return res.status(403).end();
+    }
+    res.set({
+      "Cache-Control": "no-cache",
+      "Content-Type": "text/event-stream",
+      Connection: "keep-alive",
+    });
+    res.flushHeaders();
+    res.write("event: info\ndata: Warte auf Ereignisse vom Server ...\n\n");
+    const id = account.username + ":" + path.basename(filequery, ".zip");
+    const emitter = events.get(id);
+    if (!emitter) {
+      res.write("event: error\ndata: Kein Prozess gefunden.\n\n");
+      res.end();
+    }
+    emitter.on("info", (event) => {
+      res.write(`event: info\ndata: ${event.message}\n\n`);
+    });
+    emitter.on("done", (event) => {
+      res.write(`event: done\ndata: ${event.message}\n\n`);
+      events.delete(id);
+    });
+    emitter.on("error", (event) => {
+      res.write(`event: error\ndata: ${event.message}\n\n`);
+      events.delete(id);
+    });
+    req.on("close", () => {
+      console.log(`[${filequery}] Connection closed`);
+    });
+    emitter.emit("start");
+  }
+);
+
 router.post(
   "/convert",
   fileUpload(),
@@ -644,7 +690,7 @@ router.post(
     const account = req.account;
     if (!account) {
       res
-        .status(400)
+        .status(403)
         .json({
           message: "Sie haben keine Berechtigung dies zu tun.",
         })
@@ -669,6 +715,11 @@ router.post(
     }
 
     const file: fileUpload.UploadedFile = req.files.file;
+    if (!file.name.endsWith(".pdf")) {
+      return res.status(400).json({
+        message: escapeHTML("Keine .pdf-Datei empfangen."),
+      });
+    }
     let uploadPath = path.join(
       account.getDirectory(),
       "uploads",
@@ -690,14 +741,17 @@ router.post(
           })
           .end();
       }
-      res
+      const id: string =
+        account.username + ":" + path.basename(file.name, ".pdf");
+      events.set(id, new EventEmitter());
+      const emitter = events.get(id);
+      emitter.on("start", () => {
+        Converter(uploadPath, emitter);
+      });
+      return res
         .status(200)
-        .json({
-          message: "Datei erfolgreich hochgeladen.",
-        })
+        .json({ message: "Konvertierung gestartet." })
         .end();
-      Converter(uploadPath);
-      return;
     });
   }
 );

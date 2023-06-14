@@ -1,0 +1,27 @@
+#event-logs {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+}
+
+#event-logs h3 {
+  margin: auto;
+}
+
+.log {
+  font-family: monospace;
+  font-size: 16px;
+  line-height: 16px;
+  height: 160px;
+  max-height: 160px;
+  overflow: auto;
+  background: black;
+  color: white;
+  border: 2px inset gray;
+  text-align: left;
+}
+
+.log span {
+  display: block;
+}
