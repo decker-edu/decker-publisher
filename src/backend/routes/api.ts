@@ -679,7 +679,6 @@ router.get(
     res.flushHeaders();
     res.write("event: info\ndata: Warte auf Ereignisse vom Server ...\n\n");
     const id = account.username + ":" + path.basename(filequery, ".zip");
-    console.log("get id", id);
     const emitter = events.get(id);
     if (!emitter) {
       res.write("event: error\ndata: Kein Prozess gefunden.\n\n");
@@ -762,7 +761,6 @@ router.post(
       }
       const id: string =
         account.username + ":" + path.basename(file.name, ".pdf");
-      console.log("create id", id);
       events.set(id, new EventEmitter());
       const emitter = events.get(id);
       emitter.on("start", () => {
