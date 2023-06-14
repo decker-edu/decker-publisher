@@ -162,7 +162,7 @@ async function extractMeta(
       const pagenumber = String(page).padStart(3, "0");
       const pagefilename = `${filename}-page-${pagenumber}.svg`;
       const pagefile = path.join(pagesDirectory, pagefilename);
-      if (fs.existsSync(pagefilename)) {
+      if (fs.existsSync(pagefile)) {
         zipfile.addFile(pagefile, path.join("pages", pagefilename));
       }
     }
