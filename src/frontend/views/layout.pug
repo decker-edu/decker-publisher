@@ -17,33 +17,36 @@ html
     block scripts
 
   body
-    navigation.navigation-bar
-      div.site-navigation
-        a.navigation.button-like(href="/") 
-          i.fas.fa-home
-          text Hauptseite
-        if account
-          a.navigation.button-like(href="/home") 
-            i.fas.fa-cog
-            text Persönliche Seite 
-        if admin
-          a.navigation.button-like(href="/admin") 
-            i.fas.fa-toolbox
-            text Administration
-      div.user-navigation
-        if account
-          button.user-menu-button(onclick="openUserDialog()")
-            i.fas.fa-user
-            text= account.username
-        else
-          button.login-button(onclick="openLoginDialog()")
-            i.fas.fa-sign-in-alt
-            text Login
-    block content
-    footer
-      a(href="https://www.tu-dortmund.de") TU Dortmund
-      a(href="https://www.tu-dortmund.de/impressum") Impressum
-      a(href="/data-protection") Datenschutz
+    main#main-container
+      header.sticky-header
+        navigation.navigation-bar
+          div.site-navigation
+            a.navigation.button-like(href="/") 
+              i.fas.fa-home
+              text Hauptseite
+            if account
+              a.navigation.button-like(href="/home") 
+                i.fas.fa-cog
+                text Persönliche Seite 
+            if admin
+              a.navigation.button-like(href="/admin") 
+                i.fas.fa-toolbox
+                text Administration
+          div.user-navigation
+            if account
+              button.user-menu-button(onclick="openUserDialog()")
+                i.fas.fa-user
+                text= account.username
+            else
+              button.login-button(onclick="openLoginDialog()")
+                i.fas.fa-sign-in-alt
+                text Login
+      div#content-container
+        block content
+      footer.sticky-footer
+        a(href="https://www.tu-dortmund.de") TU Dortmund
+        a(href="https://www.tu-dortmund.de/impressum") Impressum
+        a(href="/data-protection") Datenschutz
     block dialogs
     if account
       dialog#user-dialog

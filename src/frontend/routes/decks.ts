@@ -3,15 +3,15 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 
-import config from "../../../config.json";
+import config from "@root/config";
 
 const router = express.Router();
 
 function getUserDirectory() {
-  if (config.user_directory_name.startsWith("/")) {
-    return config.user_directory_name;
+  if (config().user_directory_name.startsWith("/")) {
+    return config().user_directory_name;
   } else {
-    return path.join(global.rootDirectory, config.user_directory_name);
+    return path.join(global.rootDirectory, config().user_directory_name);
   }
 }
 

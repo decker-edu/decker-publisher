@@ -4,13 +4,19 @@
   "main": "dist/server",
   "private": true,
   "scripts": {
-    "start": "npm run static-dirs && node --trace-warnings ./dist/src/server.js",
+    "start": "node --trace-warnings ./dist/server.js",
+    "start-static": "npm run static-dirs && npm start",
+    "watch": "nodemon --watch ./src --watch ./static --ext ts,js,css --exec npm run car",
+    "watch-static": "nodemon --watch ./static --ext js,css --exec npm run start-static",
     "test": "jest",
-    "setup": "node --trace-warnings ./dist/src/setup.js",
-    "static-dirs": "copyfiles -u 3 \"src/frontend/static/**/*\" dist/src/frontend/static/ && copyfiles -u 3 src/frontend/views/* dist/src/frontend/views/",
+    "setup": "node --trace-warnings ./dist/setup.js",
+    "static-dirs": "copyfiles \"./static/**/*\" \"./dist/\" && copyfiles -u 3 ./src/frontend/views/* ./dist/frontend/views/ && copyfiles ./config.json ./dist/",
     "build": "tsc && npm run static-dirs",
     "scribble": "ts-node scribble.ts",
     "car": "npm run build && npm run start"
+  },
+  "_moduleAliases": {
+    "@root": "dist"
   },
   "dependencies": {
     "argon2": "^0.30.3",
@@ -25,6 +31,7 @@
     "form-data": "^4.0.0",
     "get-video-duration": "^4.1.0",
     "http-errors": "~2.0.0",
+    "module-alias": "^2.2.3",
     "morgan": "~1.10.0",
     "node-fetch": "^2.6.9",
     "pdfjs-dist": "^3.3.122",
@@ -45,6 +52,7 @@
     "@types/express-session": "^1.17.5",
     "@types/http-errors": "^2.0.1",
     "@types/jest": "^29.4.0",
+    "@types/module-alias": "^2.0.1",
     "@types/morgan": "^1.9.4",
     "@types/node": "^18.11.18",
     "@types/node-fetch": "^2.6.3",

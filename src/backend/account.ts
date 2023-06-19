@@ -2,7 +2,7 @@ import { verify, hash } from "argon2";
 import pg from "pg";
 import database from "./database";
 import { Transaction, Query } from "./database";
-import config from "../../config.json";
+import config from "@root/config";
 import path from "path";
 import fs from "fs";
 import Role from "./role";
@@ -251,12 +251,12 @@ export class Account implements Account {
   }
 
   getDirectory(): string {
-    if (config.user_directory_name.startsWith("/")) {
-      return path.join(config.user_directory_name, this.username);
+    if (config().user_directory_name.startsWith("/")) {
+      return path.join(config().user_directory_name, this.username);
     } else {
       return path.join(
         global.rootDirectory,
-        config.user_directory_name,
+        config().user_directory_name,
         this.username
       );
     }

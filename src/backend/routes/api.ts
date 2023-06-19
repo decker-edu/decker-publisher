@@ -24,8 +24,6 @@ import { recoveryMail, requestMail } from "../mailer";
 
 import { getAllFiles } from "../../util";
 
-import config from "../../../config.json";
-
 import userAPI from "./api/user";
 import projectAPI from "./api/project";
 import amberAPI from "./api/amberscript";

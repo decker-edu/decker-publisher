@@ -6,7 +6,7 @@ import fetch from "node-fetch";
 import fs from "fs";
 import path from "path";
 import database from "./database";
-import config from "../../config.json";
+import config from "@root/config";
 
 const NO_API_KEY_ERROR_MESSAGE =
   "Es wurde vom Administrator kein Amberscript-API-Schlüssel konfiguriert.";
@@ -28,11 +28,14 @@ async function post(
     filename
   );
 
-  if (!config.amberscriptCallbackUrl || config.amberscriptCallbackUrl === "") {
+  if (
+    !config().amberscriptCallbackUrl ||
+    config().amberscriptCallbackUrl === ""
+  ) {
     throw NO_CALLBACK_URL_ERROR_MESSAGE;
   }
 
-  const apiKey = config.amberscriptAPIKey;
+  const apiKey = config().amberscriptAPIKey;
 
   if (!apiKey || apiKey === "") {
     throw NO_API_KEY_ERROR_MESSAGE;
@@ -50,7 +53,7 @@ async function post(
     language: language,
     numberOfSpeakers: speakers,
     glossaryId: glossary,
-    callbackUrl: config.amberscriptCallbackUrl,
+    callbackUrl: config().amberscriptCallbackUrl,
   };
   url.search = new URLSearchParams(params).toString();
   const form = new FormData();
@@ -124,7 +127,7 @@ async function archive(
 
 async function getVTT(jobId: string): Promise<string> {
   const url = new URL("https://api.amberscript.com/api/jobs/export-vtt");
-  const apiKey = config.amberscriptAPIKey;
+  const apiKey = config().amberscriptAPIKey;
   if (!apiKey || apiKey === "") {
     throw "No API Key specified";
   }
@@ -214,7 +217,7 @@ interface GlossaryItem {
 
 async function getGlossaries(): Promise<Glossary[]> {
   const url = new URL("https://api.amberscript.com/api/glossary");
-  const apiKey = config.amberscriptAPIKey;
+  const apiKey = config().amberscriptAPIKey;
   if (!apiKey || apiKey === "") {
     throw NO_API_KEY_ERROR_MESSAGE;
   }
@@ -262,7 +265,7 @@ async function createGlossary(
   items: GlossaryItem[]
 ) {
   const url = new URL("https://api.amberscript.com/api/glossary");
-  const apiKey = config.amberscriptAPIKey;
+  const apiKey = config().amberscriptAPIKey;
   if (!apiKey || apiKey === "") {
     throw "Es wurde vom Administrator kein Amberscript API Schlüssel konfiguriert.";
   }
@@ -329,7 +332,7 @@ async function updateGlossary(
   items: GlossaryItem[]
 ) {
   const url = new URL("https://api.amberscript.com/api/glossary/" + id);
-  const apiKey = config.amberscriptAPIKey;
+  const apiKey = config().amberscriptAPIKey;
   if (!apiKey || apiKey === "") {
     throw "Es wurde vom Administrator kein Amberscript API Schlüssel konfiguriert.";
   }
@@ -366,7 +369,7 @@ async function updateGlossary(
 
 async function deleteGlossary(id: string) {
   const url = new URL("https://api.amberscript.com/api/glossary/" + id);
-  const apiKey = config.amberscriptAPIKey;
+  const apiKey = config().amberscriptAPIKey;
   if (!apiKey || apiKey === "") {
     throw "Es wurde vom Administrator kein Amberscript API Schlüssel konfiguriert.";
   }

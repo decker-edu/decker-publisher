@@ -17,7 +17,7 @@ import deckRouter from "./frontend/routes/decks";
 const app = express();
 
 import session_store from "./backend/session";
-import config from "../config.json";
+import config from "@root/config";
 
 import authenticator from "./backend/middleware/authenticator";
 import database from "./backend/database";
@@ -40,14 +40,16 @@ legacyFeedbackSetup();
 app.set("views", path.join(__dirname, "frontend", "views"));
 app.set("view engine", "pug");
 
+console.log(path.resolve());
+
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "frontend", "static")));
+app.use(express.static(path.join(__dirname, "static")));
 app.use(
   session({
-    secret: config.session_secret,
+    secret: config().session_secret,
     resave: false,
     saveUninitialized: false,
     cookie: {

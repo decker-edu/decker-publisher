@@ -3,7 +3,6 @@ import path from "path";
 import child_process from "child_process";
 
 import yazl from "yazl";
-import config from "../../config.json";
 
 import { getDocument as getPDFDocument, PDFDocumentProxy } from "pdfjs-dist";
 import { EventEmitter } from "stream";

@@ -1,3 +1,4 @@
+require("module-alias/register");
 import application from "./application";
 import Debug from "debug";
 const debug = Debug("decker-publisher:server");

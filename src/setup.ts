@@ -1,4 +1,4 @@
-import config from "../config.json";
+import config from "@root/config";
 import { Account } from "./backend/account";
 import database from "./backend/database";
 import Role from "./backend/role";
@@ -98,8 +98,8 @@ async function setup_database() {
   });
 
   let admin_username: string =
-    config.setup_admin && config.setup_admin.username
-      ? config.setup_admin.username
+    config().setup_admin && config().setup_admin.username
+      ? config().setup_admin.username
       : undefined;
   if (!admin_username) {
     console.log(
@@ -111,8 +111,8 @@ async function setup_database() {
     admin_username = line.value;
   }
   let admin_password: string =
-    config.setup_admin && config.setup_admin.password
-      ? config.setup_admin.password
+    config().setup_admin && config().setup_admin.password
+      ? config().setup_admin.password
       : undefined;
   if (!admin_password) {
     console.log(
@@ -124,8 +124,8 @@ async function setup_database() {
     admin_password = line.value;
   }
   let admin_email: string =
-    config.setup_admin && config.setup_admin.email
-      ? config.setup_admin.email
+    config().setup_admin && config().setup_admin.email
+      ? config().setup_admin.email
       : undefined;
   if (!admin_email) {
     console.log(
@@ -140,9 +140,9 @@ async function setup_database() {
   if (exists(admin_username) && exists(admin_password) && exists(admin_email)) {
     try {
       const admin: Account | undefined = await Account.register(
-        config.setup_admin.username,
-        config.setup_admin.password,
-        config.setup_admin.email
+        config().setup_admin.username,
+        config().setup_admin.password,
+        config().setup_admin.email
       );
       if (admin) {
         console.log(`[admin account] created`);
@@ -155,7 +155,7 @@ async function setup_database() {
   }
 
   const role: Role = await Role.get("admin");
-  const admin = await Account.fromDatabase(config.setup_admin.username);
+  const admin = await Account.fromDatabase(config().setup_admin.username);
   await admin.assignRole(role);
 
   input.close();
@@ -215,5 +215,6 @@ async function setup_amberscript() {
   await setup_database();
   await setup_feedback();
   await setup_amberscript();
+  await setup_legacy_feedback();
   database.pool.end();
 })();

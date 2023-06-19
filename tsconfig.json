@@ -8,16 +8,20 @@
         "moduleResolution": "node",
         "sourceMap": true,
         "outDir": "dist",
-        "baseUrl": "./",
+        "rootDir": "src",
+        "baseUrl": "./src",
         "typeRoots": ["src/backend/types", "src/frontend/types"],
         "paths": {
             "*": [
-                "node_modules/*"
+                "node_modules/*",
+            ],
+            "@root/*": [
+                "./*"
             ]
         }
     },
     "include": [
-        "config.json",
-        "src/**/*"
+        "src/**/*",
+        "static"
     ]
 }

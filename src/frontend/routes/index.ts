@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from "express";
 import path from "path";
 import fs from "fs";
 import database from "../../backend/database";
-import config from "../../../config.json";
+import config from "@root/config";
 import child_process from "child_process";
 import amberscript from "../../backend/amberscript";
 
@@ -454,7 +454,7 @@ router.get(
     const filepart = req.params.filename;
     const deckname = path.basename(filepart);
     const fullpath = path.join(
-      config.user_directory_name,
+      config().user_directory_name,
       username,
       "projects",
       projectname,
@@ -642,7 +642,6 @@ router.get(
     const root = rootDirectory;
     const filepath = path.join(
       rootDirectory,
-      "frontend",
       "static",
       "images",
       "favicon.png"
