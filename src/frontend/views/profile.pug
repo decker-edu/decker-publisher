@@ -5,33 +5,32 @@ block scripts
     script(defer src="/javascripts/profile.js")
 
 block content
-  header 
-    h1 Profileinstellungen
-  main
-    div#form-wrapper
-      form
-        div.form-grid
-          label(for="profile-username") Nutzername
-          input#profile-username(disabled pattern="*" type="text" value=account.username)
-          label(for="profile-email") E-Mail
-          input#profile-email(disabled pattern=".+@.+\\..{2,3}" type="email" value=account.email)
-          label(for="profile-sshkey") SSH-Schlüssel
-          div.key-area
-            each key in account.keys
-              div.key-entry
-                textarea#profile-sshkey(disabled style="resize: none; width: 100%; overflow: hidden; min-height: 12.5em;")= key
-                button(type="button" onclick="openRemoveKeyDialog(\""+key+"\")")
-                  i.fas.fa-trash
-                  text Schlüssel löschen
-          div.form-buttons
-            button(type="button" onclick="openDialog(\"change-email\")")
-              text E-Mail ändern
-            button(type="button" onclick="openDialog(\"change-password\")")
-              text Passwort ändern
-            button(type="button" onclick="openDialog(\"add-ssh-key\")")
-              text SSH-Schlüssel hinzufügen
-            button(type="button" onclick="openDialog(\"delete-account\")")
-              text Konto löschen
+  h1 Profileinstellungen
+  div#form-wrapper
+    form
+      div.form-grid
+        label(for="profile-username") Nutzername
+        input#profile-username(disabled pattern="*" type="text" value=account.username)
+        label(for="profile-email") E-Mail
+        input#profile-email(disabled pattern=".+@.+\\..{2,3}" type="email" value=account.email)
+        label SSH-Schlüssel
+        div.key-area
+          each key in account.keys
+            div.key-entry
+              textarea#profile-sshkey(disabled style="resize: none; width: 100%; overflow: hidden; min-height: 12.5em;")= key
+              button.action(type="button" onclick="openRemoveKeyDialog(\""+key+"\")")
+                i.fas.fa-trash
+                span Schlüssel löschen
+      div.form-buttons
+        button.action(type="button" onclick="openDialog(\"change-email\")")
+          span E-Mail ändern
+        button.action(type="button" onclick="openDialog(\"change-password\")")
+          span Passwort ändern
+        button.action(type="button" onclick="openDialog(\"add-ssh-key\")")
+          span SSH-Schlüssel hinzufügen
+        button.action(type="button" onclick="openDialog(\"delete-account\")")
+          span Konto löschen
+
 block dialogs
   dialog#change-password
     div.dialog-message
@@ -48,10 +47,10 @@ block dialogs
       div.dialog-buttons
         button#change-password-button(disabled type="button" onclick="changePassword(\""+account.username+"\")")
           i.fas.fa-key
-          text Passwort Ändern
+          span Passwort Ändern
         button(type="button" onclick="closeDialog(\"change-password\")")
           i.fas.fa-ban
-          text Dialog schließen
+          span Dialog schließen
 
   dialog#change-email
     div.dialog-message
@@ -66,10 +65,10 @@ block dialogs
       div.dialog-buttons
         button#change-email-button(disabled type="button" onclick="changeEmail(\""+account.username+"\")")
           i.fas.fa-envelope
-          text E-Mail-Adresse ändern
+          span E-Mail-Adresse ändern
         button(type="button" onclick="closeDialog(\"change-email\")")
           i.fas.fa-ban
-          text Dialog schließen
+          span Dialog schließen
 
   dialog#remove-ssh-key-dialog
     div#remove-ssh-key-message.dialog-message
@@ -82,12 +81,12 @@ block dialogs
           label(for="remove-ssh-key-confirmation") Mit Passwort bestätigen
           input#remove-ssh-key-confirmation(required name="password" type="password" pattern="^.{8,}" placeholder="Passwort" onkeyup="deleteChanged()")
       div.dialog-buttons
-        button#remove-ssh-key-button(disabled type="button" onclick="removeKey(\""+account.username+"\")")
+        button#remove-ssh-key-button.action(disabled type="button" onclick="removeKey(\""+account.username+"\")")
           i.fas.fa-trash
-          text SSH-Schlüssel entfernen
-        button(type="button" onclick="closeDialog(\"remove-ssh-key-dialog\")")
+          span SSH-Schlüssel entfernen
+        button.action(type="button" onclick="closeDialog(\"remove-ssh-key-dialog\")")
           i.fas.fa-ban
-          text Dialog schließen
+          span Dialog schließen
 
 
   dialog#add-ssh-key
@@ -101,12 +100,12 @@ block dialogs
           label(for="add-ssh-key-confirmation") Mit Passwort bestätigen
           input#add-ssh-key-confirmation(required name="password" type="password" pattern="^.{8,}" placeholder="Passwort" onkeyup="sshkeyChanged()")
       div.dialog-buttons
-        button#add-ssh-key-button(disabled type="button" onclick="addKey(\""+account.username+"\")")
+        button#add-ssh-key-button.action(disabled type="button" onclick="addKey(\""+account.username+"\")")
           i.fas.fa-key
-          text SSH-Schlüssel hinzufügen
-        button(type="button" onclick="closeDialog(\"add-ssh-key\")")
+          span SSH-Schlüssel hinzufügen
+        button.action(type="button" onclick="closeDialog(\"add-ssh-key\")")
           i.fas.fa-ban
-          text Dialog schließen
+          span Dialog schließen
 
   dialog#delete-account
     div.dialog-message
@@ -122,7 +121,7 @@ block dialogs
     div.dialog-buttons
       //button#delete-account-button(disabled type="button" onclick="deleteAccount(\""+account.username+"\")")
         i.fas.fa-trash
-        text Konto löschen
+        span Konto löschen
       button(type="button" onclick="closeDialog(\"delete-account\")")
         i.fas.fa-ban
-        text Dialog schließen
+        span Dialog schließen

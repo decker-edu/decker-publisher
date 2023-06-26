@@ -20,27 +20,47 @@
   --tu-active: #808080;
 }
 
-html {
+html,
+body {
+  font-family: "Akkurat", sans-serif;
+  font-size: 16px;
   width: 100%;
   background-color: #f4f4f4;
   margin: 0;
   padding: 0;
 }
 
-body {
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 0;
-  margin-top: 0;
-  max-width: 60rem;
-  background-color: #ffffff;
-  
+h1,
+h2,
+h3 {
+  text-align: center;
 }
 
-html,
-body {
-  font-family: "Akkurat", sans-serif;
-  font-size: 16px;
+a {
+  color: #00b7ff;
+}
+
+#main-container {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#main-container > * {
+  margin: 0;
+  padding: 0;
+}
+
+#content-container {
+  margin: 0 auto 0 auto;
+  max-width: 60rem;
+  background-color: #ffffff;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: calc(100vh - 6rem);
 }
 
 .sticky-header {
@@ -51,7 +71,11 @@ body {
 }
 
 .sticky-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
   position: sticky;
+  line-height: 2rem;
   bottom: 0;
   width: 100%;
   background-color: #404040;
@@ -71,19 +95,6 @@ dialog {
   max-width: 60rem;
 }
 
-main {
-  max-width: 60rem;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  align-items: center;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  row-gap: 1rem;
-  background-color: white;
-}
-
 main form {
   width: 40rem;
   padding: 1rem;
@@ -96,30 +107,36 @@ main form {
   row-gap: 0.5rem;
 }
 
-main section text {
-  text-align: left;
-}
-
-a {
-  color: #00b7ff;
-}
-
-button {
+.action {
   background-color: var(--tu-green);
-  color: white;
-  border: none;
+
   border-radius: 0.5rem;
+  border: none;
   padding: 0.5rem;
+
+  text-align: center;
+  text-decoration: none;
+  color: white;
   font-weight: bold;
+
   cursor: pointer;
+  margin: 0.25rem;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 1rem;
 }
 
-button:hover {
+.action:hover {
   background-color: var(--tu-hover);
 }
 
-button:active {
+.action:active {
   background-color: var(--tu-active);
+}
+
+.navigation {
 }
 
 button[disabled] {
@@ -180,19 +197,10 @@ pre.inline {
   text-align: left;
 }
 
-.form-grid .form-buttons {
-  position: relative;
-  grid-column: 1 / 3;
-}
-
-@keyframes pan {
-  from {
-    background-position: 0% center;
-  }
-
-  to {
-    background-position: -200% center;
-  }
+.form-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 .form-grid .form-buttons button {
@@ -268,63 +276,39 @@ dialog fieldset legend {
 
 .navigation-bar {
   display: flex;
-  grid-template-columns: 7fr 1fr;
-  grid-template-areas: "navigation user";
+  flex-direction: row;
+  justify-content: space-between;
   background-color: black;
   color: white;
 }
 
-.site-navigation {
-  grid-area: navigation;
+.navigation {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.user-navigation {
-  grid-area: user;
-  width: 100%;
-}
-
-.user-navigation button {
-  background: transparent;
-  border-radius: 0;
-  padding: 0;
-  margin: 0;
-  width: 100%;
+  justify-content: space-around;
 
   line-height: 3rem;
   height: 3rem;
-  color: white;
-}
-
-a.navigation.button-like {
-  display: block;
-
-  line-height: 3rem;
-  height: 3rem;
+  background-color: transparent;
+  border: none;
   color: white;
 
   width: 256px;
 
   text-decoration: none;
   text-align: center;
-  font-size: 1rem;
   font-weight: bold;
+  cursor: pointer;
 }
 
-a.navigation.button-like:hover {
+.navigation:hover {
   background: white;
   color: black;
 }
 
-a.navigation.button-like i.fas {
-  font-size: 1.5em;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
-  float: left;
+.navigation i.fas {
   line-height: 3rem;
+  vertical-align: middle;
 }
 
 dialog a.button-like {
@@ -347,54 +331,8 @@ dialog a.button-like:active {
   background-color: var(--tu-active);
 }
 
-main a.button-like {
-  background-color: var(--tu-green);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.5rem;
-  cursor: pointer;
-
-  text-decoration: none;
-}
-
-main a.button-like text {
-  line-height: 2rem;
-}
-
-main a.button-like:hover {
-  background-color: var(--tu-hover);
-}
-
-main a.button-like:active {
-  background-color: var(--tu-active);
-}
-
 .video-button {
   min-width: 256px;
-}
-
-button i.fas ~ text,
-a.button-like i.fas ~ text {
-  line-height: 2rem;
-}
-
-button i.fas,
-a.button-like i.fas {
-  font-size: 1.25em;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
-}
-
-.user-navigation button i.fas {
-  font-size: 1.5em;
-  float: left;
-  line-height: 3rem;
-}
-
-.user-navigation button:hover {
-  background: white;
-  color: black;
 }
 
 .video-data {
@@ -476,6 +414,17 @@ label.fileinput:active {
   text-overflow: ellipsis;
 }
 
+.actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.video-list {
+  display: flex;
+  flex-direction: column;
+}
+
 .table-actions {
   display: flex;
   flex-direction: column;
@@ -518,8 +467,6 @@ main.admin {
 }
 
 main section {
-  width: 100%;
-  box-sizing: content-box;
   padding: 0.5rem;
   border: 1px inset rgba(0, 0, 0, 0.1);
   border-radius: 1rem;
@@ -533,21 +480,32 @@ section li {
   text-align: left;
 }
 
+.centered {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .tile-area {
   display: flex;
   flex-wrap: wrap;
   flex-direction: row;
+  justify-content: space-around;
   column-gap: 1rem;
-  max-width: 30rem;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 45rem;
 }
 
-a.tile-like {
+.tile {
   display: flex;
   flex-direction: column;
   background-color: var(--tu-green);
   color: white;
   border: none;
+  text-align: center;
   justify-content: space-around;
+  align-items: center;
   width: 8rem;
   height: 8rem;
   border-radius: 0.5rem;
@@ -557,17 +515,16 @@ a.tile-like {
   cursor: pointer;
 }
 
-a.tile-like:hover {
+.tile .fas {
+  font-size: 3rem;
+}
+
+.tile:hover {
   background-color: var(--tu-hover);
 }
 
-a.tile-like:active {
+.tile:active {
   background-color: var(--tu-active);
-}
-
-a.tile-like i.fas {
-  display: block;
-  font-size: 4rem;
 }
 
 @keyframes turning {
@@ -610,6 +567,24 @@ input:disabled {
 .file-item {
   list-style: none;
   cursor: default;
+}
+
+.col-order {
+  display: flex;
+  flex-direction: column;
+}
+
+.row-order {
+  display: flex;
+  flex-direction: row;
+}
+
+.row-order * {
+  flex-grow: 1;
+}
+
+.wmax {
+  width: 100%;
 }
 
 .file-table li:hover {
@@ -664,13 +639,12 @@ input:disabled {
   background-color: rgb(37, 37, 37);
 }
 
-.sync-area {
+.sync-tables {
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr;
   align-content: center;
-  flex: 1 1 auto;
 }
 
 .same {

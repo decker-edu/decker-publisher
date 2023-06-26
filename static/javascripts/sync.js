@@ -27,22 +27,24 @@ async function fetchProjectData() {
 }
 
 function displayChromeRequired() {
-  const main = document.getElementById("content");
+  const main = document.getElementById("sync-controls");
   while (main.firstChild) {
     main.removeChild(main.lastChild);
   }
   const div = document.createElement("div");
-  const h1 = document.createElement("h1");
-  div.appendChild(h1);
+  const span = document.createElement("span");
+  div.appendChild(span);
   main.appendChild(div);
   const i = document.createElement("i");
   i.classList.add("fa-brands");
   i.classList.add("fa-chrome");
-  i.style.fontSize = "8rem";
-  h1.textContent = "Diese Funktion wird von diesem Browser nicht unterstützt.";
+  i.style.fontSize = "4rem";
+  span.textContent =
+    "Diese Funktion wird von diesem Browser nicht unterstützt.";
   const text = document.createElement("p");
   main.appendChild(i);
   main.appendChild(text);
+  main.classList.add("centered");
   text.innerText = "Bitte benutzen Sie einen auf Chrome basierenden Browser.";
 }
 

@@ -21,29 +21,30 @@ block content
           each project in projects
             tr
               td
-                a.button-like(href="/decks/" + account.username + "/" + project.name + "/")
+                a.action(href="/decks/" + account.username + "/" + project.name + "/" target="_blank")
                   i.fas.fa-external-link
-                  text= project.name
+                  span= project.name
               td
-                each video in project.videos
-                  button.video-button(onclick="openVideoDialog('"+project.name+"', '"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
-                    i.fas.fa-film
-                    text= video.filename
+                div.video-list
+                  each video in project.videos
+                    button.action(onclick="openVideoDialog('"+project.name+"', '"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
+                      i.fas.fa-film
+                      span= video.filename
               td
                 div.actions
-                  button(onclick="openDeleteProjectDialog('"+project.name+"')" aria-label="Projekt "+project.name+" löschen") 
-                    i.fas.fa-trash
-                    text Löschen
-                  a.button-like(href="/sync/" + account.username + "/" + project.name)
+                  a.action(href="/sync/" + account.username + "/" + project.name)
                     i.fas.fa-tasks-alt
-                    text Verwalten
+                    span Verwalten
+                  button.action(onclick="openDeleteProjectDialog('"+project.name+"')" aria-label="Projekt "+project.name+" löschen") 
+                    i.fas.fa-trash
+                    span Löschen
     div#upload-area
-      button(onclick="addUpload()" aria-label="Neues Projekt hochladen")
+      button.action(onclick="addUpload()" aria-label="Neues Projekt hochladen")
         i.fas.fa-plus
-        text Projekt hochladen
+        span Projekt hochladen
       div#insert-area
   template(id="upload-template")
-    text.upload-information
+    span.upload-information
       | Zum hochladen eines Projektes archivieren Sie einfach das von Decker generierte Verzeichnis 
       pre.inline public
       |  in einer 
@@ -56,27 +57,27 @@ block content
       input#file-upload-input(type="file" enctype="multipart/form-data" name="projectFile" onchange="inputChanged()")
     div#project-config.hidden
       label(for="project-name-input") Projektname: 
-      input#project-name-input(type="text" name="projectName")
-    button#file-upload-button(onclick="upload()" title="Hochladen" aria-label="Hochladen" hidden)
+      input#project-name-input(type="span" name="projectName")
+    button#file-upload-button.action(onclick="upload()" title="Hochladen" aria-label="Hochladen" hidden)
       i.fas.fa-upload
-      text Upload starten
+      span Upload starten
 block dialogs
   dialog#delete-dialog
     form#delete-form
       fieldset#delete-fieldset
         legend Projekt löschen?
           div#delete-message.dialog-message
-            text Dies entfernt alle sich hier befindlichen Inhalte des Projektes, inklusive aller generierten Untertitel.
+            span Dies entfernt alle sich hier befindlichen Inhalte des Projektes, inklusive aller generierten Untertitel.
           div#delete-inputs.dialog-input-area
             label(for="delete-pass") Mit Passwort bestätigen
             input#delete-pass(type="password", name="delete-pass", placeholder="Passwort")
           div#delete-buttons.dialog-buttons
             button(type="button" onclick="deleteSelectedProject()")
               i.fas.fa-trash
-              text Löschen
+              span Löschen
             button(type="button" onclick="closeDialog('delete-dialog')")
               i.fas.fa-ban
-              text Dialog schließen
+              span Dialog schließen
   dialog#video-dialog
     div#video-message.dialog-message
     div.video-data
@@ -88,7 +89,7 @@ block dialogs
       div#video-hasvtt
       button(onclick="navigateToVideo()")
         i.fas.fa-film
-        text Video bearbeiten
+        span Video bearbeiten
       button(onclick="closeVideoDialog()")
         i.fas.fa-ban
-        text Dialog schließen
+        span Dialog schließen

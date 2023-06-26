@@ -254,11 +254,15 @@ export class Account implements Account {
     if (config().user_directory_name.startsWith("/")) {
       return path.join(config().user_directory_name, this.username);
     } else {
-      return path.join(
-        global.rootDirectory,
-        config().user_directory_name,
-        this.username
+      const dir = path.resolve(
+        path.join(
+          global.rootDirectory,
+          config().user_directory_name,
+          this.username
+        )
       );
+      console.log(dir);
+      return dir;
     }
   }
 

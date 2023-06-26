@@ -4,16 +4,17 @@ block scripts
   script(defer src="/javascripts/sync.js")
 
 block content
-  main#content
-    div.content-block
-      div.control-area
-        button(onclick="requestDirectoryAccess()") Lokalen Ordner auswählen
-        div.message-area
-          span#error-message
-        div.expanded-controls
-          button#upload-button(disabled onclick="upload()") Lokale Dateien hochladen
-          button#download-button(disabled onclick="download()") Generierte Dateien herunterladen
-      div.sync-area
+  h1 Projektverwaltung
+  div#synchronization
+    h2 Projektsynchronisation
+    div.message-area
+        span#error-message
+    div#sync-controls.centered.col-order
+      button.action(onclick="requestDirectoryAccess()") Lokalen Ordner auswählen
+      div.row-order.wmax
+        button#upload-button.action(disabled onclick="upload()") Lokale Dateien hochladen
+        button#download-button.action(disabled onclick="download()") Generierte Dateien herunterladen
+      div.sync-tables
         div.file-table#client-table
         div.file-table#server-table
 

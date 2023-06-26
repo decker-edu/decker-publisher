@@ -20,27 +20,25 @@ html
     main#main-container
       header.sticky-header
         navigation.navigation-bar
-          div.site-navigation
-            a.navigation.button-like(href="/") 
-              i.fas.fa-home
-              text Hauptseite
-            if account
-              a.navigation.button-like(href="/home") 
-                i.fas.fa-cog
-                text Persönliche Seite 
-            if admin
-              a.navigation.button-like(href="/admin") 
-                i.fas.fa-toolbox
-                text Administration
-          div.user-navigation
-            if account
-              button.user-menu-button(onclick="openUserDialog()")
-                i.fas.fa-user
-                text= account.username
-            else
-              button.login-button(onclick="openLoginDialog()")
-                i.fas.fa-sign-in-alt
-                text Login
+          a.navigation(href="/") 
+            i.fas.fa-home
+            span Hauptseite
+          if account
+            a.navigation(href="/home") 
+              i.fas.fa-cog
+              span Persönliche Seite 
+          if admin
+            a.navigation(href="/admin") 
+              i.fas.fa-toolbox
+              span Administration
+          if account
+            button.navigation(onclick="openUserDialog()")
+              i.fas.fa-user
+              span= account.username
+          else
+            button.navigation(onclick="openLoginDialog()")
+              i.fas.fa-sign-in-alt
+              span Login
       div#content-container
         block content
       footer.sticky-footer
@@ -52,16 +50,17 @@ html
       dialog#user-dialog
         form#user-form
           fieldset#user-fieldset
-            legend= account.username
+            legend Benutzermenu
+            span Eingeloggt als #{account.username}
             div#user-message.dialog-message
             div#user-inputs.dialog-input-area
             div.dialog-buttons
-              a.button-like(href="/profile")
+              a.action(href="/profile")
                 i.fas.fa-wrench
-                text Profileinstellungen
-              button.logout-button(type="button" onclick="logout()")
+                span Profileinstellungen
+              button.action(type="button" onclick="logout()")
                 i.fas.fa-sign-out-alt
-                text Logout
+                span Logout
     else
       dialog#login-dialog
         form#login-form(method="dialog")
@@ -74,6 +73,6 @@ html
               label(for="login-pass") Passwort
               input#login-pass(type="password", required, pattern=".{8,}", name="login-pass", placeholder="Passwort")
             div.dialog-buttons
-              button(type="button" onclick="closeLoginDialog()") Abbrechen
-              a.button-like(href="/password-recovery") Passwort vergessen
-              button#login-button(type="submit" name="login-button") Login
+              button.action(type="button" onclick="closeLoginDialog()") Abbrechen
+              a.action(href="/password-recovery") Passwort vergessen
+              button#login-button.action(type="submit" name="login-button") Login
