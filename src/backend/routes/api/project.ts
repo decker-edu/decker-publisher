@@ -160,4 +160,48 @@ router.get(
   }
 );
 
+router.get(
+  "/:username/:project/htaccess",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account = req.account;
+    const username = req.params.username;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const projectname = req.params.project;
+    const projects = account.getProjects();
+    const project = projects.find(
+      (project, index, array) => project.name === projectname
+    );
+    if (!project) {
+      return res
+        .status(404)
+        .json({ message: escapeHTML("Projekt nicht gefunden.") })
+        .end();
+    }
+    const dir = project.directory;
+    if (fs.existsSync(path.join(dir, ".htaccess"))) {
+      return res.status(200).json({ htuser: htuser, htpwd: htpwd }).end();
+    } else {
+      return res
+        .status(404)
+        .json({ message: escapeHTML(".htaccess nicht gefunden.") })
+        .end();
+    }
+  }
+);
+
 export default router;

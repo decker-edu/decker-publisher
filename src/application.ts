@@ -37,7 +37,7 @@ global.rootDirectory = path.resolve(__dirname);
 legacyFeedbackSetup();
 
 // view engine setup
-app.set("views", path.join(__dirname, "frontend", "views"));
+app.set("views", path.resolve(path.join(__dirname, "..", "views")));
 app.set("view engine", "pug");
 
 console.log(path.resolve());

@@ -136,13 +136,16 @@ main form {
   background-color: var(--tu-active);
 }
 
-.navigation {
-}
-
 button[disabled] {
   background-color: #808080;
   color: #404040;
   cursor: default;
+}
+
+button[disabled]:hover {
+  background-color: #808080;
+  color: #404040;
+  cursor: default; 
 }
 
 dialog::backdrop {
@@ -577,10 +580,7 @@ input:disabled {
 .row-order {
   display: flex;
   flex-direction: row;
-}
-
-.row-order * {
-  flex-grow: 1;
+  justify-content: space-evenly;
 }
 
 .wmax {
