@@ -14,7 +14,7 @@ const project = locationParts[locationParts.length - 1];
 const username = locationParts[locationParts.length - 2];
 
 async function fetchProjectData() {
-  const response = await fetch(`/api/project/${username}/${project}`);
+  const response = await fetch(`/api/project/${username}/${project}/files`);
   if (response.ok) {
     const json = await response.json();
     serverData = json;
@@ -23,6 +23,84 @@ async function fetchProjectData() {
     const json = await response.json();
     const message = json.message;
     displayError(message);
+  }
+}
+
+function setAccessMessage(message) {
+  const span = document.getElementById("access-message");
+  if (span) {
+    span.innerText = message;
+  }
+}
+
+async function fetchHtpasswd() {
+  const response = await fetch(`/api/project/${username}/${project}/access`);
+  if (response.ok) {
+    const json = await response.json();
+    const htuser = json.htuser;
+    document.getElementById("access-username").value = htuser;
+    setAccessMessage(
+      `Es ist Zugriff für externe Nutzer über den Nutzernamen '${htuser}' konfiguriert.`
+    );
+  } else {
+    if (response.status === 404) {
+      setAccessMessage("Es ist kein Zugriff für externe Nutzer konfiguriert.");
+      return;
+    } else {
+      try {
+        const json = await response.json();
+        const msg = json.message;
+        console.error(msg);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }
+}
+
+async function deleteHtpasswd() {
+  const response = await fetch(`/api/project/${username}/${project}/access`, {
+    method: "DELETE",
+  });
+  if (response.ok) {
+    setAccessMessage("Zugriffsdaten erfolgreich gelöscht.");
+  } else {
+    try {
+      const json = await response.json();
+      if (json.message) {
+        setAccessMessage(
+          `Fehler beim löschen der Zugriffsdaten: ${json.message}`
+        );
+      } else {
+        setAccessMessage("Fehler beim löschen der Zugriffsdaten.");
+      }
+    } catch (error) {
+      setAccessMessage("Unbekannter Fehler beim löschen der Zugriffsdaten.");
+      console.error(error);
+    }
+  }
+}
+
+async function setHtpasswd() {
+  const htuser = document.getElementById("access-username").value;
+  const htpass = document.getElementById("access-password").value;
+  const response = await fetch(`/api/project/${username}/${project}/access`, {
+    method: "POST",
+    cache: "no-cache",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ htuser: htuser, htpass: htpass }),
+  });
+  if (response.ok) {
+    return;
+  } else {
+    try {
+      const json = await response.json();
+      console.log(json);
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
 
@@ -100,7 +178,7 @@ let publicDirHandle;
 async function fetchFile(filepath) {
   try {
     const response = await fetch(
-      `/api/project/${username}/${project}/${filepath}`
+      `/api/project/${username}/${project}/files/${filepath}`
     );
     if (response && response.ok) {
       return response.arrayBuffer();
@@ -159,7 +237,7 @@ async function pushFile(filepath, file) {
   const data = new FormData();
   data.append("file", file);
   const response = await fetch(
-    `/api/project/${username}/${project}/${filepath}`,
+    `/api/project/${username}/${project}/files/${filepath}`,
     {
       method: "POST",
       body: data,
@@ -328,5 +406,8 @@ function markServerFilesAsNew(handled, serverList) {
 }
 
 window.addEventListener("load", () => {
-  fetchProjectData();
+  if (featureAvailable) {
+    fetchProjectData();
+  }
+  fetchHtpasswd();
 });

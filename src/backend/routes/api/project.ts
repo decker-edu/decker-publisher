@@ -2,6 +2,7 @@ import express from "express";
 const router = express.Router();
 
 import escapeHTML from "escape-html";
+import md5 from "apache-md5";
 
 import validator from "email-validator";
 import fs from "fs";
@@ -49,7 +50,151 @@ router.get(
 );
 
 router.get(
-  "/:username/:project/:filename(*)",
+  "/:username/:project/access",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account = req.account;
+    const username = req.params.username;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const projectname = req.params.project;
+    const projects = account.getProjects();
+    const project = projects.find(
+      (project, index, array) => project.name === projectname
+    );
+    if (!project) {
+      return res
+        .status(404)
+        .json({ message: escapeHTML("Projekt nicht gefunden.") })
+        .end();
+    }
+    const dir = project.directory;
+    if (fs.existsSync(path.join(dir, ".htpasswd"))) {
+      const content = fs.readFileSync(path.join(dir, ".htpasswd"), "utf-8");
+      const parts = content.split(":");
+      const htuser = parts[0];
+      return res.status(200).json({ htuser: htuser }).end();
+    } else {
+      return res
+        .status(404)
+        .json({ message: escapeHTML(".htpasswd nicht gefunden.") })
+        .end();
+    }
+  }
+);
+
+router.post(
+  "/:username/:project/access",
+  requireBody("htuser"),
+  requireBody("htpass"),
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account = req.account;
+    const username = req.params.username;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const projectname = req.params.project;
+    const projects = account.getProjects();
+    const project = projects.find(
+      (project, index, array) => project.name === projectname
+    );
+    if (!project) {
+      return res
+        .status(404)
+        .json({ message: escapeHTML("Projekt nicht gefunden.") })
+        .end();
+    }
+    const htuser = req.body["htuser"];
+    const htpass = md5(req.body["htpass"]);
+    const dir = project.directory;
+    try {
+      fs.writeFileSync(path.join(dir, ".htpasswd"), `${htuser}:${htpass}`);
+      return res.status(200).end();
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .json({ message: "Kann nicht in .htpasswd Datei schreiben." })
+        .end();
+    }
+  }
+);
+
+router.delete(
+  "/:username/:project/access",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account = req.account;
+    const username = req.params.username;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const projectname = req.params.project;
+    const projects = account.getProjects();
+    const project = projects.find(
+      (project, index, array) => project.name === projectname
+    );
+    if (!project) {
+      return res
+        .status(404)
+        .json({ message: escapeHTML("Projekt nicht gefunden.") })
+        .end();
+    }
+    const dir = project.directory;
+    const filename = path.join(dir, ".htpasswd");
+    try {
+      if (fs.existsSync(filename)) fs.rmSync(filename);
+      return res.status(200).end();
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .json({ message: "Kann .htpasswd Datei nicht löschen." })
+        .end();
+    }
+  }
+);
+
+router.get(
+  "/:username/:project/files/:filename(*)",
   async (
     req: express.Request,
     res: express.Response,
@@ -78,7 +223,7 @@ router.get(
 );
 
 router.post(
-  "/:username/:project/:filename(*)",
+  "/:username/:project/files/:filename(*)",
   fileUpload(),
   async (
     req: express.Request,
@@ -90,7 +235,10 @@ router.post(
       Object.keys(req.files).length === 0 ||
       Array.isArray(req.files.file)
     ) {
-      return res.status(400).end();
+      return res
+        .status(400)
+        .json({ message: "Es wurde keine Datei hochgeladen." })
+        .end();
     }
     const file: fileUpload.UploadedFile = req.files.file;
     if (!req.account) {
@@ -124,7 +272,7 @@ router.post(
 );
 
 router.get(
-  "/:username/:project",
+  "/:username/:project/files",
   async (
     req: express.Request,
     res: express.Response,
@@ -157,50 +305,6 @@ router.get(
     }
     const files = getChecksums(project.directory, project.directory);
     return res.status(200).json(files).end();
-  }
-);
-
-router.get(
-  "/:username/:project/htaccess",
-  async (
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    if (!req.account) {
-      return res
-        .status(403)
-        .json({ message: escapeHTML("Nicht eingeloggt.") })
-        .end();
-    }
-    const account = req.account;
-    const username = req.params.username;
-    if (account.username !== username) {
-      return res
-        .status(403)
-        .json({ message: escapeHTML("Keine Berechtigung.") })
-        .end();
-    }
-    const projectname = req.params.project;
-    const projects = account.getProjects();
-    const project = projects.find(
-      (project, index, array) => project.name === projectname
-    );
-    if (!project) {
-      return res
-        .status(404)
-        .json({ message: escapeHTML("Projekt nicht gefunden.") })
-        .end();
-    }
-    const dir = project.directory;
-    if (fs.existsSync(path.join(dir, ".htaccess"))) {
-      return res.status(200).json({ htuser: htuser, htpwd: htpwd }).end();
-    } else {
-      return res
-        .status(404)
-        .json({ message: escapeHTML(".htaccess nicht gefunden.") })
-        .end();
-    }
   }
 );
 

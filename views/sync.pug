@@ -24,19 +24,21 @@ block content
   div#access
     h2 Zugriffsbeschränkung
     div.message-area
-      p Ihre Präsentation ist aus rechtlichen Gründen nur über das Universitätsnetz der TU Dortmund erreichbar. 
-       | Sie können einen Zugang jedoch durch Abfrage einer Nutzername/Passwortkombination ermöglichen.
+      p Ihre Präsentation ist aus rechtlichen Gründen nur über das Universitätsnetz der TU Dortmund erreichbar.
+      p Sie können Nutzern einen Zugriff außerhalb des Universitätsnetzes durch Angabe eines einheitlichen Logins ermöglichen.
     div#access-controls.centered
       form#access-form
+        div
+          span#access-message
         div.row-order
-          input#access-username(name="access-username" placeholder="Loginname")
-          input#access-password(name="access-password" type="password" placeholder="Loginpasswort")
+          input#access-username(name="access-username" placeholder="Nutzername")
+          input#access-password(name="access-password" type="password" placeholder="Passwort")
         div.row-order
-          button.action(type="submit")
+          button.action(type="button" onclick="setHtpasswd()")
             i.fas.fa-edit
-            span Authentifizierungsdaten setzen
-          button.action(type="button")
+            span Zugriffsdaten setzen
+          button.action(type="button" onclick="deleteHtpasswd()")
             i.fas.fa-trash
-            span Authentifizierungsdaten löschen
+            span Zugriffsdaten löschen
 
 block dialogs

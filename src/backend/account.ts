@@ -261,7 +261,6 @@ export class Account implements Account {
           this.username
         )
       );
-      console.log(dir);
       return dir;
     }
   }
