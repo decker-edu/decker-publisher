@@ -93,13 +93,21 @@ async function setHtpasswd() {
     body: JSON.stringify({ htuser: htuser, htpass: htpass }),
   });
   if (response.ok) {
+    setAccessMessage(`Neue Zugriffsdaten mit Nutzer '${htuser}' gesetzt.`);
     return;
   } else {
     try {
       const json = await response.json();
-      console.log(json);
+      if (json.message) {
+        setAccessMessage(
+          `Fehler beim setzen der Zugriffsdaten: ${json.message}`
+        );
+      } else {
+        setAccessMessage("Unbekannter Fehler beim setzen der Zugriffsdaten.");
+      }
     } catch (error) {
       console.error(error);
+      setAccessMessage("Unbekannter Fehler beim setzen der Zugriffsdaten.");
     }
   }
 }
