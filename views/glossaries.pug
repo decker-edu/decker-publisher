@@ -1,0 +1,44 @@
+extends layout
+
+block scripts 
+  script(defer src="/javascripts/dialog.js")
+  script(defer src="/javascripts/glossaries.js")
+block content
+  header 
+    h1 Amberscript Glossarübersicht
+  main
+    table
+      thead
+        tr
+          th Glossar
+          th Aktionen
+      tbody
+        each glossary in glossaries
+          tr
+            td= glossary.name
+            td
+              a.button-like(href="/amberscript/glossary/"+glossary.id)
+                i.fas.fa-edit
+                span Bearbeiten
+              button(type="button" data-glossary=glossary.id onclick="selectForDeletion(this)")
+                i.fas.fa-trash
+                span Löschen
+    
+    a.button-like(href="/amberscript/glossary/new") Neues Glossar anlegen
+block dialogs
+  dialog#delete-dialog
+    form#delete-form
+      fieldset#delete-fieldset
+        legend Glossar löschen?
+          div#delete-message.dialog-message
+            text Möchten Sie dieses Glossar wirklich löschen?
+          div#delete-inputs.dialog-input-area
+            label(for="delete-pass") Mit Passwort bestätigen
+            input#delete-pass(type="password", name="delete-pass", placeholder="Passwort")
+          div#delete-buttons.dialog-buttons
+            button(type="button" onclick="deleteGlossary(selectedGlossary)")
+              i.fas.fa-trash
+              text Löschen
+            button(type="button" onclick="closeDialog()")
+              i.fas.fa-ban
+              text Abbrechen

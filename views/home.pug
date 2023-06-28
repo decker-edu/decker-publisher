@@ -1,0 +1,26 @@
+extends layout
+
+block content
+  h1 Persönlicher Bereich
+  section
+    h2 Decker
+    div.tile-area
+      a.tile(href="/projects")
+        i.fas.fa-book
+        span Projekte verwalten
+      a.tile(href="/convert")
+        i.fas.fa-file-import
+        span PDF-Foliensatz umwandeln
+      a.tile(href="/configuration")
+        i.fas.fa-file-code
+        span Decker-Konfiguration anzeigen
+  section
+    h2 Amberscript
+    div.tile-area
+      a.tile(href="/ambers")
+        i.fas.fa-tasks
+        span Meine Aufträge
+      a.tile(href="/glossaries")
+        i.fas.fa-book-open
+        span Wörterbücher verwalten
+block dialogs

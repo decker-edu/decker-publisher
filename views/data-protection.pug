@@ -1,0 +1,37 @@
+extends layout
+
+block content
+  header 
+    h1 Hinweise zum Datenschutz
+  main
+    section
+      p 
+        | Es gilt die 
+        a(href="https://tu-dortmund.de/datenschutz") Datenschutzerklärung
+        |  der technischen Universität Dortmund.
+    section
+      p Folgende Daten werden zusätzlich von diesem Dienst gespeichert:
+      ul
+        li Benutzerkontoinformationen, um eine Anmeldung zum Dienst zu ermöglichen:
+          ul
+            li Benutzername, E-Mail, Passworthashes
+        li Vom Nutzer angebene Zusatzdaten zum Benutzerkonto:
+          ul
+            li Kryptografieschlüssel zur Authentifizierung
+        li Vom Nutzer hochgeladene Präsentationen.
+      p Folgende Daten werden mit Anderen geteilt:
+      ul
+        li Vom Nutzer hochgeladene Präsentationen.
+          ul
+            li
+              | Dieser Dienst dient explizit dem Teilen von Präsentationen mit Anderen.
+              | Daher sind alle Präsentationen aus dem Universitätsnetz frei einsehbar.
+        li Vom Nutzer hochgeladene Videos.
+          ul
+            li
+              | Auf Anfrage eines Nutzers können Videos an den Dienst von Amberscript gesendet werden, um
+              | Untertitel generieren zu lassen. Bei Anfragen dieser Untertitel werden die Daten des Videos
+              | an Amberscript gesendet. Die Datenschutzhinweise von Amberscript finden Sie 
+              a(href="https://www.amberscript.com/de/datenschutzbestimmungen/") hier
+              | .
+block dialogs

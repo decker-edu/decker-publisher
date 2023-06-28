@@ -1,0 +1,95 @@
+extends layout
+
+block scripts 
+    script(defer src="/javascripts/upload.js")
+    script(defer src="/javascripts/video.js")
+    script(defer src="/javascripts/project.js")
+    script(defer src="/javascripts/dialog.js")
+
+block content
+  header 
+    h1 Ihre Webpräsentationen
+  main
+    div#project-area
+      table 
+        thead
+          tr
+            th Foliensatz
+            th Aufzeichnungen
+            th Aktionen
+        tbody
+          each project in projects
+            tr
+              td
+                a.action(href="/decks/" + account.username + "/" + project.name + "/" target="_blank")
+                  i.fas.fa-external-link
+                  span= project.name
+              td
+                div.video-list
+                  each video in project.videos
+                    button.action(onclick="openVideoDialog('"+project.name+"', '"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
+                      i.fas.fa-film
+                      span= video.filename
+              td
+                div.actions
+                  a.action(href="/sync/" + account.username + "/" + project.name)
+                    i.fas.fa-tasks-alt
+                    span Verwalten
+                  button.action(onclick="openDeleteProjectDialog('"+project.name+"')" aria-label="Projekt "+project.name+" löschen") 
+                    i.fas.fa-trash
+                    span Löschen
+    div#upload-area
+      button.action(onclick="addUpload()" aria-label="Neues Projekt hochladen")
+        i.fas.fa-plus
+        span Projekt hochladen
+      div#insert-area
+  template(id="upload-template")
+    span.upload-information
+      | Zum hochladen eines Projektes archivieren Sie einfach das von Decker generierte Verzeichnis 
+      pre.inline public
+      |  in einer 
+      pre.inline .zip
+      |  Datei und wählen dieses Archiv aus. Das Archiv sollte auf oberster Ebene nur den Ordner 
+      pre.inline public
+      |  beinhalten.
+    label.fileinput#file-upload-placeholder(tabindex="0" onkeydown="passOn(event)")
+      span#file-upload-label Datei auswählen
+      input#file-upload-input(type="file" enctype="multipart/form-data" name="projectFile" onchange="inputChanged()")
+    div#project-config.hidden
+      label(for="project-name-input") Projektname: 
+      input#project-name-input(type="span" name="projectName")
+    button#file-upload-button.action(onclick="upload()" title="Hochladen" aria-label="Hochladen" hidden)
+      i.fas.fa-upload
+      span Upload starten
+block dialogs
+  dialog#delete-dialog
+    form#delete-form
+      fieldset#delete-fieldset
+        legend Projekt löschen?
+          div#delete-message.dialog-message
+            span Dies entfernt alle sich hier befindlichen Inhalte des Projektes, inklusive aller generierten Untertitel.
+          div#delete-inputs.dialog-input-area
+            label(for="delete-pass") Mit Passwort bestätigen
+            input#delete-pass(type="password", name="delete-pass", placeholder="Passwort")
+          div#delete-buttons.dialog-buttons
+            button(type="button" onclick="deleteSelectedProject()")
+              i.fas.fa-trash
+              span Löschen
+            button(type="button" onclick="closeDialog('delete-dialog')")
+              i.fas.fa-ban
+              span Dialog schließen
+  dialog#video-dialog
+    div#video-message.dialog-message
+    div.video-data
+      label(for="video-filename") Dateiname
+      div#video-filename
+      label(for="video-length") Video-Länge
+      div#video-length
+      label(for="video-subtitles") Untertitel
+      div#video-hasvtt
+      button(onclick="navigateToVideo()")
+        i.fas.fa-film
+        span Video bearbeiten
+      button(onclick="closeVideoDialog()")
+        i.fas.fa-ban
+        span Dialog schließen

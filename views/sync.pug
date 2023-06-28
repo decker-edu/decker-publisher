@@ -1,0 +1,42 @@
+extends layout
+
+block scripts 
+  script(defer src="/javascripts/sync.js")
+
+block content
+  h1 Projektverwaltung
+  div#synchronization
+    h2 Projektsynchronisation
+    div.message-area
+        span#error-message
+    div#sync-controls.centered.col-order
+      button.action(onclick="requestDirectoryAccess()") Lokalen Ordner auswählen
+      div.row-order.wmax
+        button#upload-button.action(disabled onclick="upload()") 
+          i.fas.fa-upload
+          span Lokale Dateien hochladen
+        button#download-button.action(disabled onclick="download()")
+          i.fas.fa-download
+          span Generierte Dateien herunterladen
+      div.sync-tables
+        div.file-table#client-table
+        div.file-table#server-table
+  div#access
+    h2 Zugriffsbeschränkung
+    div.message-area
+      p Ihre Präsentation ist aus rechtlichen Gründen nur über das Universitätsnetz der TU Dortmund erreichbar. 
+       | Sie können einen Zugang jedoch durch Abfrage einer Nutzername/Passwortkombination ermöglichen.
+    div#access-controls.centered
+      form#access-form
+        div.row-order
+          input#access-username(name="access-username" placeholder="Loginname")
+          input#access-password(name="access-password" type="password" placeholder="Loginpasswort")
+        div.row-order
+          button.action(type="submit")
+            i.fas.fa-edit
+            span Authentifizierungsdaten setzen
+          button.action(type="button")
+            i.fas.fa-trash
+            span Authentifizierungsdaten löschen
+
+block dialogs
