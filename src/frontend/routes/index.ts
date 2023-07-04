@@ -218,7 +218,7 @@ router.get(
             req.account.username,
             project,
             "files",
-            subtitles,
+            vttpath,
           ].join("/"),
       },
       glossaries: glossaries,
