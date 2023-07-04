@@ -16,7 +16,7 @@ block content
       each glossary in glossaries
         tr
           td= glossary.name
-          td
+          td.actions
             a.action(href="/amberscript/glossary/"+glossary.id)
               i.fas.fa-edit
               span Bearbeiten

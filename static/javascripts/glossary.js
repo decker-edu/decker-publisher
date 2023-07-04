@@ -4,6 +4,7 @@ function addGlossaryName() {
   const nameDiv = document.createElement("div");
   const deleteButton = document.createElement("button");
   deleteButton.type = "button";
+  deleteButton.classList.add("action");
   const icon = document.createElement("i");
   icon.classList.add("fas");
   icon.classList.add("fa-trash");
