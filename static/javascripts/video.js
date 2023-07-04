@@ -86,6 +86,7 @@ function activateVTTEditor() {
   saveButton.disabled = false;
   const area = document.getElementById("vtt-area");
   area.disabled = false;
+  area.style.height = "auto";
   area.focus();
 }
 

@@ -1,7 +1,14 @@
 #vtt-area {
   width: 100%;
   resize: vertical;
+  min-height: 8em;
   max-height: 24em;
+}
+
+#vtt-area:disabled {
+  resize: none;
+  min-height: 16em;
+  max-height: 16em;
 }
 
 .amberscript-options {
