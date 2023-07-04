@@ -145,7 +145,7 @@ button[disabled] {
 button[disabled]:hover {
   background-color: #808080;
   color: #404040;
-  cursor: default; 
+  cursor: default;
 }
 
 dialog::backdrop {
@@ -717,4 +717,8 @@ li.caret.active::marker {
   grid-template-columns: 1fr 1fr;
   gap: 0.4rem;
   flex-grow: 1;
+}
+
+#glossary-table {
+  width: 100%;
 }
