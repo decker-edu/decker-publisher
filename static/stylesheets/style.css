@@ -420,7 +420,7 @@ label.fileinput:active {
 .actions {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .video-list {
@@ -721,4 +721,5 @@ li.caret.active::marker {
 
 #glossary-table {
   width: 100%;
+  table-layout: auto;
 }
