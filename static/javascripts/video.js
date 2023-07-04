@@ -120,7 +120,7 @@ async function saveSubtitles(username, project, filename) {
       const message = document.getElementById("vtt-message");
       if (message) {
         message.innerText = "Daten erfolgreich übermittelt.";
-        setTimeout(() => closeSaveDialog(), 2000);
+        setTimeout(() => location.reload(), 2000);
       }
     } else {
       const json = await response.json();
