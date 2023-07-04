@@ -1,3 +1,4 @@
+require("module-alias/register");
 import config from "@root/config";
 import { Account } from "./backend/account";
 import database from "./backend/database";
