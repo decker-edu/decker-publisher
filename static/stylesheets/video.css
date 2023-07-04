@@ -3,6 +3,7 @@
   resize: vertical;
   min-height: 8em;
   max-height: 24em;
+  transition: height 0.5s;
 }
 
 #vtt-area:disabled {
