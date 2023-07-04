@@ -17,14 +17,14 @@ block content
           tr
             td= glossary.name
             td
-              a.button-like(href="/amberscript/glossary/"+glossary.id)
+              a.action(href="/amberscript/glossary/"+glossary.id)
                 i.fas.fa-edit
                 span Bearbeiten
-              button(type="button" data-glossary=glossary.id onclick="selectForDeletion(this)")
+              button.action(type="button" data-glossary=glossary.id onclick="selectForDeletion(this)")
                 i.fas.fa-trash
                 span Löschen
     
-    a.button-like(href="/amberscript/glossary/new") Neues Glossar anlegen
+    a.action(href="/amberscript/glossary/new") Neues Glossar anlegen
 block dialogs
   dialog#delete-dialog
     form#delete-form
@@ -36,9 +36,9 @@ block dialogs
             label(for="delete-pass") Mit Passwort bestätigen
             input#delete-pass(type="password", name="delete-pass", placeholder="Passwort")
           div#delete-buttons.dialog-buttons
-            button(type="button" onclick="deleteGlossary(selectedGlossary)")
+            button.action(type="button" onclick="deleteGlossary(selectedGlossary)")
               i.fas.fa-trash
               text Löschen
-            button(type="button" onclick="closeDialog()")
+            button.action(type="button" onclick="closeDialog()")
               i.fas.fa-ban
               text Abbrechen
