@@ -169,11 +169,15 @@ router.get(
     const filename = path.basename(fullpath, path.extname(fullpath));
     const dirname = path.dirname(fullpath);
     const subtitles = filename + ".vtt";
+    console.log("dirname:", path.dirname(filepath));
+    console.log("basename:", path.basename(filepath));
+    console.log("extname:", path.extname(filepath));
     const vttpath = path.join(
       path.dirname(filepath),
       path.basename(filepath, path.extname(filepath)),
       ".vtt"
     );
+    console.log("vttname:", vttpath);
     const vttfile = path.join(dirname, subtitles);
     let vttcontent = undefined;
     if (fs.existsSync(vttfile)) {
