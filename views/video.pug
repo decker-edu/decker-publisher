@@ -4,23 +4,34 @@ block scripts
   script(src="/javascripts/video.js")
   script(src="/javascripts/amber.js")
 
+block styles
+  link(rel="stylesheet", href="/stylesheets/video.css")
+
 
 block content
-  header
-    h1 Video
-    h2= video.project
-    h3= video.path
-  main
+  h1 Aufnahme aus Projekt #{video.project}
+  h2 Datei #{video.path}
+  div#video
     video(src= video.url controls)
+      if video.vtt
+        track(label="Subtitles" kind="subtitles" src=video.vtturl)
 
     if video.vtt
-        pre.vtt= video.vtt
+        textarea#vtt-area(disabled)= video.vtt
     else 
-        pre.vtt Keine Untertitel
+        textarea#vtt-area(disabled) Keine Untertitel
 
-    button(onclick="openAmberDialog('"+video.project+"', '"+video.path+"')") 
-      i.fas.fa-closed-captioning
-      text Untertitel generieren
+  div#video-controls
+    div.row-order
+      button.action(onclick="openAmberDialog('"+video.project+"', '"+video.path+"')") 
+        i.fas.fa-closed-captioning
+        span Untertitel generieren
+      button.action(onclick="activateVTTEditor()")
+        i.fas.fa-edit
+        span Untertitel bearbeiten
+      button#save-button.action(disabled onclick="openSaveDialog()")
+        i.fas.fa-save
+        span Untertitel speichern
 
 block dialogs
   dialog#amber-dialog
@@ -100,12 +111,21 @@ block dialogs
         for glossary in glossaries
           option(value=glossary.id)= glossary.name 
     div.dialog-buttons
-      button(onclick="requestAmber()")
+      button.action(onclick="requestAmber()")
         i.fas.fa-film
-        text Video an Amberscript senden
-      a.button-like(href="/amberscript/glossary/new")
+        span Video an Amberscript senden
+      a.action(href="/amberscript/glossary/new")
         i.fas.fa-edit
-        text Neues Wörterbuch anlegen
-      button(onclick="closeAmberDialog()")
+        span Neues Wörterbuch anlegen
+      button.action(onclick="closeAmberDialog()")
         i.fas.fa-ban
-        text Dialog schließen
+        span Dialog schließen
+  dialog#vtt-dialog
+    div#vtt-message Sind Sie sicher, dass Sie die Untertitel dieses Videos überschreiben wollen?
+    div.dialog-buttons
+      button.action(onclick="saveSubtitles('"+account.username+"','"+video.project+"', '"+video.vttpath+"')")
+        i.fas.fa-save
+        span Überschreiben
+      button.action(onclick="closeSaveDialog()")
+        i.fas.fa-ban
+        span Abbrechen

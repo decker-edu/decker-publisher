@@ -80,3 +80,67 @@ function navigateToVideo() {
     `/video?project=${dialogProject}&filepath=${dialogFilepath}`
   );
 }
+
+function activateVTTEditor() {
+  const saveButton = document.getElementById("save-button");
+  saveButton.disabled = false;
+  const area = document.getElementById("vtt-area");
+  area.disabled = false;
+  area.focus();
+}
+
+function openSaveDialog() {
+  const diag = document.getElementById("vtt-dialog");
+  diag.showModal();
+}
+
+function closeSaveDialog() {
+  const diag = document.getElementById("vtt-dialog");
+  diag.close();
+}
+
+async function saveSubtitles(username, project, filename) {
+  const area = document.getElementById("vtt-area");
+  const subtitles = area.value;
+  try {
+    const blob = new Blob([subtitles], { type: "text/plain" });
+    const file = new File([blob], filename);
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch(
+      `/api/project/${username}/${project}/files/${filename}`,
+      {
+        method: "POST",
+        cache: "no-cache",
+        body: formData,
+      }
+    );
+    if (response.ok) {
+      const message = document.getElementById("vtt-message");
+      if (message) {
+        message.innerText = "Daten erfolgreich übermittelt.";
+        setTimeout(() => closeSaveDialog(), 2000);
+      }
+    } else {
+      const json = await response.json();
+      if (json.message) {
+        const message = document.getElementById("vtt-message");
+        if (message) {
+          message.innerText = "Es ist ein Fehler aufgetreten: " + json.message;
+        }
+      } else {
+        const message = document.getElementById("vtt-message");
+        if (message) {
+          message.innerText = "Es ist ein unerwarteter Fehler aufgetreten.";
+        }
+      }
+    }
+  } catch (error) {
+    const message = document.getElementById("vtt-message");
+    if (message) {
+      console.error(error);
+      message.innerText =
+        "Es ist ein Fehler bei der Datenübertragung aufgetreten.";
+    }
+  }
+}

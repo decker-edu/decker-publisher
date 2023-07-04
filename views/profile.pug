@@ -45,10 +45,10 @@ block dialogs
           label(for="change-password-new-repeat") Neues Passwort Wiederholen
           input#change-password-new-repeat(type="password" required pattern="^.{8,}" placeholder="Passwort Wiederholen" onkeyup="passwordChanged()")
       div.dialog-buttons
-        button#change-password-button(disabled type="button" onclick="changePassword(\""+account.username+"\")")
+        button#change-password-button.action(disabled type="button" onclick="changePassword(\""+account.username+"\")")
           i.fas.fa-key
           span Passwort Ändern
-        button(type="button" onclick="closeDialog(\"change-password\")")
+        button.action(type="button" onclick="closeDialog(\"change-password\")")
           i.fas.fa-ban
           span Dialog schließen
 
@@ -63,10 +63,10 @@ block dialogs
           label(for="change-email-confirmation") Mit Passwort bestätigen
           input#change-email-confirmation(type="password" required pattern="^.{8,}" placeholder="Passwort" onkeyup="emailChanged()")
       div.dialog-buttons
-        button#change-email-button(disabled type="button" onclick="changeEmail(\""+account.username+"\")")
+        button#change-email-button.action(disabled type="button" onclick="changeEmail(\""+account.username+"\")")
           i.fas.fa-envelope
           span E-Mail-Adresse ändern
-        button(type="button" onclick="closeDialog(\"change-email\")")
+        button.action(type="button" onclick="closeDialog(\"change-email\")")
           i.fas.fa-ban
           span Dialog schließen
 
@@ -111,7 +111,7 @@ block dialogs
     div.dialog-message
       | Das automatische Löschen von Konten auf Anfrage ist noch nicht vollständig umgesetzt.
       | Sollten Sie Ihr Konto vollständig und mit allen Inhalten entfernen wollen, bitte kontaktieren Sie den Administrator:
-      | sebastian.hauer@tu-dortmund.de
+      | admin.hylec@tu-dortmund.de
     // form#delete-account-form
       fieldset#delete-account-fieldset
         legend Konto löschen
@@ -122,6 +122,6 @@ block dialogs
       //button#delete-account-button(disabled type="button" onclick="deleteAccount(\""+account.username+"\")")
         i.fas.fa-trash
         span Konto löschen
-      button(type="button" onclick="closeDialog(\"delete-account\")")
+      button.action(type="button" onclick="closeDialog(\"delete-account\")")
         i.fas.fa-ban
         span Dialog schließen

@@ -192,10 +192,30 @@ router.get(
       title: "Videoinformationen",
       admin: admin,
       video: {
-        url: path.join("decks", req.account.username, project, filepath),
+        url:
+          "/" +
+          [
+            "api",
+            "project",
+            req.account.username,
+            project,
+            "files",
+            filepath,
+          ].join("/"),
         project: project,
         path: filepath,
         vtt: vttcontent,
+        vttpath: subtitles,
+        vtturl:
+          "/" +
+          [
+            "api",
+            "project",
+            req.account.username,
+            project,
+            "files",
+            subtitles,
+          ].join("/"),
       },
       glossaries: glossaries,
     });

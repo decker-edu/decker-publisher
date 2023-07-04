@@ -72,10 +72,10 @@ block dialogs
             label(for="delete-pass") Mit Passwort bestätigen
             input#delete-pass(type="password", name="delete-pass", placeholder="Passwort")
           div#delete-buttons.dialog-buttons
-            button(type="button" onclick="deleteSelectedProject()")
+            button.action(type="button" onclick="deleteSelectedProject()")
               i.fas.fa-trash
               span Löschen
-            button(type="button" onclick="closeDialog('delete-dialog')")
+            button.action(type="button" onclick="closeDialog('delete-dialog')")
               i.fas.fa-ban
               span Dialog schließen
   dialog#video-dialog
@@ -87,9 +87,9 @@ block dialogs
       div#video-length
       label(for="video-subtitles") Untertitel
       div#video-hasvtt
-      button(onclick="navigateToVideo()")
+      button.action(onclick="navigateToVideo()")
         i.fas.fa-film
         span Video bearbeiten
-      button(onclick="closeVideoDialog()")
+      button.action(onclick="closeVideoDialog()")
         i.fas.fa-ban
         span Dialog schließen

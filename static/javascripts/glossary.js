@@ -36,6 +36,7 @@ function addGlossaryItem() {
   const descLabel = document.createElement("span");
   descLabel.innerText = "Beschreibung";
   const deleteButton = document.createElement("button");
+  deleteButton.classList.add("action");
   deleteButton.type = "button";
   const icon = document.createElement("i");
   icon.classList.add("fas");
@@ -59,6 +60,8 @@ function addGlossaryItem() {
 async function confirmGlossary() {
   const name = document.getElementById("glossary-name-input").value;
   if (name === "") {
+    const msg = document.getElementById("status-message");
+    msg.innerText = "Das Glossar muss einen Namen besitzen.";
     return;
   }
   const namesDiv = document.getElementById("names-container");
