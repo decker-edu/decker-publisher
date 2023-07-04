@@ -1,0 +1,18 @@
+#vtt-area {
+  width: 100%;
+  resize: none;
+  min-height: 8em;
+  max-height: 16em;
+}
+
+.amberscript-options {
+  display: flex;
+  flex-direction: column;
+  border: 1px inset rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.amberscript-options label {
+  font-weight: bold;
+}
