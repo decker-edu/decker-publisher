@@ -3,35 +3,33 @@ extends layout
 block scripts 
 
 block content
-  header 
-    h1 Amberscriptaufträge
-  main
-    table
-      thead
+  h1 Amberscriptaufträge
+  table#amber-table
+    thead
+      tr
+        th Jobnummer
+        th Projektname
+        th Dateiname
+        th Status
+        th Aktionen
+    tbody
+      each job in jobs
         tr
-          th Jobnummer
-          th Projektname
-          th Dateiname
-          th Status
-          th Aktionen
-      tbody
-        each job in jobs
-          tr
-            td= job.job_id
-            td= job.projectname
-            td= job.relative_filepath
-            td 
-              case job.status
-                when "DONE"
-                  text Erledigt
-                when "OPEN"
-                  text Ausstehend
-                when "ERROR"
-                  text Fehlerhaft
-            td
-              button.action(onclick="openDeleteJobDialog('"+job.job_id+"')")
-                i.fas.fa-trash
-                span Löschen
+          td= job.job_id
+          td= job.projectname
+          td= job.relative_filepath
+          td 
+            case job.status
+              when "DONE"
+                text Erledigt
+              when "OPEN"
+                text Ausstehend
+              when "ERROR"
+                text Fehlerhaft
+          td
+            button.action(onclick="openDeleteJobDialog('"+job.job_id+"')")
+              i.fas.fa-trash
+              span Löschen
 block dialogs
     dialog#delete-amber-dialog
     div#delete-amber-message Sind Sie sicher, dass Sie diesen Auftrag und alle dazugehörigen Informationen löschen wollen?

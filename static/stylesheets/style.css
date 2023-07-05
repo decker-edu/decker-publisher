@@ -723,3 +723,8 @@ li.caret.active::marker {
   width: 100%;
   table-layout: auto;
 }
+
+#amber-table {
+  width: 100%;
+  table-layout: fixed;
+}
