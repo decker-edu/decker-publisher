@@ -66,7 +66,7 @@ async function upload() {
       if (json.message) {
         addToLocalLog(json.message);
       }
-      connect();
+      setTimeout(() => connect(), 1000);
     } else {
       const json = await response.json();
       addToLocalLog("Ein Fehler ist aufgetreten.");
