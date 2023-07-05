@@ -29,7 +29,7 @@ block content
       label.fileinput#file-upload-placeholder(tabindex="0" onkeydown="passOn(event)")
         span#file-upload-label Datei auswählen
         input#file-upload-input(type="file" enctype="multipart/form-data" name="projectFile" onchange="inputChanged()")
-      button#file-upload-button(type="button" onclick="upload()" title="Hochladen" aria-label="Hochladen" hidden)
+      button#file-upload-button.action(type="button" onclick="upload()" title="Hochladen" aria-label="Hochladen" hidden)
         i.fas.fa-upload
         text Upload starten
 block dialogs
