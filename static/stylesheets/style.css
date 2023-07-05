@@ -726,5 +726,5 @@ li.caret.active::marker {
 
 #amber-table {
   width: 100%;
-  table-layout: fixed;
+  table-layout: auto;
 }
