@@ -201,7 +201,8 @@ export async function Converter(filepath: string, emitter: EventEmitter) {
     console.error("[convert] Not a PDF.");
     return;
   }
-  const dataBuffer: Uint8Array = fs.readFileSync(filepath);
+  const dataBuffer: Buffer = fs.readFileSync(filepath);
+  const array: Uint8Array = new Uint8Array(dataBuffer);
   let pdfInfo: pdfInformation = {
     author: "Unknown Author",
     pdfTitle: "Unknown Presentation Title",
@@ -213,7 +214,7 @@ export async function Converter(filepath: string, emitter: EventEmitter) {
   };
   console.log("[convert] Reading PDF ...");
   try {
-    const pdf = await getPDFDocument(dataBuffer).promise;
+    const pdf = await getPDFDocument(array).promise;
     pdfInfo.pages = pdf.numPages;
     console.log("[convert]", `${pdf.numPages} Seiten gefunden.`);
     emitter.emit("info", { message: `${pdf.numPages} Seiten gefunden.` });
