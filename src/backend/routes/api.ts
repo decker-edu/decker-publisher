@@ -655,12 +655,12 @@ router.get(
       console.log(`[${filequery}] Connection closed`);
     });
     console.log("[convert event] registered");
-    res.set({
+    const headers = {
       "Cache-Control": "no-cache",
       "Content-Type": "text/event-stream",
       Connection: "keep-alive",
-    });
-    res.flushHeaders();
+    };
+    res.writeHead(200, headers);
     console.log("[convert event] headers flushed");
     res.write("event: info\ndata: Warte auf Ereignisse vom Server ...\n\n");
     console.log("[convert event] hello sent");
