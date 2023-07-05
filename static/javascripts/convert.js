@@ -105,6 +105,10 @@ function connect() {
     } else {
       addToServerLog("Ein unbekannter Fehler ist aufgetreten.");
     }
+    const cog = document.getElementById("waitingcog");
+    if (cog) {
+      cog.className = "fas fa-times";
+    }
     source.close();
     addToLocalLog("Verbindung zum Server getrennt.");
   });
