@@ -115,3 +115,48 @@ function closeAmberDialog() {
   let dialog = document.getElementById("amber-dialog");
   dialog.close();
 }
+
+let selected_job = undefined;
+
+async function deleteSelectedJob() {
+  try {
+    const response = await fetch(`/api/amberscript/${selected_job}`, {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      let span = document.getElementById("delete-amber-message");
+      span.innerText = "Auftrag gelöscht.";
+      setTimeout(() => location.reload(), 2000);
+    } else {
+      try {
+        const json = await response.json();
+        let span = document.getElementById("delete-amber-message");
+        span.innerText = json.message;
+      } catch (error) {
+        console.error(error);
+        let span = document.getElementById("delete-amber-message");
+        span.innerText =
+          "Die Anfrage zum Löschen dieses Auftrags wurde abgelehnt.";
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    let span = document.getElementById("delete-amber-message");
+    span.innerText = "Ein unbekannter Fehler ist aufgetreten.";
+  }
+}
+
+function openDeleteJobDialog(job_id) {
+  selected_job = job_id;
+  let dialog = document.getElementById("delete-amber-dialog");
+  dialog.showModal();
+}
+
+function closeDeleteJobDialog() {
+  let dialog = document.getElementById("delete-amber-dialog");
+  dialog.close();
+}

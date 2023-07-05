@@ -44,6 +44,31 @@ router.post(
   }
 );
 
+router.delete(
+  "/:id",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const id = req.params.id;
+    if (!req.account) {
+      return res.status(403).end();
+    }
+    const account = req.account;
+    const jobs = await amberscript.getJobs(account);
+    const job = jobs.find((job) => (job.job_id = id));
+    if (job) {
+      try {
+        await amberscript.deleteJob(id);
+        return res.status(200).end();
+      } catch (error) {
+        return res.status(500).json({ message: error }).end();
+      }
+    }
+  }
+);
+
 router.post(
   "/callback",
   (req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -125,6 +125,41 @@ async function archive(
   }
 }
 
+async function deleteJob(jobId: string): Promise<void> {
+  const url = new URL("https://api.amberscript.com/api/jobs");
+  const apiKey = config().amberscriptAPIKey;
+  if (!apiKey || apiKey === "") {
+    throw "Es wurde vom Administrator kein Amberscript API Schlüssel konfiguriert.";
+  }
+  const params = {
+    jobId: jobId,
+    apiKey: apiKey,
+  };
+  url.search = new URLSearchParams(params).toString();
+  try {
+    const response = await fetch(url, {
+      method: "DELETE",
+    });
+    if (response.ok) {
+      try {
+        await database.query("DELETE FROM amberscript_jobs WHERE job_id = $1", [
+          jobId,
+        ]);
+        console.log("[amberscript] job deleted: ", jobId);
+        return;
+      } catch (error) {
+        console.error(error);
+        throw "Konnte Datenbankeintrag des Auftrags nicht löschen.";
+      }
+    } else {
+      throw "Löschung des Auftrags wurde von Amberscript abgelehnt.";
+    }
+  } catch (error) {
+    console.error(error);
+    throw "Konnte Auftrag nicht löschen.";
+  }
+}
+
 async function getVTT(jobId: string): Promise<string> {
   const url = new URL("https://api.amberscript.com/api/jobs/export-vtt");
   const apiKey = config().amberscriptAPIKey;
@@ -402,6 +437,7 @@ async function deleteGlossary(id: string) {
 export default {
   post,
   archive,
+  deleteJob,
   importVTT,
   finallizeJob,
   publishError,

@@ -29,5 +29,16 @@ block content
                 when "ERROR"
                   text Fehlerhaft
             td
-              button:disabled Löschen
+              button.action(onclick="openDeleteJobDialog('"+job.job_id+"')")
+                i.fas.fa-trash
+                span Löschen
 block dialogs
+    dialog#delete-amber-dialog
+    div#delete-amber-message Sind Sie sicher, dass Sie diesen Auftrag und alle dazugehörigen Informationen löschen wollen?
+    div.dialog-buttons
+      button.action(onclick="deleteSelectedJob()")
+        i.fas.fa-trash
+        span Löschen
+      button.action(onclick="closeDeleteJobDialog()")
+        i.fas.fa-ban
+        span Abbrechen
