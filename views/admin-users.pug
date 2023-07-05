@@ -22,8 +22,8 @@ block content
             span= account.username
           td
             span= account.email
-          td.table-actions
-            button(onclick="chargeAmberscript('"+account.username+"')")
+          td.actions
+            button.action(onclick="chargeAmberscript('"+account.username+"')")
               i.fas.fa-plus
               span Amberscript Guthaben aufladen
             button.action(onclick="deleteAccount('"+account.username+"')")
