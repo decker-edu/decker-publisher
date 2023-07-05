@@ -643,7 +643,6 @@ router.get(
   "/convert/events",
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const filequery: string = req.query.file.toString();
-    console.log("[convert event] request:", filequery);
     if (!filequery) {
       return res.status(400).end();
     }
@@ -654,34 +653,27 @@ router.get(
     req.on("close", () => {
       console.log(`[${filequery}] Connection closed`);
     });
-    console.log("[convert event] registered");
     const headers = {
       "Cache-Control": "no-cache",
       "Content-Type": "text/event-stream",
       Connection: "keep-alive",
     };
     res.writeHead(200, headers);
-    console.log("[convert event] headers flushed");
     res.write("event: info\ndata: Warte auf Ereignisse vom Server ...\n\n");
-    console.log("[convert event] hello sent");
     const id = account.username + ":" + path.basename(filequery, ".zip");
     const emitter = events.get(id);
     if (!emitter) {
-      console.log("[convert event] emitter", id, "was null");
       res.write("event: error\ndata: Kein Prozess gefunden.\n\n");
       return;
     }
     emitter.on("info", (event) => {
-      console.log("[convert event]", event.message);
       res.write(`event: info\ndata: ${event.message}\n\n`);
     });
     emitter.on("done", (event) => {
-      console.log("[convert event]", event.message);
       res.write(`event: done\ndata: ${event.message}\n\n`);
       events.delete(id);
     });
     emitter.on("error", (event) => {
-      console.log("[convert event]", event.message);
       res.write(`event: error\ndata: ${event.message}\n\n`);
       events.delete(id);
     });
