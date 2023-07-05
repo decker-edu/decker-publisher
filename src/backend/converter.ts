@@ -207,8 +207,10 @@ export function Converter(filepath: string, emitter: EventEmitter) {
     height: 0,
     entries: [],
   };
+  console.log("[convert] Reading PDF ...");
   getPDFDocument(dataBuffer).promise.then(async (pdf) => {
     pdfInfo.pages = pdf.numPages;
+    console.log("[convert]", `${pdf.numPages} Seiten gefunden.`);
     emitter.emit("info", { message: `${pdf.numPages} Seiten gefunden.` });
     for (let pageNum = 1; pageNum <= pdfInfo.pages; pageNum++) {
       const page = await pdf.getPage(pageNum);
