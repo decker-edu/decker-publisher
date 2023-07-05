@@ -4,31 +4,30 @@ block scripts
   script(src="/javascripts/admin.js")
 
 block content
-  header
-    h1 Administration
-  main.admin
-    h2 Benutzerkonten
-    table
-      thead 
+  h1 Administration
+  h2 Benutzerkonten
+  table
+    thead 
+      tr
+        th Nummer
+        th Benutzername
+        th E-Mail
+        th Aktionen
+    tbody
+      each account in accounts
         tr
-          th Nummer
-          th Benutzername
-          th E-Mail
-          th Aktionen
-      tbody
-        each account in accounts
-          tr
-            td
-              text= account.id
-            td
-              text= account.username
-            td
-              text= account.email
-            td.table-actions
-              button(onclick="chargeAmberscript('"+account.username+"')")
-                i.fas.fa-plus
-                text Amberscript Guthaben aufladen
-              button
-                i.fas.fa-trash
-                text Entfernen
+          td
+            span= account.id
+          td
+            span= account.username
+          td
+            span= account.email
+          td.table-actions
+            button(onclick="chargeAmberscript('"+account.username+"')")
+              i.fas.fa-plus
+              span Amberscript Guthaben aufladen
+            button.action(onclick="deleteAccount('"+account.username+"')")
+              i.fas.fa-trash
+              span Entfernen
+
 block dialogs

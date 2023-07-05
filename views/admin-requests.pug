@@ -4,43 +4,41 @@ block scripts
   script(src="/javascripts/admin.js")
 
 block content
-  header
-    h1 Administration
-  main.admin
-    h2 Kontoanfragen
-    if requests
-      table
-        thead 
+  h1 Administration
+  h2 Kontoanfragen
+  if requests
+    table
+      thead 
+        tr
+          th Nummer
+          th Benutzername
+          th E-Mail
+          th Notiz
+          th Token
+          th Datum
+          th Aktionen
+      tbody
+        each request in requests
           tr
-            th Nummer
-            th Benutzername
-            th E-Mail
-            th Notiz
-            th Token
-            th Datum
-            th Aktionen
-        tbody
-          each request in requests
-            tr
-              td
-                text= request.id
-              td
-                text= request.username
-              td
-                text= request.email
-              td.note-column
-                text= request.note
-              td.token-column 
-                text= request.token
-              td
-                text= request.created
-              td.table-actions
-                button(onclick="openMailDialog('"+request.id+", "+request.username+", "+request.email+"')")
-                  i.fas.fa-mail
-                  text Anfrage ablehnen
-                button(onclick="openMailDialog('"+request.id+", "+request.username+", "+request.email+"')")
-                  i.fas.fa-mail
-                  text E-Mail generieren
+            td
+              text= request.id
+            td
+              text= request.username
+            td
+              text= request.email
+            td.note-column
+              text= request.note
+            td.token-column 
+              text= request.token
+            td
+              text= request.created
+            td.actions
+              button.action(onclick="openMailDialog('"+request.id+", "+request.username+", "+request.email+"')")
+                i.fas.fa-mail
+                span Anfrage ablehnen
+              button.action(onclick="openMailDialog('"+request.id+", "+request.username+", "+request.email+"')")
+                i.fas.fa-mail
+                span E-Mail generieren
     else
-      text Keine Anfragen vorhanden
+      span Keine Anfragen vorhanden
 block dialogs
