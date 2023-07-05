@@ -100,8 +100,11 @@ function connect() {
     addToLocalLog("Verbindung zum Server getrennt.");
   });
   source.addEventListener("error", (event) => {
-    console.log(event);
-    addToServerLog(event.data);
+    if (event.data) {
+      addToServerLog(event.data);
+    } else {
+      addToServerLog("Ein unbekannter Fehler ist aufgetreten.");
+    }
     source.close();
     addToLocalLog("Verbindung zum Server getrennt.");
   });
