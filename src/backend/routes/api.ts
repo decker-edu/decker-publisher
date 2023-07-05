@@ -642,7 +642,6 @@ let events: Map<string, EventEmitter> = new Map();
 router.get(
   "/convert/events",
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.log(req.query);
     const filequery: string = req.query.file.toString();
     if (!filequery) {
       return res.status(400).end();
@@ -651,6 +650,9 @@ router.get(
     if (!account) {
       return res.status(403).end();
     }
+    req.on("close", () => {
+      console.log(`[${filequery}] Connection closed`);
+    });
     res.set({
       "Cache-Control": "no-cache",
       "Content-Type": "text/event-stream",
@@ -662,6 +664,7 @@ router.get(
     const emitter = events.get(id);
     if (!emitter) {
       res.write("event: error\ndata: Kein Prozess gefunden.\n\n");
+      return;
     }
     emitter.on("info", (event) => {
       res.write(`event: info\ndata: ${event.message}\n\n`);
@@ -673,9 +676,6 @@ router.get(
     emitter.on("error", (event) => {
       res.write(`event: error\ndata: ${event.message}\n\n`);
       events.delete(id);
-    });
-    req.on("close", () => {
-      console.log(`[${filequery}] Connection closed`);
     });
     emitter.emit("start");
   }
