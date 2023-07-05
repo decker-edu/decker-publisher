@@ -667,6 +667,7 @@ router.get(
     const id = account.username + ":" + path.basename(filequery, ".zip");
     const emitter = events.get(id);
     if (!emitter) {
+      console.log("[convert event] emitter", id, "was null");
       res.write("event: error\ndata: Kein Prozess gefunden.\n\n");
       return;
     }
