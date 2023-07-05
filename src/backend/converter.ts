@@ -187,7 +187,7 @@ async function extractMeta(
   }
 }
 
-export function Converter(filepath: string, emitter: EventEmitter) {
+export async function Converter(filepath: string, emitter: EventEmitter) {
   console.log("[convert] Trying to convert file", filepath);
   if (!emitter) {
     console.log("[convert] No emitter for data transfer available.");
@@ -201,7 +201,7 @@ export function Converter(filepath: string, emitter: EventEmitter) {
     console.error("[convert] Not a PDF.");
     return;
   }
-  const dataBuffer = fs.readFileSync(filepath);
+  const dataBuffer: Uint8Array = fs.readFileSync(filepath);
   let pdfInfo: pdfInformation = {
     author: "Unknown Author",
     pdfTitle: "Unknown Presentation Title",
@@ -213,58 +213,56 @@ export function Converter(filepath: string, emitter: EventEmitter) {
   };
   console.log("[convert] Reading PDF ...");
   try {
-    getPDFDocument(dataBuffer).promise.then(async (pdf) => {
-      pdfInfo.pages = pdf.numPages;
-      console.log("[convert]", `${pdf.numPages} Seiten gefunden.`);
-      emitter.emit("info", { message: `${pdf.numPages} Seiten gefunden.` });
-      for (let pageNum = 1; pageNum <= pdfInfo.pages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 1.0 });
-        pdfInfo.width = Math.max(pdfInfo.width, viewport.width);
-        pdfInfo.height = Math.max(pdfInfo.height, viewport.height);
-      }
-      emitter.emit("info", {
-        message: `Größte Seitendimensionen: ${pdfInfo.width}x${pdfInfo.height}`,
-      });
-      const outline = await pdf.getOutline();
-      if (outline) {
-        emitter.emit("info", {
-          message:
-            "PDF Outline gefunden. Inhaltsverzeichnis wird analysiert ...",
-        });
-        let items: any[] = [];
-        expandItems(outline, items);
-        let entries = [];
-        for (const item of items) {
-          const destination = item.dest;
-          if (destination && typeof destination === "string") {
-            const reference = await pdf.getDestination(destination);
-            const target = reference[0];
-            const id = await pdf.getPageIndex(target);
-            const entry = { title: item.title, page: id + 1 };
-            entries.push(entry);
-          } else if (
-            destination &&
-            typeof destination === "object" &&
-            Array.isArray(destination)
-          ) {
-            const reference = destination[0];
-            const id = await pdf.getPageIndex(reference);
-            const entry = { title: item.title, page: id + 1 };
-            entries.push(entry);
-          }
-        }
-        pdfInfo.entries = entries;
-        await extractMeta(pdf, pdfInfo, directory, filepath, filename, emitter);
-      } else {
-        emitter.emit("info", {
-          message:
-            "Keine PDF Outline gefunden. Inhaltsverzeichnis kann nicht analysiert werden.",
-        });
-        pdfInfo.entries = [];
-        await extractMeta(pdf, pdfInfo, directory, filepath, filename, emitter);
-      }
+    const pdf = await getPDFDocument(dataBuffer).promise;
+    pdfInfo.pages = pdf.numPages;
+    console.log("[convert]", `${pdf.numPages} Seiten gefunden.`);
+    emitter.emit("info", { message: `${pdf.numPages} Seiten gefunden.` });
+    for (let pageNum = 1; pageNum <= pdfInfo.pages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.0 });
+      pdfInfo.width = Math.max(pdfInfo.width, viewport.width);
+      pdfInfo.height = Math.max(pdfInfo.height, viewport.height);
+    }
+    emitter.emit("info", {
+      message: `Größte Seitendimensionen: ${pdfInfo.width}x${pdfInfo.height}`,
     });
+    const outline = await pdf.getOutline();
+    if (outline) {
+      emitter.emit("info", {
+        message: "PDF Outline gefunden. Inhaltsverzeichnis wird analysiert ...",
+      });
+      let items: any[] = [];
+      expandItems(outline, items);
+      let entries = [];
+      for (const item of items) {
+        const destination = item.dest;
+        if (destination && typeof destination === "string") {
+          const reference = await pdf.getDestination(destination);
+          const target = reference[0];
+          const id = await pdf.getPageIndex(target);
+          const entry = { title: item.title, page: id + 1 };
+          entries.push(entry);
+        } else if (
+          destination &&
+          typeof destination === "object" &&
+          Array.isArray(destination)
+        ) {
+          const reference = destination[0];
+          const id = await pdf.getPageIndex(reference);
+          const entry = { title: item.title, page: id + 1 };
+          entries.push(entry);
+        }
+      }
+      pdfInfo.entries = entries;
+      await extractMeta(pdf, pdfInfo, directory, filepath, filename, emitter);
+    } else {
+      emitter.emit("info", {
+        message:
+          "Keine PDF Outline gefunden. Inhaltsverzeichnis kann nicht analysiert werden.",
+      });
+      pdfInfo.entries = [];
+      await extractMeta(pdf, pdfInfo, directory, filepath, filename, emitter);
+    }
   } catch (error) {
     console.error(error);
     emitter.emit("error", {
