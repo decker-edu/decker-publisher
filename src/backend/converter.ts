@@ -189,6 +189,10 @@ async function extractMeta(
 
 export function Converter(filepath: string, emitter: EventEmitter) {
   console.log("[convert] Trying to convert file", filepath);
+  if (!emitter) {
+    console.log("[convert] No emitter for data transfer available.");
+    return;
+  }
   const directory = path.dirname(filepath);
   const basename = path.basename(filepath);
   const filename = basename.substring(0, basename.lastIndexOf("."));

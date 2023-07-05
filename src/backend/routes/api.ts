@@ -756,7 +756,7 @@ router.post(
       });
       return res
         .status(200)
-        .json({ message: "Konvertierung gestartet." })
+        .json({ message: "Datei steht zur Konvertierung bereit." })
         .end();
     });
   }
