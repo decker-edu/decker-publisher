@@ -4,6 +4,11 @@ import Debug from "debug";
 const debug = Debug("decker-publisher:server");
 import http = require("http");
 
+/** set umask */
+console.log("[umask - before]", process.umask());
+process.umask("002");
+console.log("[umask - after]", process.umask());
+
 /**
  * Get port from environment and store in Express.
  */

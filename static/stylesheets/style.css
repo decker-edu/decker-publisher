@@ -659,6 +659,10 @@ input:disabled {
   color: rgb(192, 64, 96);
 }
 
+.handled {
+  color: rgb(128, 192, 192);
+}
+
 .caret {
   cursor: pointer;
   list-style: none;

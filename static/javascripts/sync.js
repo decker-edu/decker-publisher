@@ -338,9 +338,8 @@ async function download() {
 }
 
 async function upload() {
-  try {
-    for (const entry of toUpload) {
-      console.log("[uploading]", entry.filepath);
+  for (const entry of toUpload) {
+    try {
       let targetDir = await clientRootHandle.getDirectoryHandle("public");
       const parts = entry.filepath.split("/");
       while (parts.length > 1) {
@@ -352,13 +351,14 @@ async function upload() {
       if (file) {
         await pushFile(entry.filepath, file);
       }
+      entry.reference.classList.add("handled");
+    } catch (error) {
+      console.error(error);
     }
-    clearElement(document.getElementById("server-table"));
-    await fetchProjectData();
-    compareData();
-  } catch (error) {
-    console.error(error);
   }
+  clearElement(document.getElementById("server-table"));
+  await fetchProjectData();
+  compareData();
 }
 
 function compareData() {
