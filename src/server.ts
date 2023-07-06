@@ -5,9 +5,11 @@ const debug = Debug("decker-publisher:server");
 import http = require("http");
 
 /** set umask */
-console.log("[umask - before]", process.umask());
-process.umask("002");
-console.log("[umask - after]", process.umask());
+const newmask = 0o002;
+const oldmask = process.umask(newmask);
+console.log(
+  `[umask] Changed umask from ${oldmask.toString(8)} to ${newmask.toString(8)}`
+);
 
 /**
  * Get port from environment and store in Express.
