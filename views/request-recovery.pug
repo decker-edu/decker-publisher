@@ -4,13 +4,11 @@ block scripts
   script(defer src="/javascripts/recovery.js")
 
 block content
-  header 
-    h1 Passwort vergessen?
-  main 
-    form#recovery-form
-      div#recovery-message
-      div.form-grid
-        label(for="email") E-Mail
-        input#email(required type="email" name="email" placeholder="E-Mail")
-      button#recovery-button(type="button" onclick="requestRecovery()") Passwortwiederherstellung anfragen 
+  h1 Passwort vergessen? 
+  form#recovery-form
+    div#recovery-message Bitte geben Sie die E-Mailadresse Ihres Nutzerkontos an.
+    div.form-grid
+      label(for="email") E-Mail
+      input#email(required type="email" name="email" placeholder="E-Mail")
+    button#recovery-button.action(type="button" onclick="requestRecovery()") Passwortwiederherstellung anfragen 
 block dialogs

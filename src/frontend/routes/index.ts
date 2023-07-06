@@ -8,6 +8,7 @@ import database from "../../backend/database";
 import config from "@root/config";
 import child_process from "child_process";
 import amberscript from "../../backend/amberscript";
+import { Account } from "@root/backend/account";
 
 const router = express.Router();
 
@@ -63,6 +64,71 @@ router.get(
       title: "Decker: Persönlicher Bereich",
       admin: admin,
     });
+  }
+);
+
+router.get(
+  "/password-recovery",
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return res.render("request-recovery", {
+      title: "Decker: Neues Passwort anfragen",
+    });
+  }
+);
+
+async function purgeOldRequests() {
+  const result = await database.query(
+    "DELETE FROM recovery_requests WHERE created + INTERVAL '6 hours' < NOW()"
+  );
+}
+
+router.get(
+  "/password-reset/",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    res.redirect("/password-recovery");
+  }
+);
+
+router.get(
+  "/password-reset/:token",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const token = req.params.token;
+    if (!token) {
+      return res.redirect("/password-recovery");
+    }
+    try {
+      await purgeOldRequests();
+      const reqResult = await database.query(
+        "SELECT * FROM recovery_requests WHERE token = $1",
+        [token]
+      );
+      if (reqResult.rows.length > 0) {
+        const request = reqResult.rows[0];
+        const account = await Account.fromDatabase(request.user_id);
+        if (account) {
+          res.render("password-reset", {
+            title: "Decker: Passwort zurücksetzen",
+            token: token,
+            username: account.username,
+            email: account.email,
+          });
+        } else {
+          res.redirect("/password-recovery");
+        }
+      } else {
+        res.redirect("/password-recovery");
+      }
+    } catch (error) {
+      res.render("error", error);
+    }
   }
 );
 

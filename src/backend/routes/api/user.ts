@@ -154,14 +154,22 @@ router.put(
       const authenticated = await account.checkPassword(oldPassword);
       if (authenticated) {
         account.changePassword(newPassword);
+        return res
+          .status(200)
+          .json({ message: escapeHTML("Passwort geändert.") })
+          .end();
       } else {
         return res
           .status(403)
-          .json({ message: escapeHTML("Falsches Passwort.") });
+          .json({ message: escapeHTML("Falsches Passwort.") })
+          .end();
       }
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ message: escapeHTML("Interner Fehler.") });
+      return res
+        .status(500)
+        .json({ message: escapeHTML("Interner Fehler.") })
+        .end();
     }
   }
 );
@@ -212,7 +220,10 @@ router.put(
     const confirmed = await account.checkPassword(passwordConfirmation);
     if (confirmed) {
       account.changeEmail(newEmail);
-      return res.status(200).json({ message: escapeHTML("E-Mail geändert.") });
+      return res
+        .status(200)
+        .json({ message: escapeHTML("E-Mail geändert.") })
+        .end();
     } else {
       return res
         .status(403)
@@ -257,12 +268,14 @@ router.post(
       } catch {
         return res
           .status(500)
-          .json({ message: escapeHTML("Interner Fehler.") });
+          .json({ message: escapeHTML("Interner Fehler.") })
+          .end();
       }
     } else {
       return res
         .status(403)
-        .json({ message: escapeHTML("Passwortbestätigung fehlgeschlagen.") });
+        .json({ message: escapeHTML("Passwortbestätigung fehlgeschlagen.") })
+        .end();
     }
   }
 );
@@ -307,7 +320,8 @@ router.delete(
     } else {
       return res
         .status(403)
-        .json({ message: escapeHTML("Passwortbestätigung fehlgeschlagen.") });
+        .json({ message: escapeHTML("Passwortbestätigung fehlgeschlagen.") })
+        .end();
     }
   }
 );
