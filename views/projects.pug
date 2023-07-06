@@ -40,8 +40,11 @@ block content
                     span Löschen
     div#upload-area
       button.action(onclick="addUpload()" aria-label="Neues Projekt hochladen")
-        i.fas.fa-plus
+        i.fas.fa-cloud-arrow-up
         span Projekt hochladen
+      button.action(onclick="addEmpty()" aria-label="Neues leeres Projekt erzeugen")
+        i.fas.fa-folder-plus
+        span Neues leeres Projekt erzeugen
       div#insert-area
   template(id="upload-template")
     span.upload-information
@@ -57,13 +60,22 @@ block content
       input#file-upload-input(type="file" enctype="multipart/form-data" name="projectFile" onchange="inputChanged()")
     div#project-config.hidden
       label(for="project-name-input") Projektname: 
-      input#project-name-input(type="span" name="projectName")
+      input#project-name-input(type="text" name="projectName")
     button#file-upload-button.action(onclick="upload()" title="Hochladen" aria-label="Hochladen" hidden)
       i.fas.fa-upload
       span Upload starten
+  template(id="empty-template")
+    span.upload-information
+      | Bitte geben Sie den Namen für ihr leeres Projektverzeichnis an.
+    div#empty-config
+      label(for="empty-name-input") Projektname: 
+      input#empty-name-input(type="text" name="projectName")
+    button#create-empty-button.action(onclick="createEmptyProject()" title="Erstellen" aria-label="Erstellen")
+      i.fas.fa-upload
+      span Projekt erstellen
 block dialogs
   dialog#delete-dialog
-    form#delete-form
+    form#delete-form(onsubmit="return false;")
       fieldset#delete-fieldset
         legend Projekt löschen?
           div#delete-message.dialog-message

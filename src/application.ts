@@ -79,10 +79,16 @@ app.use(function (
   response: Response,
   next: NextFunction
 ) {
+  if (error.status === 404) {
+    response.locals.message = "Ressource nicht gefunden.";
+    response.locals.error = { status: 404 };
+    response.locals.title = "Ressource nicht gefunden";
+    response.status(404);
+    return response.render("error");
+  }
   // set locals, only providing error in development
   response.locals.message = error.message;
   response.locals.error = request.app.get("env") === "development" ? error : {};
-
   // render the error page
   response.status(error.status || 500);
   response.render("error");

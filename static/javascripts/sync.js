@@ -340,6 +340,7 @@ async function download() {
 async function upload() {
   try {
     for (const entry of toUpload) {
+      console.log("[uploading]", entry.filepath);
       let targetDir = await clientRootHandle.getDirectoryHandle("public");
       const parts = entry.filepath.split("/");
       while (parts.length > 1) {
@@ -395,8 +396,12 @@ function compare(clientList, serverList) {
       }
     }
     if (!contains) {
-      toUpload.push(a);
-      a.reference.classList.add("newer");
+      if (a.kind === "directory") {
+        compare(a.children, []);
+      } else {
+        toUpload.push(a);
+        a.reference.classList.add("newer");
+      }
     }
   }
   markServerFilesAsNew(handled, serverList);

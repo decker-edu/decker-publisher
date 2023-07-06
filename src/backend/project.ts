@@ -69,12 +69,13 @@ export default class Project implements Project {
     filename: string,
     content: string | Buffer
   ): Promise<boolean> {
+    const target = path.join(this.directory, filename);
+    const direcotry = path.dirname(target);
+    if (!fs.existsSync(direcotry)) {
+      fs.mkdirSync(direcotry, { recursive: true });
+    }
     try {
-      fs.promises.writeFile(
-        path.join(this.directory, filename),
-        content,
-        "utf8"
-      );
+      fs.promises.writeFile(target, content, "utf8");
       return true;
     } catch (error) {
       console.error(error);

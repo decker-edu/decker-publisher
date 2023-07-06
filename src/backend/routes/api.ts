@@ -350,10 +350,24 @@ router.post(
       );
       if (recreq) {
         recoveryMail(email, token);
-        return res.status(200).json({ message: "Anfrage gesendet." }).end();
+        return res
+          .status(200)
+          .json({
+            message: escapeHTML(
+              "Anfrage empfangen. Bitte überprüfen Sie Ihr Postfach."
+            ),
+          })
+          .end();
       }
     } else {
-      return res.status(200).json({ message: "Anfrage gesendet." }).end();
+      return res
+        .status(200)
+        .json({
+          message: escapeHTML(
+            "Anfrage empfangen. Bitte überprüfen Sie Ihr Postfach."
+          ),
+        })
+        .end();
     }
   }
 );
@@ -368,6 +382,12 @@ router.post(
     next: express.NextFunction
   ) => {
     const account: Account = req.account;
+    if (!account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
     const projectName: string = req.body.projectName;
     if (!req.files || Object.keys(req.files).length === 0) {
       return res
@@ -392,7 +412,7 @@ router.post(
     if (!projectName || projectName === "") {
       return res
         .status(400)
-        .json({ status: "error", message: "Kein Projektname empfangen." })
+        .json({ status: "error", message: "Keinen Projektnamen empfangen." })
         .end();
     }
 
@@ -505,6 +525,63 @@ router.post(
         })
         .end();
     });
+  }
+);
+
+router.post(
+  "/project/empty",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const account: Account = req.account;
+    if (!account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const projectName: string = req.body.projectName;
+    if (!projectName || projectName === "") {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Keinen Projektnamen empfangen." })
+        .end();
+    }
+
+    if (projectName.includes(".")) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Ungültiger Projektname." })
+        .end();
+    }
+    const projectPath: string = path.join(
+      account.getDirectory(),
+      "projects",
+      projectName
+    );
+
+    if (!fs.existsSync(path.join(account.getDirectory(), "projects"))) {
+      fs.mkdirSync(path.join(account.getDirectory(), "projects"), {
+        recursive: true,
+      });
+    }
+
+    if (fs.existsSync(projectPath)) {
+      return res
+        .status(400)
+        .json({
+          status: "error",
+          message: "Projektname wird bereits verwendet.",
+        })
+        .end();
+    }
+    fs.mkdirSync(projectPath, { recursive: true });
+    return res
+      .status(200)
+      .json({ message: "Projektverzeichnis erfolgreich angelegt." })
+      .end();
   }
 );
 

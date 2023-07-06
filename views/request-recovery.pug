@@ -5,7 +5,7 @@ block scripts
 
 block content
   h1 Passwort vergessen? 
-  form#recovery-form
+  form#recovery-form(onsubmit="requestRecovery(); return false;")
     div#recovery-message Bitte geben Sie die E-Mailadresse Ihres Nutzerkontos an.
     div.form-grid
       label(for="email") E-Mail

@@ -8,6 +8,16 @@ function addUpload() {
   div.appendChild(insert);
 }
 
+function addEmpty() {
+  const div = document.getElementById("insert-area");
+  const template = document.getElementById("empty-template");
+  const insert = template.content.cloneNode(true);
+  while (div.firstChild) {
+    div.removeChild(div.lastChild);
+  }
+  div.appendChild(insert);
+}
+
 function inputChanged() {
   const input = document.getElementById("file-upload-input");
   if (input.value) {
@@ -72,7 +82,7 @@ function endProgress(event) {
   //  clearInsertArea();
   const div = document.getElementById("insert-area");
   div.appendChild(document.createTextNode("Datei erfolgreich hochgeladen."));
-  setTimeout(() => window.location.reload(), 3000);
+  setTimeout(() => window.location.reload(), 2000);
 }
 
 function upload() {
@@ -87,4 +97,41 @@ function upload() {
   xhr.addEventListener("loadend", endProgress);
   xhr.open("POST", "/api/project");
   xhr.send(data);
+}
+
+async function createEmptyProject() {
+  const projectNameInput = document.querySelector("#empty-name-input");
+  try {
+    const response = await fetch("/api/project/empty", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        projectName: projectNameInput.value,
+      }),
+    });
+    if (response.ok) {
+      const json = await response.json();
+      let message = "Anfrage erfolgreich gesendet";
+      if (json.message) {
+        message = json.message;
+      }
+      const div = document.getElementById("insert-area");
+      div.appendChild(document.createTextNode(message));
+      setTimeout(() => window.location.reload(), 2000);
+    } else {
+      const json = await response.json();
+      let message = "Anfrage wurde abgelehnt.";
+      if (json.message) {
+        message = json.message;
+      }
+      const div = document.getElementById("insert-area");
+      div.appendChild(document.createTextNode(json.message));
+    }
+  } catch (error) {
+    console.error(error);
+    const div = document.getElementById("insert-area");
+    div.appendChild(document.createTextNode("Fehler beim Senden der Anfrage."));
+  }
 }

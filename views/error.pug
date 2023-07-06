@@ -1,14 +1,15 @@
 extends layout
 
 block content
-  header
-    h1 Ein Fehler ist aufgetreten.
-  main
-    h1= message
-    if error
-      if error.status
-        h2= error.status
-      else
-        h2 500
-      if error.stack
-        pre= error.stack
+  h1 Ein Fehler ist aufgetreten.
+  if error
+    if error.status
+      h2= "Fehlernummer " + error.status
+    else
+      h2 Fehlernummer 500
+  div.centered
+    span= message
+  if error
+    if error.stack
+      h3 Fehlerinformationen
+      pre= error.stack
