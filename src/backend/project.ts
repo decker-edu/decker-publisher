@@ -72,7 +72,7 @@ export default class Project implements Project {
     const target = path.join(this.directory, filename);
     const direcotry = path.dirname(target);
     if (!fs.existsSync(direcotry)) {
-      fs.mkdirSync(direcotry, { recursive: true });
+      fs.mkdirSync(direcotry, { recursive: true, mode: 0o0775 });
     }
     try {
       fs.promises.writeFile(target, content, "utf8");

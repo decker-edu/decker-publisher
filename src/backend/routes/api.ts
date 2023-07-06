@@ -434,6 +434,7 @@ router.post(
     if (!fs.existsSync(path.join(account.getDirectory(), "projects"))) {
       fs.mkdirSync(path.join(account.getDirectory(), "projects"), {
         recursive: true,
+        mode: 0o0775,
       });
     }
 
@@ -448,7 +449,7 @@ router.post(
     }
 
     if (!fs.existsSync(path.dirname(uploadPath))) {
-      fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
+      fs.mkdirSync(path.dirname(uploadPath), { recursive: true, mode: 0o0775 });
     }
 
     file.mv(uploadPath, function (err) {
@@ -565,6 +566,7 @@ router.post(
     if (!fs.existsSync(path.join(account.getDirectory(), "projects"))) {
       fs.mkdirSync(path.join(account.getDirectory(), "projects"), {
         recursive: true,
+        mode: 0o0775,
       });
     }
 
@@ -577,7 +579,7 @@ router.post(
         })
         .end();
     }
-    fs.mkdirSync(projectPath, { recursive: true });
+    fs.mkdirSync(projectPath, { recursive: true, mode: 0o0775 });
     return res
       .status(200)
       .json({ message: "Projektverzeichnis erfolgreich angelegt." })
