@@ -179,28 +179,42 @@ export class Account implements Account {
   }
 
   async changeEmail(email: string): Promise<void> {
+    let already;
     try {
-      const already = await database.query(
+      already = await database.query(
         "SELECT * FROM accounts WHERE email = $1",
         [email]
       );
-      if (already.rowCount > 0) {
-        throw new Error("Diese E-Mailadresse wird bereits verwendet.");
-      }
-      const result = await database.query(
+    } catch (error) {
+      console.error(error);
+      throw new Error("Interner Datenbankfehler.");
+    }
+    if (already && already.rowCount > 0) {
+      throw new Error("Diese E-Mailadresse wird bereits verwendet.");
+    }
+    let result;
+    try {
+      result = await database.query(
         "UPDATE accounts SET email = $2 WHERE id = $1 RETURNING id",
         [this.id, email]
       );
-      if (result && result.rows.length > 0) {
-        for (const hook of Account.emailChangeHooks) {
-          hook(this.username, undefined, this.email);
-        }
-      } else {
-        throw new Error("E-Mail-Aktuallisierung ergab kein Resultat.");
-      }
     } catch (error) {
       console.error(error);
-      throw new Error("E-Mail konnte nicht geändert werden.");
+      throw new Error("Interner Datenbankfehler.");
+    }
+    if (result && result.rows.length > 0) {
+      for (const hook of Account.emailChangeHooks) {
+        try {
+          hook(this.username, undefined, this.email);
+        } catch (error) {
+          console.error(error);
+          throw new Error(
+            "Fehler beim weiterführenden Bearbeiten der Anfrage."
+          );
+        }
+      }
+    } else {
+      throw new Error("E-Mail-Aktuallisierung ergab kein Resultat.");
     }
   }
 
