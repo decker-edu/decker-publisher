@@ -60,38 +60,35 @@ function deleteChanged() {
   }
 }
 
-function changePassword(username) {
+async function changePassword(username) {
   const oldInput = document.getElementById("change-password-old");
   const newInput = document.getElementById("change-password-new");
-  fetch(`/api/user/${username}/password`, {
-    method: "PUT",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      oldPassword: oldInput.value,
-      newPassword: newInput.value,
-    }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        response.json().then((json) => {
-          displayMessage(json.message);
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-        });
-      } else {
-        response.json().then((json) => {
-          displayMessage(`${response.status}: ${json.message}`);
-        });
-      }
-    })
-    .catch((error) => {
-      displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
-      console.error(error);
+  try {
+    const response = await fetch(`/api/user/${username}/password`, {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        oldPassword: oldInput.value,
+        newPassword: newInput.value,
+      }),
     });
+    if (response.ok) {
+      const json = await response.json();
+      displayMessage(json.message);
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      const json = response.json();
+      displayMessage(`${response.status}: ${json.message}`);
+    }
+  } catch (error) {
+    displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
+    console.error(error);
+  }
 }
 
 function changeEmail(username) {

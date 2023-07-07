@@ -219,11 +219,15 @@ router.put(
     }
     const confirmed = await account.checkPassword(passwordConfirmation);
     if (confirmed) {
-      account.changeEmail(newEmail);
-      return res
-        .status(200)
-        .json({ message: escapeHTML("E-Mail geändert.") })
-        .end();
+      try {
+        await account.changeEmail(newEmail);
+        return res
+          .status(200)
+          .json({ message: escapeHTML("E-Mail geändert.") })
+          .end();
+      } catch (error) {
+        return res.status(500).json({ message: error }).end();
+      }
     } else {
       return res
         .status(403)

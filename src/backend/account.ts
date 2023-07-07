@@ -180,6 +180,13 @@ export class Account implements Account {
 
   async changeEmail(email: string): Promise<void> {
     try {
+      const already = await database.query(
+        "SELECT * FROM accounts WHERE email = $1",
+        [email]
+      );
+      if (already.rowCount > 0) {
+        throw "Diese E-Mailadresse wird bereits verwendet.";
+      }
       const result = await database.query(
         "UPDATE accounts SET email = $2 WHERE id = $1 RETURNING id",
         [this.id, email]
@@ -193,7 +200,7 @@ export class Account implements Account {
       }
     } catch (error) {
       console.error(error);
-      throw new Error("Passwort konnte nicht geändert werden.");
+      throw new Error("E-Mail konnte nicht geändert werden.");
     }
   }
 
