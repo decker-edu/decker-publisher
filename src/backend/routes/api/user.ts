@@ -153,11 +153,19 @@ router.put(
     try {
       const authenticated = await account.checkPassword(oldPassword);
       if (authenticated) {
-        account.changePassword(newPassword);
-        return res
-          .status(200)
-          .json({ message: escapeHTML("Passwort geändert.") })
-          .end();
+        try {
+          account.changePassword(newPassword);
+          return res
+            .status(200)
+            .json({ message: escapeHTML("Passwort geändert.") })
+            .end();
+        } catch (error) {
+          console.error(error);
+          return res
+            .status(500)
+            .json({ message: escapeHTML(error.message) })
+            .end();
+        }
       } else {
         return res
           .status(403)

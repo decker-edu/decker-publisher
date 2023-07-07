@@ -159,22 +159,30 @@ export class Account implements Account {
   }
 
   async changePassword(password: string): Promise<void> {
+    let result;
     try {
       const passwordHash = await hash(password);
-      const result = await database.query(
+      result = await database.query(
         "UPDATE accounts SET hash = $2 WHERE id = $1 RETURNING id",
         [this.id, passwordHash]
       );
-      if (result && result.rows.length > 0) {
-        for (const hook of Account.passwordChangeHooks) {
-          await hook(this.username, password, this.email);
-        }
-      } else {
-        throw new Error("Passwortaktuallisierung ergab kein Resultat.");
-      }
     } catch (error) {
       console.error(error);
-      throw new Error("Passwort konnte nicht geändert werden.");
+      throw new Error("Interner Datenbankfehler.");
+    }
+    if (result && result.rows.length > 0) {
+      for (const hook of Account.passwordChangeHooks) {
+        try {
+          await hook(this.username, password, this.email);
+        } catch (error) {
+          console.error(error);
+          throw new Error(
+            "Fehler beim weiterführenden Bearbeiten der Anfrage."
+          );
+        }
+      }
+    } else {
+      throw new Error("Passwortaktuallisierung ergab kein Resultat.");
     }
   }
 
