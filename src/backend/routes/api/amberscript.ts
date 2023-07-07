@@ -105,6 +105,9 @@ router.post(
     const name = req.body.name;
     const names = req.body.names;
     const items = req.body.items;
+    console.log(name);
+    console.log(names);
+    console.log(items);
     if (!name || name === "" || !names || !items) {
       return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
     }
