@@ -109,7 +109,7 @@ block dialogs
       select#amberscript-glossary
         option(value="") Kein Wörterbuch verwenden
         for glossary in glossaries
-          option(value=glossary.id)= glossary.name 
+          option(value=glossary.id)= glossary.name.split(":")[1]
     div.dialog-buttons
       button.action(onclick="requestAmber()")
         i.fas.fa-film
