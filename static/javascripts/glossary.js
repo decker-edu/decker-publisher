@@ -78,8 +78,8 @@ async function confirmGlossary() {
   const items = [];
   for (const inputs of itemDivs) {
     const name = inputs.getElementsByClassName("item-name-input")[0];
-    if (!name || name === "") continue;
     const desc = inputs.getElementsByClassName("item-desc-input")[0];
+    if (!name || name === "") continue;
     items.push({ name: name.value, description: desc.value });
   }
   if (names.length == 0 && items.length == 0) {
@@ -160,7 +160,7 @@ async function loadGlossary() {
     const response = await fetch("/api/amberscript/glossary/" + id);
     if (response.ok) {
       const json = await response.json();
-      const name = json.name;
+      const name = json.name.split(":")[1];
       const names = json.names;
       const items = json.items;
       document.getElementById("glossary-name-input").value = name;

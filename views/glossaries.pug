@@ -15,7 +15,7 @@ block content
     tbody
       each glossary in glossaries
         tr
-          td= glossary.name
+          td= glossary.name.split(":")[1]
           td.actions
             a.action(href="/amberscript/glossary/"+glossary.id)
               i.fas.fa-edit

@@ -105,14 +105,12 @@ router.post(
     const name = req.body.name;
     const names = req.body.names;
     const items = req.body.items;
-    console.log(name);
-    console.log(names);
-    console.log(items);
     if (!name || name === "" || !names || !items) {
       return res.status(400).json({ message: "Fehlerhafte Anfrage." }).end();
     }
+    const adjustedName = account.username + ":" + name;
     try {
-      await amberscript.createGlossary(account, name, names, items);
+      await amberscript.createGlossary(account, adjustedName, names, items);
       return res.status(200).end();
     } catch (error) {
       return res.status(500).json({ message: error }).end();
@@ -166,12 +164,13 @@ router.put(
     if (!id || id === "" || !name || name === "" || !names || !items) {
       return res.status(400).end();
     }
+    const adjustedName = account.username + ":" + name;
     try {
       const owner = await amberscript.glossaryOwner(id);
       if (owner != account.id) {
         return res.status(403).end();
       }
-      await amberscript.updateGlossary(id, name, names, items);
+      await amberscript.updateGlossary(id, adjustedName, names, items);
       return res.status(200).end();
     } catch (error) {
       return res.status(500).json({ message: error }).end();
