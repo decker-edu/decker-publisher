@@ -71,12 +71,14 @@ async function confirmGlossary() {
   const names = [];
   for (const input of nameInputs) {
     const name = input.value;
+    if (!name || name === "") continue;
     names.push(name);
   }
   const itemDivs = itemsDiv.getElementsByClassName("input-container");
   const items = [];
   for (const inputs of itemDivs) {
     const name = inputs.getElementsByClassName("item-name-input")[0];
+    if (!name || name === "") continue;
     const desc = inputs.getElementsByClassName("item-desc-input")[0];
     items.push({ name: name.value, description: desc.value });
   }
