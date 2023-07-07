@@ -10,7 +10,7 @@ block content
     form
       div.form-grid
         label(for="profile-username") Nutzername
-        input#profile-username(disabled pattern="*" type="text" value=account.username)
+        input#profile-username(disabled type="text" value=account.username)
         label(for="profile-email") E-Mail
         input#profile-email(disabled pattern=".+@.+\\..{2,3}" type="email" value=account.email)
         label SSH-Schlüssel

@@ -226,6 +226,7 @@ router.put(
           .json({ message: escapeHTML("E-Mail geändert.") })
           .end();
       } catch (error) {
+        console.error(error);
         return res.status(500).json({ message: error }).end();
       }
     } else {
