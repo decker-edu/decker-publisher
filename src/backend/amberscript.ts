@@ -285,7 +285,7 @@ async function getGlossaries(): Promise<Glossary[]> {
 
 async function getGlossary(glossary_id: string): Promise<Glossary> {
   const glossaries = await getGlossaries();
-  const found = glossaries.find((glossary) => (glossary.id = glossary_id));
+  const found = glossaries.find((glossary) => glossary.id === glossary_id);
   if (found) {
     return found;
   } else {
