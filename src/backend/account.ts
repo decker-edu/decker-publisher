@@ -185,7 +185,7 @@ export class Account implements Account {
         [email]
       );
       if (already.rowCount > 0) {
-        throw "Diese E-Mailadresse wird bereits verwendet.";
+        throw new Error("Diese E-Mailadresse wird bereits verwendet.");
       }
       const result = await database.query(
         "UPDATE accounts SET email = $2 WHERE id = $1 RETURNING id",
