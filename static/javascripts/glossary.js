@@ -70,17 +70,17 @@ async function confirmGlossary() {
   const nameInputs = namesDiv.getElementsByClassName("name-input");
   const names = [];
   for (const input of nameInputs) {
-    const name = input.value;
-    if (!name || name === "") continue;
-    names.push(name);
+    const nameValue = input.value;
+    if (!nameValue || nameValue === "") continue;
+    names.push(nameValue);
   }
   const itemDivs = itemsDiv.getElementsByClassName("input-container");
   const items = [];
   for (const inputs of itemDivs) {
-    const name = inputs.getElementsByClassName("item-name-input")[0];
-    const desc = inputs.getElementsByClassName("item-desc-input")[0];
-    if (!name || name === "") continue;
-    items.push({ name: name.value, description: desc.value });
+    const nameInput = inputs.getElementsByClassName("item-name-input")[0];
+    const descInput = inputs.getElementsByClassName("item-desc-input")[0];
+    if (!nameInput.value || nameInput.value === "") continue;
+    items.push({ name: nameInput.value, description: descInput.value });
   }
   if (names.length == 0 && items.length == 0) {
     return;
