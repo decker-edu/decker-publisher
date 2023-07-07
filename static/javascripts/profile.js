@@ -82,7 +82,7 @@ async function changePassword(username) {
         window.location.reload();
       }, 2000);
     } else {
-      const json = response.json();
+      const json = await response.json();
       displayMessage(`${response.status}: ${json.message}`);
     }
   } catch (error) {
