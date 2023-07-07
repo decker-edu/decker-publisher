@@ -34,7 +34,7 @@ block content
 block dialogs
   dialog#change-password
     div.dialog-message
-    form#change-password-form(onsubmit="return false;")
+    form#change-password-form(onsubmit="changePassword(\""+account.username+"\"); return false;")
       fieldset#change-password-fieldset
         legend Passwort ändern
         div.form-grid
@@ -54,7 +54,7 @@ block dialogs
 
   dialog#change-email
     div.dialog-message
-    form#change-email-form(onsubmit="return false;")
+    form#change-email-form(onsubmit="changeEmail(\""+account.username+"\"); return false;")
       fieldset#change-email-fieldset
         legend E-Mail-Adresse ändern
         div.form-grid
@@ -72,7 +72,7 @@ block dialogs
 
   dialog#remove-ssh-key-dialog
     div#remove-ssh-key-message.dialog-message
-    form#remove-ssh-key-form(onsubmit="return false;")
+    form#remove-ssh-key-form(onsubmit="removeKey(\""+account.username+"\"); return false;")
       fieldset#remove-ssh-key-fieldset
         legend SSH-Schlüssel entfernen
         div.form-grid
@@ -91,7 +91,7 @@ block dialogs
 
   dialog#add-ssh-key
     div.dialog-message
-    form#add-ssh-key-form(onsubmit="return false;")
+    form#add-ssh-key-form(onsubmit="addKey(\""+account.username+"\"); return false;")
       fieldset#add-ssh-key-fieldset
         legend SSH-Schlüssel hinzufügen
         div.form-grid

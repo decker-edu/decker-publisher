@@ -5,7 +5,7 @@ block scripts
 
 block content
   h1 Amberscript Glossar
-  form#glossary-form
+  form#glossary-form(onsubmit="return false;")
     fieldset#glossary-name
       legend Glossarname
       input#glossary-name-input(placeholder="Name des Glossars" value="")

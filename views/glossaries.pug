@@ -27,7 +27,7 @@ block content
   a.action(href="/amberscript/glossary/new") Neues Glossar anlegen
 block dialogs
   dialog#delete-dialog
-    form#delete-form
+    form#delete-form(onsubmit="deleteGlossary(selectedGlossary); return false;")
       fieldset#delete-fieldset
         legend Glossar löschen?
           div#delete-message.dialog-message
@@ -36,7 +36,7 @@ block dialogs
             label(for="delete-pass") Mit Passwort bestätigen
             input#delete-pass(type="password", name="delete-pass", placeholder="Passwort")
           div#delete-buttons.dialog-buttons
-            button.action(type="button" onclick="deleteGlossary(selectedGlossary)")
+            button.action(type="submit" onclick="deleteGlossary(selectedGlossary)")
               i.fas.fa-trash
               text Löschen
             button.action(type="button" onclick="closeDialog()")
