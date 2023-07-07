@@ -65,7 +65,7 @@ async function changePassword(username) {
   const newInput = document.getElementById("change-password-new");
   let response;
   try {
-    const response = await fetch(`/api/user/${username}/password`, {
+    response = await fetch(`/api/user/${username}/password`, {
       method: "PUT",
       headers: {
         Accept: "application/json",
@@ -107,7 +107,7 @@ async function changePassword(username) {
     }
   } catch (error) {
     console.error(error);
-    displayMessage("Fehler beim bearbeiten der Antwort.");
+    displayMessage("Fehler beim Bearbeiten der Antwort.");
   }
 }
 
