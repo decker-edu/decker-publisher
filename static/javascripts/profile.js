@@ -162,36 +162,47 @@ async function changeEmail(username) {
   }
 }
 
-function addKey(username) {
+async function addKey(username) {
   const textarea = document.getElementById("add-ssh-key-textarea");
   const passwordInput = document.getElementById("add-ssh-key-confirmation");
-  fetch(`/api/user/${username}/sshkey`, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      passwordConfirmation: passwordInput.value,
-      newKey: textarea.value,
-    }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        displayMessage("Schlüssel übernommen.");
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } else {
-        response.json().then((json) => {
-          displayMessage(`${response.status}: ${json.message}`);
-        });
-      }
-    })
-    .catch((error) => {
-      displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
-      console.error(error);
+  let response;
+  try {
+    response = await fetch(`/api/user/${username}/sshkey`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        passwordConfirmation: passwordInput.value,
+        newKey: textarea.value,
+      }),
     });
+  } catch (error) {
+    console.error(error);
+    displayMessage(
+      `Es ist ein Fehler während der Datenübertragung aufgetreten.`
+    );
+    return;
+  }
+  if (response && response.ok) {
+    displayMessage("Schlüssel übernommen.");
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  } else {
+    try {
+      const json = response.json();
+      if (json.message) {
+        displayMessage(json.message);
+      } else {
+        displayMessage("Der Server meldet einen unbekannten Fehler.");
+      }
+    } catch (error) {
+      console.error(error);
+      displayMessage("Fehler beim Bearbeiten der Antwort.");
+    }
+  }
 }
 
 function displayRemovalMessage(message) {
