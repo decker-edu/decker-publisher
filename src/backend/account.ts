@@ -190,7 +190,7 @@ export class Account implements Account {
       throw new Error("Interner Datenbankfehler.");
     }
     if (already && already.rowCount > 0) {
-      throw new Error("Diese E-Mailadresse wird bereits verwendet.");
+      throw new Error("Diese E-Mail-Adresse wird bereits verwendet.");
     }
     let result;
     try {

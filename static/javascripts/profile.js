@@ -63,6 +63,7 @@ function deleteChanged() {
 async function changePassword(username) {
   const oldInput = document.getElementById("change-password-old");
   const newInput = document.getElementById("change-password-new");
+  let response;
   try {
     const response = await fetch(`/api/user/${username}/password`, {
       method: "PUT",
@@ -75,55 +76,90 @@ async function changePassword(username) {
         newPassword: newInput.value,
       }),
     });
-    if (response.ok) {
+  } catch (error) {
+    displayMessage(
+      `Es ist ein Fehler während der Datenübertragung aufgetreten.`
+    );
+    console.error(error);
+    return;
+  }
+  try {
+    if (response && response.ok) {
       const json = await response.json();
-      displayMessage(json.message);
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      if (json.message) {
+        displayMessage(json.message);
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        displayMessage("Anfrage erfolgreich übermittelt.");
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
     } else {
       const json = await response.json();
-      console.log(json);
-      displayMessage(`${response.status}: ${json.message}`);
+      if (json.message) {
+        displayMessage(json.message);
+      } else {
+        displayMessage("Der Server meldet einen unbekannten Fehler.");
+      }
     }
   } catch (error) {
-    displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
     console.error(error);
+    displayMessage("Fehler beim bearbeiten der Antwort.");
   }
 }
 
-function changeEmail(username) {
+async function changeEmail(username) {
   const newInput = document.getElementById("change-email-input");
   const passwordInput = document.getElementById("change-email-confirmation");
-  fetch(`/api/user/${username}/email`, {
-    method: "PUT",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      passwordConfirmation: passwordInput.value,
-      newEmail: newInput.value,
-    }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        response.json().then((json) => {
-          displayMessage(json.message);
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-        });
-      } else {
-        response.json().then((json) => {
-          displayMessage(`${response.status}: ${json.message}`);
-        });
-      }
-    })
-    .catch((error) => {
-      displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
-      console.error(error);
+  let response;
+  try {
+    response = await fetch(`/api/user/${username}/email`, {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        passwordConfirmation: passwordInput.value,
+        newEmail: newInput.value,
+      }),
     });
+  } catch (error) {
+    displayMessage(
+      `Es ist ein Fehler während der Datenübertragung aufgetreten.`
+    );
+    console.error(error);
+    return;
+  }
+  try {
+    if (response && response.ok) {
+      const json = await response.json();
+      if (json.message) {
+        displayMessage(json.message);
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        displayMessage("Anfrage erfolgreich übermittelt.");
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+    } else {
+      const json = await response.json();
+      if (json.message) {
+        displayMessage(json.message);
+      } else {
+        displayMessage("Der Server meldet einen unbekannten Fehler.");
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    displayMessage("Fehler beim bearbeiten der Antwort.");
+  }
 }
 
 function addKey(username) {
