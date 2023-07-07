@@ -43,6 +43,9 @@ export function getChecksums(root: string, directory: string): FileHashEntry[] {
   const result: FileHashEntry[] = [];
   const entries = fs.readdirSync(directory);
   for (const entry of entries) {
+    if (entry.endsWith(".htpasswd")) {
+      continue;
+    }
     const filepath = path.join(directory, entry);
     const stat = fs.statSync(filepath);
     if (stat.isDirectory()) {

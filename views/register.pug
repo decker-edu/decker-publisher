@@ -35,5 +35,5 @@ block content
         input#register-password(type="password", required, pattern=".{8,}", name="registerPassword", placeholder="Passwort")
         label(for="register-repeat-password") Passwort wiederholen
         input#register-repeat-password(type="password", required, pattern=".{8,}", name="registerRepeatPassword", placeholder="Passwort wiederholen")
-      button#register-button(type="button" onclick="asyncRegister()") Registrieren 
+      button#register-button.action(type="button" onclick="asyncRegister()") Registrieren 
 block dialogs

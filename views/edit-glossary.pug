@@ -4,26 +4,24 @@ block scripts
   script(defer src="/javascripts/glossary.js")
 
 block content
-  header 
-    h1 Amberscript Glossar
-  main
-    form#glossary-form
-      fieldset#glossary-name
-        legend Glossarname
-        input#glossary-name-input(placeholder="Name des Glossars" value="")
-      fieldset#glossary-names
-        legend Glossarinhalt: Namen
-        div#names-container
-        button#add-name-button.action(type="button" onclick="addGlossaryName()")
-          i.fas.fa-plus
-          span Name hinzufügen
-      fieldset#glossary-items
-        legend Glossarinhalt: Begriffe
-        div#items-container
-        button#add-item-button.action(type="button" onclick="addGlossaryItem()")
-          i.fas.fa-plus
-          span Begriff hinzufügen
-      button.action(type="button" onclick="confirmGlossary()") Glossar speichern
-      div#message-area
-        span#status-message
+  h1 Amberscript Glossar
+  form#glossary-form
+    fieldset#glossary-name
+      legend Glossarname
+      input#glossary-name-input(placeholder="Name des Glossars" value="")
+    fieldset#glossary-names
+      legend Glossarinhalt: Namen
+      div#names-container
+      button#add-name-button.action(type="button" onclick="addGlossaryName()")
+        i.fas.fa-plus
+        span Name hinzufügen
+    fieldset#glossary-items
+      legend Glossarinhalt: Begriffe
+      div#items-container
+      button#add-item-button.action(type="button" onclick="addGlossaryItem()")
+        i.fas.fa-plus
+        span Begriff hinzufügen
+    button.action(type="button" onclick="confirmGlossary()") Glossar speichern
+    div#message-area
+      span#status-message
 block dialogs
