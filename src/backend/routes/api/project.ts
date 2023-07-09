@@ -2,6 +2,8 @@ import express from "express";
 const router = express.Router();
 
 import escapeHTML from "escape-html";
+import html2text from "html-to-text";
+const rake = require("node-rake");
 import md5 from "apache-md5";
 
 import validator from "email-validator";
@@ -305,6 +307,89 @@ router.get(
     }
     const files = getChecksums(project.directory, project.directory);
     return res.status(200).json(files).end();
+  }
+);
+
+router.get(
+  "/:username/:project/decks",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account = req.account;
+    const username = req.params.username;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const projectname = req.params.project;
+    const projects = account.getProjects();
+    const project = projects.find(
+      (project, index, array) => project.name === projectname
+    );
+    if (!project) {
+      return res
+        .status(404)
+        .json({ message: escapeHTML("Projekt nicht gefunden.") })
+        .end();
+    }
+    const allFiles = await project.getFiles();
+    const decks = [];
+    for (const file of allFiles) {
+      if (file.endsWith("-deck.html")) {
+        decks.push(file);
+      }
+    }
+    return res.status(200).json({ decks: decks }).end();
+  }
+);
+
+router.get(
+  "/:username/:project/keywords/:deck",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account = req.account;
+    const username = req.params.username;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const projectname = req.params.project;
+    const projects = account.getProjects();
+    const project = projects.find(
+      (project, index, array) => project.name === projectname
+    );
+    if (!project) {
+      return res
+        .status(404)
+        .json({ message: escapeHTML("Projekt nicht gefunden.") })
+        .end();
+    }
+    const deck = req.params.deck;
+    const contents = await project.readFile(deck);
+    const text = html2text.convert(contents);
+    const keywords = rake.generate(text);
+    return res.status(200).json({ keywords: keywords }).end();
   }
 );
 

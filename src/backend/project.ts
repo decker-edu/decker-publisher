@@ -3,7 +3,24 @@ import path from "path";
 
 import { createHash } from "crypto";
 
-export class Recording {
+function traverseFilesystem(directory: string): string[] {
+  const result: string[] = [];
+  const names = fs.readdirSync(directory);
+  for (const name of names) {
+    const stat = fs.statSync(name);
+    if (stat.isDirectory()) {
+      const recursive = traverseFilesystem(name);
+      for (const item of recursive) {
+        result.push(item);
+      }
+    } else {
+      result.push(name);
+    }
+  }
+  return result;
+}
+
+export class Recording implements Recording {
   project: Project;
   relativePath: string;
 
@@ -37,7 +54,7 @@ export default class Project implements Project {
 
   async getRecordings(): Promise<Recording[]> {
     try {
-      const files = await fs.promises.readdir(this.directory);
+      const files = await this.getFiles();
       let result: Recording[] = [];
       for (const file of files) {
         if (file.endsWith(".webm") && file.includes(this.name)) {
@@ -55,6 +72,10 @@ export default class Project implements Project {
     this.directory = path.join(ownerDirectory, "projects", name);
     this.name = name;
     this.owner = owner;
+  }
+
+  async getFiles(): Promise<string[]> {
+    return traverseFilesystem(this.directory);
   }
 
   async fileExists(filename: string): Promise<boolean> {
