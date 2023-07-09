@@ -9,7 +9,10 @@ block styles
 
 
 block content
-  h1 Aufnahme aus Projekt #{video.project}
+  if video.project
+    h1 Aufnahme aus Projekt #{video.project}
+  else
+    h1 Projektlose Videodatei
   h2 Datei #{video.path}
   div#video
     video(src= video.url controls)

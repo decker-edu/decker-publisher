@@ -22,8 +22,12 @@ router.post(
     const language = req.body.language || req.query.language;
     const glossary = req.body.glossary || req.query.glossary;
     const userdir = req.account.getDirectory();
-    const fullpath = path.join(userdir, "projects", project, filepath);
-
+    let fullpath;
+    if (project === "") {
+      fullpath = path.join(userdir, "uploads", filepath);
+    } else {
+      fullpath = path.join(userdir, "projects", project, filepath);
+    }
     if (!fs.existsSync(fullpath)) {
       return res.status(404).json({ message: "Datei nicht gefunden." }).end();
     }

@@ -101,6 +101,9 @@ function closeSaveDialog() {
 }
 
 async function saveSubtitles(username, project, filename) {
+  if (project === "undefined") {
+    return;
+  }
   const area = document.getElementById("vtt-area");
   const subtitles = area.value;
   try {

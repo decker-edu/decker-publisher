@@ -590,12 +590,81 @@ router.post(
   }
 );
 
+router.post(
+  "/video",
+  fileUpload(),
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const account: Account = req.account;
+    if (!account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res
+        .status(400)
+        .json({ message: escapeHTML("Keine Datei empfangen.") })
+        .end();
+    }
+    if (Array.isArray(req.files.file)) {
+      console.error("[PROJECT UPLOAD] Received multiple files.");
+      return res
+        .status(400)
+        .json({
+          message: escapeHTML(
+            "Mehrere Dateien empfangen. Bitte nur eine Datei senden."
+          ),
+        })
+        .end();
+    }
+    const file: fileUpload.UploadedFile = req.files.file;
+    const userdir = account.getDirectory();
+    const filename = file.name;
+    const ext = path.extname(filename);
+    const supported =
+      ext === ".mp4" ||
+      ext === ".wav" ||
+      ext === ".mp3" ||
+      ext === ".m4a" ||
+      ext === ".aac" ||
+      ext === ".wma" ||
+      ext === ".mov" ||
+      ext === ".m4v" ||
+      ext === ".ogg" ||
+      ext === ".opus" ||
+      ext === ".flac";
+    if (!supported) {
+      return res
+        .status(400)
+        .json({ message: escapeHTML("Nicht unterstütztes Dateiformat.") })
+        .end();
+    }
+    const targetPath = path.join(userdir, "uploads", filename);
+    if (!fs.existsSync(path.dirname(targetPath))) {
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true, mode: 0o0775 });
+    }
+    file.mv(targetPath, (error) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).end();
+      } else {
+        return res.status(200).end();
+      }
+    });
+  }
+);
+
 router.get(
   "/video",
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const project: string = req.query.project.toString();
     const filepath: string = req.query.file.toString();
-    if (!project || project === "" || /\.\.(\/|\\)/g.test(project)) {
+    if (!project || /\.\.(\/|\\)/g.test(project)) {
       return res
         .status(400)
         .json({ status: "error", message: "Fehlerhafte Anfrage." })
@@ -614,7 +683,12 @@ router.get(
         .end();
     }
     const userdir = req.account.getDirectory();
-    const fullpath = path.join(userdir, "projects", project, filepath);
+    let fullpath;
+    if (project === "") {
+      fullpath = path.join(userdir, "uploads", filepath);
+    } else {
+      fullpath = path.join(userdir, "projects", project, filepath);
+    }
     const filename = path.basename(fullpath, path.extname(fullpath));
     const dirname = path.dirname(fullpath);
     const subtitles = filename + ".vtt";

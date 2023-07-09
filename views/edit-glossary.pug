@@ -5,6 +5,15 @@ block scripts
 
 block content
   h1 Amberscript Glossar
+  div#recommendation-area
+    h2 Projekte nach Schlüsselwörtern durchsuchen
+    div#selection-area
+      select#project-select
+        option(value="") Kein Projekt ausgewählt
+      select#deck-select(disabled)
+        option(value="") Kein Foliensatz ausgewählt
+    div#keyword-area
+      h3 Schlüsselwörter
   form#glossary-form(onsubmit="return false;")
     fieldset#glossary-name
       legend Glossarname

@@ -10,6 +10,7 @@ import path from "path";
 import database from "../../database";
 
 import { Account } from "../../account";
+import { getAllFiles } from "@root/util";
 
 function verifyEmail(mail: string, allowedOrigins: string[]) {
   let format = validator.validate(mail);
@@ -51,6 +52,84 @@ function requireBody(name: string) {
     }
   };
 }
+
+router.get(
+  "/:username/videos",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account: Account = req.account;
+    const username = req.params.username;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const userdir = account.getDirectory();
+    const target = path.join(userdir, "uploads");
+    const videos = getAllFiles(target, (file) => {
+      const ext = path.extname(file);
+      return (
+        ext === ".mp4" ||
+        ext === ".wav" ||
+        ext === ".mp3" ||
+        ext === ".m4a" ||
+        ext === ".aac" ||
+        ext === ".wma" ||
+        ext === ".mov" ||
+        ext === ".m4v" ||
+        ext === ".ogg" ||
+        ext === ".opus" ||
+        ext === ".flac"
+      );
+    });
+    return res
+      .status(200)
+      .json({ videos: videos.map((fullpath) => path.basename(fullpath)) })
+      .end();
+  }
+);
+
+router.get(
+  "/:username/files/:filename(*)",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account = req.account;
+    const username = req.params.username;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const filename = req.params.filename;
+    const userdir = account.getDirectory();
+    const target = path.join(userdir, "uploads", filename);
+    if (!fs.existsSync(target)) {
+      return res.status(404).end();
+    } else {
+      return res.sendFile(target);
+    }
+  }
+);
 
 router.post(
   "/reset-password",

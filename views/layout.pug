@@ -34,7 +34,7 @@ html
           if account
             button.navigation(onclick="openUserDialog()")
               i.fas.fa-user
-              span= account.username
+              span#navigation-username= account.username
           else
             button.navigation(onclick="openLoginDialog()")
               i.fas.fa-sign-in-alt

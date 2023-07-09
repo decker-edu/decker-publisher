@@ -176,7 +176,8 @@ async function getVTT(jobId: string): Promise<string> {
     const text = await response.text();
     return text;
   } else {
-    throw response.status;
+    console.error("[getVTT] amberscript answered with: " + response.status);
+    throw new Error("Amberscript rejected the request.");
   }
 }
 
@@ -201,7 +202,12 @@ async function importVTT(jobId: string) {
         return;
       }
       const userdir = account.getDirectory();
-      const fullpath = path.join(userdir, "projects", projectname, filename);
+      let fullpath;
+      if (projectname === "") {
+        fullpath = path.join(userdir, "uploads", filename);
+      } else {
+        fullpath = path.join(userdir, "projects", projectname, filename);
+      }
       const dirname = path.dirname(fullpath);
       const stem = path.basename(filename, path.extname(filename));
       const subtitleFile = path.join(dirname, stem + ".vtt");

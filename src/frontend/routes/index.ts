@@ -212,11 +212,17 @@ router.get(
     if (account) {
       admin = account.roles ? account.roles.includes("admin") : false;
     }
-    let project: string = req.query.project.toString();
-    let filepath: string = req.query.filepath.toString();
-    if (!project || project === "" || /\.\.(\/|\\)/g.test(project)) {
+    let project: string;
+    if (req.query.project) {
+      project = req.query.project.toString();
+    }
+    let filepath: string;
+    if (req.query.filepath) {
+      filepath = req.query.filepath.toString();
+    }
+    if (/\.\.(\/|\\)/g.test(project)) {
       return res.render("error", {
-        message: "Projekt nicht oder fehlerhaft spezifiziert.",
+        message: "Projekt fehlerhaft spezifiziert.",
       });
     }
     if (!filepath || filepath === "" || /\.\.(\/|\\)/g.test(filepath)) {
@@ -231,7 +237,21 @@ router.get(
       });
     }
     const userdir = req.account.getDirectory();
-    const fullpath = path.join(userdir, "projects", project, filepath);
+    let fullpath;
+    let videoAccessURL;
+    if (!project) {
+      fullpath = path.join(userdir, "uploads", filepath);
+      videoAccessURL =
+        "/" + ["api", "user", account.username, "files", filepath].join("/");
+    } else {
+      fullpath = path.join(userdir, "projects", project, filepath);
+      videoAccessURL =
+        "/" + ["api", "project", account.username, "files", filepath].join("/");
+    }
+    const vttAccessURL = path.join(
+      path.dirname(videoAccessURL),
+      path.basename(videoAccessURL, path.extname(videoAccessURL) + ".vtt")
+    );
     const filename = path.basename(fullpath, path.extname(fullpath));
     const dirname = path.dirname(fullpath);
     const subtitles = filename + ".vtt";
@@ -262,30 +282,12 @@ router.get(
       title: "Videoinformationen",
       admin: admin,
       video: {
-        url:
-          "/" +
-          [
-            "api",
-            "project",
-            req.account.username,
-            project,
-            "files",
-            filepath,
-          ].join("/"),
+        url: videoAccessURL,
         project: project,
         path: filepath,
         vtt: vttcontent,
         vttpath: vttpath,
-        vtturl:
-          "/" +
-          [
-            "api",
-            "project",
-            req.account.username,
-            project,
-            "files",
-            vttpath,
-          ].join("/"),
+        vtturl: vttAccessURL,
       },
       glossaries: glossaries,
     });
@@ -400,6 +402,26 @@ router.get(
         title: "Amberscript Glossar",
         admin: admin,
         glossary: glossary,
+      });
+    } else {
+      return res.redirect("/");
+    }
+  }
+);
+
+router.get(
+  "/amberscript/videos",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    let admin = false;
+    const account = req.account;
+    if (account) {
+      return res.render("videos", {
+        title: "Videoübersicht",
+        admin: admin,
       });
     } else {
       return res.redirect("/");
@@ -742,7 +764,10 @@ router.get(
 
 router.get("/error", (req: Request, res: Response, next: NextFunction) => {
   const account = req.account;
-  const admin = account.roles.includes("admin");
+  let admin = false;
+  if (account) {
+    admin = account.roles.includes("admin");
+  }
   return res.render("index", {
     title: "Decker",
     admin: admin,
