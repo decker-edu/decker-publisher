@@ -2,6 +2,7 @@ extends layout
 
 block scripts 
   script(defer src="/javascripts/sync.js")
+  script(defer src="/javascripts/dialog.js")
 
 block content
   h1 Projektverwaltung
@@ -11,11 +12,12 @@ block content
         span#error-message
     div#sync-controls.centered.col-order
       button.action(onclick="requestDirectoryAccess()") Lokalen Ordner auswählen
+      div#progress-area.inset
       div.row-order.wmax
-        button#upload-button.action(disabled onclick="upload()") 
+        button#upload-button.action(disabled onclick="confirmUpload()") 
           i.fas.fa-upload
-          span Lokale Dateien hochladen
-        button#download-button.action(disabled onclick="download()")
+          span Lokale Dateien synchronisieren
+        button#download-button.action(disabled onclick="confirmDownload()")
           i.fas.fa-download
           span Generierte Dateien herunterladen
       div.sync-tables
@@ -42,3 +44,29 @@ block content
             span Zugriffsdaten löschen
 
 block dialogs
+  dialog#confirm-download
+    legend#download-legend Möchten Sie die folgenden Dateien, die sich auf dem Server von den Ihren 
+      | unterscheiden, in ihr Projektverzeichnis übernehmen? Denken Sie daran, dass Sie Ihr Projekt
+      | erneut übersetzen müssen, damit die Dateien in Ihr hochzuladendes Projekt übernommen werden.
+    ul#download-list
+    div.dialog-buttons
+      button.action(type="button" onclick="closeDialog(\"confirm-download\")")
+        i.fas.fa-times
+        span Abbrechen
+      button#dialog-download-button.action(type="button" onclick="download()")
+        i.fas.fa-check
+        span Durchführen
+  dialog#confirm-upload
+    legend#upload-legend Sie sind dabei ihr Projekt auf den Server zu synchronisieren. Möchten Sie dabei alle 
+      | Dateien auf dem Server, die kein Gegenstück in ihrem Projekt haben, löschen, um auf dem Server eine
+      | exakte Kopie ihres Projektverzeichnisses zu erhalten?
+    div#selection.inset
+      input#delete-on-upload(type="checkbox")
+      label(for="delete-on-upload") Nicht vorhandene Dateien auf dem Server löschen
+    div.dialog-buttons
+      button.action(type="button" onclick="closeDialog(\"confirm-upload\")")
+        i.fas.fa-times
+        span Abbrechen
+      button#dialog-upload-button.action(type="button" onclick="upload()")
+        i.fas.fa-check
+        span Durchführen

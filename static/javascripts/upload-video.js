@@ -76,8 +76,6 @@ function uploadVideo() {
   xhr.send(data);
 }
 
-let username;
-
 function clearElement(element) {
   while (element.firstChild) {
     element.removeChild(element.lastChild);
@@ -85,8 +83,12 @@ function clearElement(element) {
 }
 
 async function getVideoList() {
+  if (!window.Session) {
+    console.error("No session to get data from.");
+    return;
+  }
   try {
-    const response = await fetch(`/api/user/${username}/videos`);
+    const response = await fetch(`/api/user/${window.Session.username}/videos`);
     if (response.ok) {
       const json = await response.json();
       if (json.videos) {
@@ -116,7 +118,6 @@ async function getVideoList() {
   }
 }
 
-window.addEventListener("load", (event) => {
-  username = document.getElementById("navigation-username").innerText;
+window.addEventListener("session", (event) => {
   getVideoList();
 });

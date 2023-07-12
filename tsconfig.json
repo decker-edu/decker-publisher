@@ -10,7 +10,7 @@
         "outDir": "dist",
         "rootDir": "src",
         "baseUrl": "./src",
-        "typeRoots": ["src/backend/types", "src/frontend/types"],
+        "typeRoots": ["src/types"],
         "paths": {
             "*": [
                 "node_modules/*",

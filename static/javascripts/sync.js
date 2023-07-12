@@ -112,6 +112,13 @@ async function setHtpasswd() {
   }
 }
 
+function clearProgressArea() {
+  const area = document.getElementById("progress-area");
+  while (area.firstChild) {
+    area.removeChild(area.lastChild);
+  }
+}
+
 function displayChromeRequired() {
   const main = document.getElementById("sync-controls");
   while (main.firstChild) {
@@ -184,11 +191,16 @@ let clientRootHandle;
 let publicDirHandle;
 
 async function fetchFile(filepath) {
+  clearProgressArea();
+  const info = document.createElement("p");
+  info.innerText = "Lade herunter: " + filepath;
+  document.getElementById("progress-area").appendChild(info);
   try {
     const response = await fetch(
       `/api/project/${username}/${project}/files/${filepath}`
     );
     if (response && response.ok) {
+      clearProgressArea();
       return response.arrayBuffer();
     } else {
       const json = await response.json();
@@ -242,21 +254,68 @@ async function chooseDirectory() {
 }
 
 async function pushFile(filepath, file) {
+  function initProgress(event) {
+    clearProgressArea();
+    const div = document.getElementById("progress-area");
+    const msg = document.createElement("p");
+    msg.innerText = `Übertrage: ${filepath}`;
+    div.appendChild(msg);
+    const bar = document.createElement("progress");
+    bar.id = "upload-progress";
+    bar.value = 0;
+    bar.max = 100;
+    div.appendChild(bar);
+    updateProgress(event);
+  }
+
+  function updateProgress(event) {
+    const total = event.total;
+    const loaded = event.loaded;
+    if (event.lengthComputable) {
+      const part = (loaded / total) * 100;
+      const bar = document.getElementById("upload-progress");
+      if (bar) {
+        bar.value = part;
+        bar.innerText = part;
+      }
+    } else {
+      const bar = document.getElementById("upload-progress");
+      if (bar && loaded) {
+        bar.value = loaded;
+        bar.innerHTML = loaded + " bytes";
+      }
+    }
+  }
+
+  function endProgress(event) {
+    clearProgressArea();
+    const div = document.getElementById("progress-area");
+    const msg = document.createElement("p");
+    msg.innerText = `Übertragung von ${filepath} abgeschlossen!`;
+    div.appendChild(msg);
+  }
+
   const data = new FormData();
   data.append("file", file);
-  const response = await fetch(
-    `/api/project/${username}/${project}/files/${filepath}`,
-    {
-      method: "POST",
-      body: data,
+  const xhr = new XMLHttpRequest();
+  function finallizeProgress(event) {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      `Übertragung von ${filepath} erfolgreich!`;
+    } else {
+      if (xhr.responseType === "json") {
+        const error = JSON.parse(xhr.responseText);
+        if (error.message) {
+          console.error(error.message);
+        }
+      }
     }
-  );
-  if (response && response.ok) {
-    return;
-  } else {
-    const status = response.status;
-    console.error("pushing file " + filepath + " ended in status: " + status);
   }
+  xhr.upload.addEventListener("progress", updateProgress);
+  xhr.addEventListener("loadstart", initProgress);
+  xhr.addEventListener("loadend", endProgress);
+  xhr.addEventListener("readystatechange", finallizeProgress);
+  xhr.open("POST", `/api/project/${username}/${project}/files/${filepath}`);
+  xhr.send(data);
 }
 
 async function accumulateFileInformation(entries, rootPath) {
@@ -304,11 +363,44 @@ let toDownload;
 
 function isGeneratedFile(filename) {
   const regex =
-    /.+(-recording.webm|-recording.mp4|-recording.mp4.list|-annot.json|-recording-[0-9]+.webm|-times.json)$/;
+    /.+(-recording.webm|-recording.mp4|-recording.vtt|-recording.mp4.list|-annot.json|-recording-[0-9]+.webm|-times.json)$/;
   return regex.test(filename);
 }
 
+async function confirmDownload() {
+  const dialog = document.getElementById("confirm-download");
+  const list = document.getElementById("download-list");
+  const dlbutton = document.getElementById("dialog-download-button");
+  dlbutton.removeAttribute("disabled");
+  while (list.firstChild) {
+    list.removeChild(list.lastChild);
+  }
+  const genFiles = [];
+  for (const entry of toDownload) {
+    if (isGeneratedFile(entry.filename)) {
+      genFiles.push(entry.filename);
+    }
+  }
+  if (genFiles.length === 0) {
+    const legend = document.getElementById("download-legend");
+    legend.innerText =
+      "Es befinden sich auf dem Server keine Dateien, die sie herunterladen müssen.";
+    dlbutton.setAttribute("disabled", "");
+  } else {
+    for (const filename of genFiles) {
+      const li = document.createElement("li");
+      li.innerText = filename;
+      list.appendChild(li);
+    }
+  }
+  dialog.showModal();
+}
+
 async function download() {
+  const dialog = document.getElementById("confirm-download");
+  if (dialog) {
+    dialog.close();
+  }
   try {
     for (const entry of toDownload) {
       let targetDir = clientRootHandle;
@@ -321,7 +413,7 @@ async function download() {
         const parts = entry.filepath.split("/");
         while (parts.length > 1) {
           const dir = parts.shift();
-          targetDir = await targetDir.getDirectoryHandle(dir);
+          targetDir = await targetDir.getDirectoryHandle(dir, { create: true });
         }
         const file = await targetDir.getFileHandle(parts[0], { create: true });
         const writable = await file.createWritable();
@@ -329,6 +421,11 @@ async function download() {
         await writable.close();
       }
     }
+    clearProgressArea();
+    const area = document.getElementById("progress-area");
+    const msg = document.createElement("p");
+    msg.innerText = "Downloads abgeschlossen!";
+    area.appendChild(msg);
     clearElement(document.getElementById("client-table"));
     await readClientData();
     compareData();
@@ -337,7 +434,19 @@ async function download() {
   }
 }
 
+function confirmUpload() {
+  const dialog = document.getElementById("confirm-upload");
+  dialog.showModal();
+}
+
 async function upload() {
+  const delOnUpload = document.getElementById("delete-on-upload");
+  const shouldDelete = delOnUpload ? delOnUpload.checked : false;
+  const dialog = document.getElementById("confirm-upload");
+  dialog.close();
+  if (shouldDelete) {
+    await deleteOnlyServer();
+  }
   for (const entry of toUpload) {
     try {
       let targetDir = await clientRootHandle.getDirectoryHandle("public");
@@ -357,25 +466,58 @@ async function upload() {
     }
   }
   clearElement(document.getElementById("server-table"));
+  clearElement(document.getElementById("client-table"));
+  await readClientData();
   await fetchProjectData();
   compareData();
+}
+
+async function deleteFile(filepath) {
+  clearProgressArea();
+  const area = document.getElementById("progress-area");
+  const msg = document.createElement("p");
+  msg.innerText = "Lösche Datei: " + filepath;
+  area.appendChild(msg);
+  const response = await fetch(
+    `/api/project/${username}/${project}/files/${filepath}`,
+    {
+      method: "DELETE",
+    }
+  );
+  if (response && response.ok) {
+    clearProgressArea();
+    return;
+  } else {
+    const status = response.status;
+    console.error("deleting file " + filepath + " ended in status: " + status);
+  }
+}
+
+async function deleteOnlyServer() {
+  for (const entry of toDownload) {
+    await deleteFile(entry.filepath);
+  }
+  const area = document.getElementById("progress-area");
+  const msg = document.createElement("p");
+  msg.innerText = "Dateien gelöscht.";
+  area.appendChild(msg);
 }
 
 function compareData() {
   toUpload = [];
   toDownload = [];
-  compare(clientData, serverData);
+  compare(clientData, serverData, new Set());
+  markServerFilesAsNew(handled, serverList);
 }
 
-function compare(clientList, serverList) {
-  const handled = new Set();
+function compare(clientList, serverList, handled) {
   for (const a of clientList) {
     let contains = false;
     for (const b of serverList) {
       if (a.filename === b.filename && a.kind === b.kind) {
         contains = true;
         if (a.kind === "directory") {
-          compare(a.children, b.children);
+          compare(a.children, b.children, handled);
           break;
         }
         handled.add(b);
@@ -393,24 +535,25 @@ function compare(clientList, serverList) {
             a.reference.classList.add("older");
           }
         }
+        break;
       }
     }
     if (!contains) {
       if (a.kind === "directory") {
-        compare(a.children, []);
+        compare(a.children, [], handled);
       } else {
         toUpload.push(a);
         a.reference.classList.add("newer");
       }
     }
   }
-  markServerFilesAsNew(handled, serverList);
 }
 
 function markServerFilesAsNew(handled, serverList) {
   for (const b of serverList) {
     if (handled.has(b)) continue;
     if (b.kind === "directory") {
+      //      markServerFilesAsNew(handled, b.children);
       continue;
     }
     toDownload.push(b);

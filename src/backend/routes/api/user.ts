@@ -66,7 +66,7 @@ router.get(
         .json({ message: escapeHTML("Nicht eingeloggt.") })
         .end();
     }
-    const account: Account = req.account;
+    const account: IAccount = req.account;
     const username = req.params.username;
     if (account.username !== username) {
       return res
@@ -270,7 +270,7 @@ router.put(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    const account: Account = req.account;
+    const account: IAccount = req.account;
     if (!account) {
       return res
         .status(403)

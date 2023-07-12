@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import Role from "./role";
 import { getAllFiles } from "../util";
+import Project from "./project";
 
 const NO_RESULT_MESSAGE: string = "Kein Resultat";
 
@@ -32,7 +33,7 @@ function getDirectories(parent: string): string[] {
   return result;
 }
 
-export class Account implements Account {
+export class Account implements IAccount {
   id: number;
   username: string;
   email: string;
@@ -305,17 +306,15 @@ export class Account implements Account {
         const name = path.basename(file, ext);
         return ext === ".mp4" && name.endsWith("recording");
       });
-      const videoData: VideoLinkData[] = mp4s.map((video) => {
+      const videoData: IVideoLinkData[] = mp4s.map((video) => {
         return {
           filename: path.basename(video),
           filepath: path.relative(directory, video),
         };
       });
-      projects.push({
-        name: path.basename(directory),
-        directory: directory,
-        videos: videoData,
-      });
+      const project = new Project(this, path.basename(directory));
+      project.videos = videoData;
+      projects.push(project);
     }
     return projects;
   }

@@ -122,6 +122,21 @@ router.use("/user", userAPI);
 router.use("/project", projectAPI);
 router.use("/amberscript", amberAPI);
 
+router.get(
+  "/session",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    if (req.account) {
+      return res.status(200).json({ username: req.account.username }).end();
+    } else {
+      return res.status(403).end();
+    }
+  }
+);
+
 router.post(
   "/login",
   function (
@@ -384,7 +399,7 @@ router.post(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    const account: Account = req.account;
+    const account: IAccount = req.account;
     if (!account) {
       return res
         .status(403)
@@ -539,7 +554,7 @@ router.post(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    const account: Account = req.account;
+    const account: IAccount = req.account;
     if (!account) {
       return res
         .status(403)
@@ -598,7 +613,7 @@ router.post(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    const account: Account = req.account;
+    const account: IAccount = req.account;
     if (!account) {
       return res
         .status(403)

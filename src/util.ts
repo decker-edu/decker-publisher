@@ -1,20 +1,46 @@
+import express from "express";
+
 import fs from "fs";
 import path from "path";
 
-export function randomString(length : number, characters? : string) {
-    let result = "";
-    let options = characters
-      ? characters
-      : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let amount = options.length;
-    for (let i = 0; i < length; i++) {
-      result += options.charAt(Math.floor(Math.random() * amount));
-    }
-    return result;
+export function requireLogin(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  if (!req.account) {
+    res.redirect("/");
+  } else {
+    next();
+  }
 }
 
-export function getAllFiles(directory: string, filter: (arg: string) => boolean) : string[] {
-  let result : string[] = [];
+export async function retrieveKeys(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  req.account.keys = await req.account.getKeys();
+  next();
+}
+
+export function randomString(length: number, characters?: string) {
+  let result = "";
+  let options = characters
+    ? characters
+    : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let amount = options.length;
+  for (let i = 0; i < length; i++) {
+    result += options.charAt(Math.floor(Math.random() * amount));
+  }
+  return result;
+}
+
+export function getAllFiles(
+  directory: string,
+  filter: (arg: string) => boolean
+): string[] {
+  let result: string[] = [];
   if (!fs.existsSync(directory)) {
     return [];
   }

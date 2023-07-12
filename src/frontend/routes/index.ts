@@ -12,26 +12,10 @@ import { Account } from "@root/backend/account";
 
 const router = express.Router();
 
-function requiresLogin(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
-  if (!req.account) {
-    res.redirect("/");
-  } else {
-    next();
-  }
-}
+import userRouter from "./user";
+import { requireLogin, retrieveKeys } from "@root/util";
 
-async function retrieveKeys(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
-  req.account.keys = await req.account.getKeys();
-  next();
-}
+router.use("/user", userRouter);
 
 /* GET home page. */
 router.get(
@@ -51,7 +35,7 @@ router.get(
 /* GET overview page. */
 router.get(
   "/home",
-  requiresLogin,
+  requireLogin,
   async function (
     req: express.Request,
     res: express.Response,
@@ -134,7 +118,7 @@ router.get(
 
 router.get(
   "/profile",
-  requiresLogin,
+  requireLogin,
   retrieveKeys,
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const admin = req.account.roles
@@ -149,7 +133,7 @@ router.get(
 
 router.get(
   "/configuration",
-  requiresLogin,
+  requireLogin,
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const admin = req.account.roles
       ? req.account.roles.includes("admin")
@@ -163,7 +147,7 @@ router.get(
 
 router.get(
   "/projects",
-  requiresLogin,
+  requireLogin,
   async (
     req: express.Request,
     res: express.Response,
@@ -183,7 +167,7 @@ router.get(
 
 router.get(
   "/convert",
-  requiresLogin,
+  requireLogin,
   async function (
     req: express.Request,
     res: express.Response,
@@ -201,7 +185,7 @@ router.get(
 
 router.get(
   "/video",
-  requiresLogin,
+  requireLogin,
   async function (
     req: express.Request,
     res: express.Response,
@@ -303,7 +287,7 @@ router.get(
   ) {
     let admin = false;
     let jobs = [];
-    const account = req.account;
+    const account: IAccount = req.account;
     if (account) {
       admin = account.roles ? account.roles.includes("admin") : false;
       jobs = await amberscript.getJobs(account);

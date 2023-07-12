@@ -218,6 +218,7 @@ export async function Converter(filepath: string, emitter: EventEmitter) {
     emitter.emit("info", { message: `${pdf.numPages} Seiten gefunden.` });
     for (let pageNum = 1; pageNum <= pdfInfo.pages; pageNum++) {
       const page = await pdf.getPage(pageNum);
+      //      const struct = await page.getStructTree();
       const viewport = page.getViewport({ scale: 1.0 });
       pdfInfo.width = Math.max(pdfInfo.width, viewport.width);
       pdfInfo.height = Math.max(pdfInfo.height, viewport.height);

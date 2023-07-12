@@ -18,10 +18,19 @@ export default async function (
     } finally {
       return next();
     }
-  } else if (request.body.username && request.body.password) {
+  } else if (request.headers.authorization) {
     try {
-      const username: string = request.body.username;
-      const password: string = request.body.password;
+      const header = request.headers.authorization;
+      if (!header.startsWith("Basic")) {
+        request.account = undefined;
+        response.locals.account = undefined;
+        return next();
+      }
+      const encoded = header.split(" ")[1];
+      const decoded = Buffer.from(encoded, "base64").toString("utf-8");
+      const colon = decoded.indexOf(":");
+      const username: string = decoded.substring(0, colon);
+      const password: string = decoded.substring(colon + 1);
       const account: Account | null = await Account.fromDatabase(username);
       if (account) {
         const verified: boolean = await account.checkPassword(password);

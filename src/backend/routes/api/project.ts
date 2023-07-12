@@ -262,7 +262,44 @@ router.post(
     const project = new Project(account, projectname);
     // const content = project.readFile(filename);
     try {
-      if (project.writeFile(filename, file.data)) {
+      if (await project.writeFile(filename, file.data)) {
+        return res.status(200).end();
+      } else {
+        return res.status(500).end();
+      }
+    } catch (error) {
+      return res.status(500).end();
+    }
+  }
+);
+
+router.delete(
+  "/:username/:project/files/:filename(*)",
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const account = req.account;
+    const username = req.params.username;
+    const projectname = req.params.project;
+    const filename = req.params.filename;
+    if (account.username !== username) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Keine Berechtigung.") })
+        .end();
+    }
+    const project = new Project(account, projectname);
+    // const content = project.readFile(filename);
+    try {
+      if (await project.deleteFile(filename)) {
         return res.status(200).end();
       } else {
         return res.status(500).end();

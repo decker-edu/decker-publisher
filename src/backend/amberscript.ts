@@ -1,5 +1,3 @@
-import { Account } from "./account";
-
 import FormData from "form-data";
 import fetch from "node-fetch";
 
@@ -7,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import database from "./database";
 import config from "@root/config";
+import { Account } from "./account";
 
 const NO_API_KEY_ERROR_MESSAGE =
   "Es wurde vom Administrator kein Amberscript-API-Schlüssel konfiguriert.";
@@ -14,7 +13,7 @@ const NO_CALLBACK_URL_ERROR_MESSAGE =
   "Es wurde vom Administrator keine Antwort-URL für Amberscript konfiguriert.";
 
 async function post(
-  account: Account,
+  account: IAccount,
   project: string,
   filename: string,
   speakers: string,
@@ -97,7 +96,7 @@ async function finallizeJob(jobId: string, status: string) {
 }
 
 async function archive(
-  account: Account,
+  account: IAccount,
   projectname: string,
   filename: string,
   jobId: string,
@@ -197,7 +196,7 @@ async function importVTT(jobId: string) {
       const projectname = job.projectname;
       const filename = job.relative_filepath;
 
-      const account = await Account.fromDatabase(user_id);
+      const account: IAccount = await Account.fromDatabase(user_id);
       if (!account) {
         return;
       }
@@ -220,7 +219,7 @@ async function importVTT(jobId: string) {
   }
 }
 
-async function getJobs(account: Account) {
+async function getJobs(account: IAccount) {
   const jobs = [];
   try {
     const result = await database.query(
@@ -300,7 +299,7 @@ async function getGlossary(glossary_id: string): Promise<Glossary> {
 }
 
 async function createGlossary(
-  account: Account,
+  account: IAccount,
   name: string,
   names: string[],
   items: GlossaryItem[]

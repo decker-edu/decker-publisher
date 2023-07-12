@@ -732,3 +732,13 @@ li.caret.active::marker {
   width: 100%;
   table-layout: auto;
 }
+
+.inset {
+  padding: 0.5rem;
+  border: 1px inset rgba(0, 0, 0, 0.1);
+  border-radius: 1rem;
+}
+
+#progress-area:empty {
+  display: none;
+}

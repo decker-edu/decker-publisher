@@ -20,7 +20,7 @@ function traverseFilesystem(directory: string): string[] {
   return result;
 }
 
-export class Recording implements Recording {
+export class Recording implements IRecording {
   project: Project;
   relativePath: string;
 
@@ -42,17 +42,24 @@ export class Recording implements Recording {
   }
 }
 
-export default class Project implements Project {
+export default class Project implements IProject {
   name: string;
   directory: string;
-  videos: VideoLinkData[];
-  owner: Account;
+  videos: IVideoLinkData[];
+  owner: IAccount;
+
+  constructor(owner: IAccount, name: string) {
+    const ownerDirectory = owner.getDirectory();
+    this.directory = path.join(ownerDirectory, "projects", name);
+    this.name = name;
+    this.owner = owner;
+  }
 
   getDirectory(): string {
     return this.directory;
   }
 
-  async getRecordings(): Promise<Recording[]> {
+  async getRecordings(): Promise<IRecording[]> {
     try {
       const files = await this.getFiles();
       let result: Recording[] = [];
@@ -67,13 +74,6 @@ export default class Project implements Project {
     }
   }
 
-  constructor(owner: Account, name: string) {
-    const ownerDirectory = owner.getDirectory();
-    this.directory = path.join(ownerDirectory, "projects", name);
-    this.name = name;
-    this.owner = owner;
-  }
-
   async getFiles(): Promise<string[]> {
     return traverseFilesystem(this.directory);
   }
@@ -84,6 +84,33 @@ export default class Project implements Project {
 
   async readFile(filename: string): Promise<string> {
     return fs.promises.readFile(path.join(this.directory, filename), "utf8");
+  }
+
+  maybeDeleteDirectory(directory: string) {
+    if (directory === this.directory) {
+      return;
+    }
+    const files = fs.readdirSync(directory);
+    if (files.length === 0) {
+      fs.rmdirSync(directory);
+      this.maybeDeleteDirectory(path.dirname(directory));
+    }
+  }
+
+  async deleteFile(filename: string): Promise<boolean> {
+    const target = path.join(this.directory, filename);
+    const directory = path.dirname(target);
+    if (fs.existsSync(target)) {
+      fs.rmSync(target);
+    } else {
+      return false;
+    }
+    try {
+      this.maybeDeleteDirectory(directory);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   async writeFile(

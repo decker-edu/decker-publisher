@@ -47,17 +47,15 @@ async function login() {
   const passElement = document.getElementById("login-pass");
   const username = userElement.value;
   const password = passElement.value;
+  const base = window.btoa(username + ":" + password);
   try {
     const response = await fetch("/api/login", {
       method: "POST",
       headers: {
         Accept: "application/json",
+        Authorization: "Basic " + base,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        username: username,
-        password: password,
-      }),
     });
     if (response.ok) {
       const json = await response.json();
