@@ -58,6 +58,9 @@ export function getChecksums(root: string, directory: string): FileHashEntry[] {
         modified: Math.floor(stat.mtime.getTime()),
         children: sub,
       };
+      if (path.sep === "\\") {
+        subtree.filepath = subtree.filepath.replace(/\\/, "/");
+      }
       result.push(subtree);
     } else {
       const content = fs.readFileSync(filepath);
@@ -70,6 +73,9 @@ export function getChecksums(root: string, directory: string): FileHashEntry[] {
         modified: Math.floor(stat.mtime.getTime()),
         children: null,
       };
+      if (path.sep === "\\") {
+        data.filepath = data.filepath.replace(/\\/g, "/");
+      }
       result.push(data);
     }
   }

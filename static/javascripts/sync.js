@@ -503,11 +503,60 @@ async function deleteOnlyServer() {
   area.appendChild(msg);
 }
 
+function unfold(tree, list) {
+  for (const item of tree) {
+    if (item.kind === "directory") {
+      unfold(item.children, list);
+    } else {
+      list.push(item);
+    }
+  }
+}
+
 function compareData() {
   toUpload = [];
   toDownload = [];
-  compare(clientData, serverData, new Set());
-  markServerFilesAsNew(handled, serverList);
+  const clientList = [];
+  const serverList = [];
+  unfold(clientData, clientList);
+  unfold(serverData, serverList);
+  compareLists(clientList, serverList);
+}
+
+function compareLists(clientList, serverList) {
+  const handled = new Set();
+  for (const a of clientList) {
+    let contains = false;
+    for (const b of serverList) {
+      if (a.filepath === b.filepath) {
+        contains = true;
+        handled.add(b);
+        if (a.checksum === b.checksum) {
+          a.reference.classList.add("same");
+          b.reference.classList.add("same");
+        } else {
+          if (new Date(a.modified).getTime() > new Date(b.modified).getTime()) {
+            toUpload.push(a);
+            a.reference.classList.add("newer");
+            b.reference.classList.add("older");
+          } else {
+            toDownload.push(b);
+            b.reference.classList.add("newer");
+            a.reference.classList.add("older");
+          }
+        }
+      }
+    }
+    if (!contains) {
+      toUpload.push(a);
+      a.reference.classList.add("newer");
+    }
+  }
+  for (const b of serverList) {
+    if (handled.has(b)) continue;
+    toDownload.push(b);
+    b.reference.classList.add("newer");
+  }
 }
 
 function compare(clientList, serverList, handled) {
