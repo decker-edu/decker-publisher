@@ -76,9 +76,7 @@ function navigateToVideo() {
     );
     return;
   }
-  window.location.replace(
-    `/video?project=${dialogProject}&filepath=${dialogFilepath}`
-  );
+  window.location.href = `/video?project=${dialogProject}&filepath=${dialogFilepath}`;
 }
 
 function activateVTTEditor() {

@@ -1,7 +1,11 @@
 extends layout
 
+block styles
+  link(rel='stylesheet', href='/stylesheets/progress.css')
+
+
 block scripts 
-  script(defer src="/javascripts/sync.js")
+  script(defer type="module" src="/javascripts/sync.js")
   script(defer src="/javascripts/dialog.js")
 
 block content
@@ -11,13 +15,21 @@ block content
     div.message-area
         span#error-message
     div#sync-controls.centered.col-order
-      button.action(onclick="requestDirectoryAccess()") Lokalen Ordner auswählen
-      div#progress-area.inset
+      button.action#pick-directory-button Lokalen Ordner auswählen
+      div#progress-area.inset(hidden=true)
+        div.message-wrapper
+          span#progress-message
+        div.progress-wrapper
+          label#total-progress-label(for="total-progress") Total
+          progress#total-progress(value=50 max=100)
+        div.progress-wrapper
+          label#file-upload-progress-label(for="file-upload-progress") Partial
+          progress#file-upload-progress
       div.row-order.wmax
-        button#upload-button.action(disabled onclick="confirmUpload()") 
+        button#upload-button.action(disabled) 
           i.fas.fa-upload
           span Lokale Dateien synchronisieren
-        button#download-button.action(disabled onclick="confirmDownload()")
+        button#download-button.action(disabled)
           i.fas.fa-download
           span Generierte Dateien herunterladen
       div.sync-tables
@@ -53,7 +65,7 @@ block dialogs
       button.action(type="button" onclick="closeDialog(\"confirm-download\")")
         i.fas.fa-times
         span Abbrechen
-      button#dialog-download-button.action(type="button" onclick="download()")
+      button#confirm-download-button.action(type="button")
         i.fas.fa-check
         span Durchführen
   dialog#confirm-upload
@@ -67,6 +79,6 @@ block dialogs
       button.action(type="button" onclick="closeDialog(\"confirm-upload\")")
         i.fas.fa-times
         span Abbrechen
-      button#dialog-upload-button.action(type="button" onclick="upload()")
+      button#confirm-upload-button.action(type="button")
         i.fas.fa-check
         span Durchführen

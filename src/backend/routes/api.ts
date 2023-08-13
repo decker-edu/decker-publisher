@@ -59,7 +59,7 @@ export function getChecksums(root: string, directory: string): FileHashEntry[] {
         children: sub,
       };
       if (path.sep === "\\") {
-        subtree.filepath = subtree.filepath.replace(/\\/, "/");
+        subtree.filepath = subtree.filepath.replace(/\\/g, "/");
       }
       result.push(subtree);
     } else {

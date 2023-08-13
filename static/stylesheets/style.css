@@ -344,13 +344,19 @@ dialog a.button-like:active {
   column-gap: 0.25rem;
 }
 
-#project-area {
+#table-area {
   width: 100%;
   text-align: center;
 }
 
-#project-area table {
+#table-area table {
   width: 100%;
+  border-collapse: collapse;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+#table-area table tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 #upload-area {

@@ -2,18 +2,39 @@ extends layout
 
 block scripts 
     script(defer src="/javascripts/upload-video.js")
+    script(defer src="/javascripts/video.js")
     script(defer src="/javascripts/dialog.js")
 
 block content
   h1 Ihre Videodateien
   div#explanation
     p Sie können hier Videos hochladen, die Sie nach dem Upload an Amberscript zum Generieren von Untertiteln übergeben können.
-  div#video-area
+  div#table-area
     table 
       thead
         tr
-          th Video
+          th Projekt
+          th Aufzeichnungen
+          th Videos
       tbody#video-table-body
+        each project in projects
+          tr
+            td
+              a.action(href="/decks/" + account.username + "/" + project.name + "/" target="_blank")
+                i.fas.fa-external-link
+                span= project.name
+            td
+              div.video-list
+                each video in project.recordings
+                  button.action(onclick="openVideoDialog('"+project.name+"', '"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
+                    i.fas.fa-film
+                    span= video.filename
+            td
+              div.video-list
+                each video in project.videos
+                  button.action(onclick="openVideoDialog('"+project.name+"', '"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
+                    i.fas.fa-film
+                    span= video.filename
   div#upload-area
     button.action(onclick="addVideoUpload()" aria-label="Neues Video hochladen")
       i.fas.fa-cloud-arrow-up
@@ -27,3 +48,18 @@ block content
       i.fas.fa-upload
       span Upload starten
 block dialogs
+  dialog#video-dialog
+    div#video-message.dialog-message
+    div.video-data
+      label(for="video-filename") Dateiname
+      div#video-filename
+      label(for="video-length") Video-Länge
+      div#video-length
+      label(for="video-subtitles") Untertitel
+      div#video-hasvtt
+      button.action(onclick="navigateToVideo()")
+        i.fas.fa-film
+        span Video bearbeiten
+      button.action(onclick="closeVideoDialog()")
+        i.fas.fa-ban
+        span Dialog schließen

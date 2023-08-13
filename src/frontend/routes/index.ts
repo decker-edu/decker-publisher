@@ -230,7 +230,10 @@ router.get(
     } else {
       fullpath = path.join(userdir, "projects", project, filepath);
       videoAccessURL =
-        "/" + ["api", "project", account.username, "files", filepath].join("/");
+        "/" +
+        ["api", "project", account.username, project, "files", filepath].join(
+          "/"
+        );
     }
     const vttAccessURL = path.join(
       path.dirname(videoAccessURL),
@@ -403,9 +406,11 @@ router.get(
     let admin = false;
     const account = req.account;
     if (account) {
+      const projects = account.getProjects();
       return res.render("videos", {
         title: "Videoübersicht",
         admin: admin,
+        projects: projects,
       });
     } else {
       return res.redirect("/");

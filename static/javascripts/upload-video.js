@@ -119,5 +119,5 @@ async function getVideoList() {
 }
 
 window.addEventListener("session", (event) => {
-  getVideoList();
+  // getVideoList();
 });

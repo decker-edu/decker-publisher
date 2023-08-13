@@ -1,3 +1,7 @@
+#video {
+  text-align: center;
+}
+
 #vtt-area {
   width: 100%;
   resize: vertical;

@@ -1,6 +1,7 @@
 declare interface IProject {
   name: string;
   directory: string;
+  recordings: IVideoLinkData[];
   videos: IVideoLinkData[];
   getRecordings(): Promise<IRecording[]>;
   getFiles(): Promise<string[]>;

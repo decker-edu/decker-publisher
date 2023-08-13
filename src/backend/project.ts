@@ -45,6 +45,7 @@ export class Recording implements IRecording {
 export default class Project implements IProject {
   name: string;
   directory: string;
+  recordings: IVideoLinkData[];
   videos: IVideoLinkData[];
   owner: IAccount;
 

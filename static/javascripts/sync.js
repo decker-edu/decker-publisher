@@ -1,3 +1,5 @@
+import UploadProgress from "./upload-progress.js";
+
 let featureAvailable = true;
 if (
   !window.showDirectoryPicker ||
@@ -119,6 +121,16 @@ function clearProgressArea() {
   }
 }
 
+function showProgressArea() {
+  const area = document.getElementById("progress-area");
+  area.removeAttribute("hidden");
+}
+
+function hideProgressArea() {
+  const area = document.getElementById("progress-area");
+  area.setAttribute("hidden");
+}
+
 function displayChromeRequired() {
   const main = document.getElementById("sync-controls");
   while (main.firstChild) {
@@ -150,11 +162,6 @@ function toggleCaret(event) {
 function displayError(message) {
   const span = document.getElementById("error-message");
   span.innerText = message;
-}
-
-function requestDirectoryAccess() {
-  if (!featureAvailable) return;
-  chooseDirectory().then(() => {});
 }
 
 function clearElement(element) {
@@ -191,16 +198,13 @@ let clientRootHandle;
 let publicDirHandle;
 
 async function fetchFile(filepath) {
-  clearProgressArea();
-  const info = document.createElement("p");
+  const info = document.getElementById("progress-message");
   info.innerText = "Lade herunter: " + filepath;
-  document.getElementById("progress-area").appendChild(info);
   try {
     const response = await fetch(
       `/api/project/${username}/${project}/files/${filepath}`
     );
     if (response && response.ok) {
-      clearProgressArea();
       return response.arrayBuffer();
     } else {
       const json = await response.json();
@@ -224,6 +228,7 @@ async function readClientData() {
 }
 
 async function chooseDirectory() {
+  if (!featureAvailable) return;
   window.showDirectoryPicker({ mode: "readwrite" }).then(async (handle) => {
     if (!handle) {
       displayError("Kein Ordner ausgewählt.");
@@ -254,68 +259,13 @@ async function chooseDirectory() {
 }
 
 async function pushFile(filepath, file) {
-  function initProgress(event) {
-    clearProgressArea();
-    const div = document.getElementById("progress-area");
-    const msg = document.createElement("p");
-    msg.innerText = `Übertrage: ${filepath}`;
-    div.appendChild(msg);
-    const bar = document.createElement("progress");
-    bar.id = "upload-progress";
-    bar.value = 0;
-    bar.max = 100;
-    div.appendChild(bar);
-    updateProgress(event);
-  }
-
-  function updateProgress(event) {
-    const total = event.total;
-    const loaded = event.loaded;
-    if (event.lengthComputable) {
-      const part = (loaded / total) * 100;
-      const bar = document.getElementById("upload-progress");
-      if (bar) {
-        bar.value = part;
-        bar.innerText = part;
-      }
-    } else {
-      const bar = document.getElementById("upload-progress");
-      if (bar && loaded) {
-        bar.value = loaded;
-        bar.innerHTML = loaded + " bytes";
-      }
-    }
-  }
-
-  function endProgress(event) {
-    clearProgressArea();
-    const div = document.getElementById("progress-area");
-    const msg = document.createElement("p");
-    msg.innerText = `Übertragung von ${filepath} abgeschlossen!`;
-    div.appendChild(msg);
-  }
-
+  const progressBar = document.getElementById("file-upload-progress");
+  const progressLabel = document.getElementById("file-upload-progress-label");
   const data = new FormData();
   data.append("file", file);
-  const xhr = new XMLHttpRequest();
-  function finallizeProgress(event) {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      `Übertragung von ${filepath} erfolgreich!`;
-    } else {
-      if (xhr.responseType === "json") {
-        const error = JSON.parse(xhr.responseText);
-        if (error.message) {
-          console.error(error.message);
-        }
-      }
-    }
-  }
-  xhr.upload.addEventListener("progress", updateProgress);
-  xhr.addEventListener("loadstart", initProgress);
-  xhr.addEventListener("loadend", endProgress);
-  xhr.addEventListener("readystatechange", finallizeProgress);
-  xhr.open("POST", `/api/project/${username}/${project}/files/${filepath}`);
-  xhr.send(data);
+  const target = `/api/project/${username}/${project}/files/${filepath}`;
+  const upload = new UploadProgress(file, target, progressBar, progressLabel);
+  upload.start();
 }
 
 async function accumulateFileInformation(entries, rootPath) {
@@ -370,7 +320,7 @@ function isGeneratedFile(filename) {
 async function confirmDownload() {
   const dialog = document.getElementById("confirm-download");
   const list = document.getElementById("download-list");
-  const dlbutton = document.getElementById("dialog-download-button");
+  const dlbutton = document.getElementById("confirm-download-button");
   dlbutton.removeAttribute("disabled");
   while (list.firstChild) {
     list.removeChild(list.lastChild);
@@ -405,7 +355,6 @@ async function download() {
     for (const entry of toDownload) {
       let targetDir = clientRootHandle;
       if (isGeneratedFile(entry.filename)) {
-        console.log(entry.filepath.split("/"));
         const buffer = await fetchFile(entry.filepath);
         if (!buffer) {
           continue;
@@ -444,6 +393,13 @@ async function upload() {
   const shouldDelete = delOnUpload ? delOnUpload.checked : false;
   const dialog = document.getElementById("confirm-upload");
   dialog.close();
+  showProgressArea();
+  const totalBar = document.getElementById("total-progress");
+  const totalLabel = document.getElementById("total-progress-label");
+  let done = 0;
+  totalBar.setAttribute("max", toUpload.length);
+  totalBar.setAttribute("value", done);
+  totalLabel.innerText = `${done} / ${toUpload.length}`;
   if (shouldDelete) {
     await deleteOnlyServer();
   }
@@ -459,6 +415,9 @@ async function upload() {
       const file = await handle.getFile();
       if (file) {
         await pushFile(entry.filepath, file);
+        done++;
+        totalBar.setAttribute("value", done);
+        totalLabel.innerText = `${done} / ${toUpload.length}`;
       }
       entry.reference.classList.add("handled");
     } catch (error) {
@@ -615,4 +574,16 @@ window.addEventListener("load", () => {
     fetchProjectData();
   }
   fetchHtpasswd();
+  const pickButton = document.getElementById("pick-directory-button");
+  pickButton.addEventListener("click", chooseDirectory);
+  const uploadButton = document.getElementById("upload-button");
+  uploadButton.addEventListener("click", confirmUpload);
+  const downloadButton = document.getElementById("download-button");
+  downloadButton.addEventListener("click", confirmDownload);
+  const confirmUploadButton = document.getElementById("confirm-upload-button");
+  confirmUploadButton.addEventListener("click", upload);
+  const confirmDownloadButton = document.getElementById(
+    "confirm-download-button"
+  );
+  confirmDownloadButton.addEventListener("click", download);
 });

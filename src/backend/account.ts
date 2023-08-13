@@ -17,7 +17,7 @@ type AccountCallback = (
   email: string
 ) => Promise<void>;
 
-function getDirectories(parent: string): string[] {
+function getProjectDirectories(parent: string): string[] {
   let result: string[] = [];
   if (!fs.existsSync(parent)) {
     return result;
@@ -25,7 +25,7 @@ function getDirectories(parent: string): string[] {
   const files = fs.readdirSync(parent);
   for (const file of files) {
     const filename = path.join(parent, file);
-    const stat = fs.lstatSync(filename);
+    const stat = fs.statSync(filename);
     if (stat.isDirectory()) {
       result.push(filename);
     }
@@ -298,22 +298,47 @@ export class Account implements IAccount {
   getProjects(): Project[] {
     const dir: string = this.getDirectory();
     const projectDir: string = path.join(dir, "projects");
-    const directories: string[] = getDirectories(projectDir);
+    const projectDirectories: string[] = getProjectDirectories(projectDir);
     const projects: Project[] = [];
-    for (const directory of directories) {
-      const mp4s = getAllFiles(directory, (file) => {
+    for (const directory of projectDirectories) {
+      const recordings = getAllFiles(directory, (file) => {
         const ext = path.extname(file);
         const name = path.basename(file, ext);
         return ext === ".mp4" && name.endsWith("recording");
       });
-      const videoData: IVideoLinkData[] = mp4s.map((video) => {
-        return {
-          filename: path.basename(video),
-          filepath: path.relative(directory, video),
-        };
+      const others = getAllFiles(directory, (file) => {
+        const ext = path.extname(file);
+        const name = path.basename(file, ext);
+        const supported =
+          ext === ".mp4" ||
+          ext === ".wav" ||
+          ext === ".mp3" ||
+          ext === ".m4a" ||
+          ext === ".aac" ||
+          ext === ".wma" ||
+          ext === ".mov" ||
+          ext === ".m4v" ||
+          ext === ".ogg" ||
+          ext === ".opus" ||
+          ext === ".flac";
+        return supported && !name.endsWith("recording");
       });
+      function makeVideoData(video: string): IVideoLinkData {
+        let filename: string = path.basename(video);
+        let filepath: string = path.relative(directory, video);
+        if (path.sep === "\\") {
+          filepath = filepath.replace(/\\/g, "/");
+        }
+        return {
+          filename: filename,
+          filepath: filepath,
+        };
+      }
+      const recordingData: IVideoLinkData[] = recordings.map(makeVideoData);
+      const otherData: IVideoLinkData[] = others.map(makeVideoData);
       const project = new Project(this, path.basename(directory));
-      project.videos = videoData;
+      project.recordings = recordingData;
+      project.videos = otherData;
       projects.push(project);
     }
     return projects;

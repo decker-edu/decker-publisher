@@ -46,8 +46,8 @@ export function getAllFiles(
   }
   const files = fs.readdirSync(directory);
   for (let file of files) {
-    const filename = path.join(directory, file);
-    const stat = fs.lstatSync(filename);
+    let filename = path.join(directory, file);
+    const stat = fs.statSync(filename);
     if (stat.isDirectory()) {
       const recusion = getAllFiles(filename, filter);
       result = result.concat(recusion);
