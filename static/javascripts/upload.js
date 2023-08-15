@@ -1,22 +1,7 @@
-function addUpload() {
-  const div = document.getElementById("insert-area");
-  const template = document.getElementById("upload-template");
-  const insert = template.content.cloneNode(true);
-  while (div.firstChild) {
-    div.removeChild(div.lastChild);
-  }
-  div.appendChild(insert);
-}
-
-function addEmpty() {
-  const div = document.getElementById("insert-area");
-  const template = document.getElementById("empty-template");
-  const insert = template.content.cloneNode(true);
-  while (div.firstChild) {
-    div.removeChild(div.lastChild);
-  }
-  div.appendChild(insert);
-}
+const supportsFileSystemAccessAPI =
+  "getAsFileSystemHandle" in DataTransferItem.prototype;
+const supportsWebkitGetAsEntry =
+  "webkitGetAsEntry" in DataTransferItem.prototype;
 
 function inputChanged() {
   const input = document.getElementById("file-upload-input");
@@ -28,7 +13,7 @@ function inputChanged() {
       const button = document.getElementById("file-upload-button");
       button.removeAttribute("hidden");
       const configDiv = document.getElementById("project-config");
-      configDiv.classList.remove("hidden");
+      configDiv.removeAttribute("hidden");
       const nameInput = document.getElementById("project-name-input");
       nameInput.value = filename.split(".")[0];
     }
@@ -37,11 +22,11 @@ function inputChanged() {
 
 function passOn(event) {
   const input = document.getElementById("file-upload-input");
-  input.click();
+  if (event.key === "Enter" || event.key === " ") input.click();
 }
 
 function clearInsertArea() {
-  const div = document.getElementById("insert-area");
+  const div = document.getElementById("upload-area");
   while (div.firstChild) {
     div.removeChild(div.lastChild);
   }
@@ -49,7 +34,7 @@ function clearInsertArea() {
 
 function initProgress(event) {
   clearInsertArea();
-  const div = document.getElementById("insert-area");
+  const div = document.getElementById("upload-area");
   const bar = document.createElement("progress");
   bar.id = "upload-progress";
   bar.value = 0;
@@ -79,8 +64,7 @@ function updateProgress(event) {
 }
 
 function endProgress(event) {
-  //  clearInsertArea();
-  const div = document.getElementById("insert-area");
+  const div = document.getElementById("upload-area");
   div.appendChild(document.createTextNode("Datei erfolgreich hochgeladen."));
   setTimeout(() => window.location.reload(), 2000);
 }
@@ -100,7 +84,7 @@ function upload() {
 }
 
 async function createEmptyProject() {
-  const projectNameInput = document.querySelector("#empty-name-input");
+  const projectNameInput = document.querySelector("#empty-project-name-input");
   try {
     const response = await fetch("/api/project/empty", {
       method: "POST",
@@ -135,3 +119,101 @@ async function createEmptyProject() {
     div.appendChild(document.createTextNode("Fehler beim Senden der Anfrage."));
   }
 }
+
+let enterCounter = 0;
+
+function dragEnterHandler(event) {
+  if (enterCounter === 0) {
+    event.currentTarget.classList.add("dragover");
+  }
+  enterCounter++;
+}
+
+function dragLeaveHandler(event) {
+  enterCounter--;
+  if (enterCounter === 0) {
+    event.currentTarget.classList.remove("dragover");
+  }
+}
+
+function dragOverHandler(event) {
+  event.preventDefault();
+}
+
+uploadFiles = undefined;
+
+async function readDirectories(handle, root) {
+  if (handle.kind === "directory") {
+    for await (const [key, value] of handle.entries()) {
+      await readDirectories(value, root + "/" + handle.name);
+    }
+  } else {
+    uploadFiles.push({
+      path: root + "/" + handle.name,
+      file: await handle.getFile(),
+    });
+  }
+}
+
+async function dropHandler(event) {
+  enterCounter = 0;
+  event.currentTarget.classList.remove("dragover");
+  event.preventDefault();
+  if (!supportsFileSystemAccessAPI && !supportsWebkitGetAsEntry) {
+    return;
+  }
+  if (event.dataTransfer.items) {
+    for (const item of event.dataTransfer.items) {
+      if (item.kind === "file") {
+        let handle = undefined;
+        if (supportsFileSystemAccessAPI) {
+          handle = await item.getAsFileSystemHandle();
+        } else {
+          handle = await item.webkitGetAsEntry();
+        }
+        if (handle) {
+          uploadFiles = [];
+          for await (const [key, value] of handle.entries()) {
+            await readDirectories(value, "");
+          }
+          const area = document.getElementById("upload-area");
+          while (area.firstChild) {
+            area.removeChild(area.lastChild);
+          }
+          const span = document.createElement("span");
+          span.innerText =
+            uploadFiles.length + " Dateien zum hochladen ausgewählt.";
+          area.appendChild(span);
+          document
+            .getElementById("upload-directory-button")
+            .removeAttribute("hidden");
+          document.getElementById("project-config").removeAttribute("hidden");
+        }
+      }
+    }
+  }
+}
+
+function uploadDirectory() {
+  const data = new FormData();
+  for (const file of uploadFiles) {
+    data.append("directory", file.file, encodeURIComponent(file.file.name));
+    data.append("paths", file.path);
+  }
+  const nameInput = document.getElementById("project-name-input");
+  data.append("projectName", nameInput.value);
+  const xhr = new XMLHttpRequest();
+  xhr.upload.addEventListener("progress", updateProgress);
+  xhr.addEventListener("loadstart", initProgress);
+  xhr.addEventListener("loadend", endProgress);
+  xhr.open("POST", "/api/project/directory");
+  xhr.send(data);
+}
+
+window.addEventListener("load", (event) => {
+  const uploadArea = document.getElementById("upload-area");
+  uploadArea.addEventListener("dragenter", dragEnterHandler);
+  uploadArea.addEventListener("dragleave", dragLeaveHandler);
+  uploadArea.addEventListener("dragover", dragOverHandler);
+  uploadArea.addEventListener("drop", dropHandler);
+});

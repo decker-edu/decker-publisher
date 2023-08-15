@@ -419,7 +419,7 @@ router.post(
         .json({ message: escapeHTML("Keine Datei empfangen.") })
         .end();
     }
-    if (Array.isArray(req.files.file)) {
+    if (Array.isArray(req.files.file) || Object.keys(req.files).length > 1) {
       console.error("[PROJECT UPLOAD] Received multiple files.");
       return res
         .status(400)
@@ -550,6 +550,118 @@ router.post(
         })
         .end();
     });
+  }
+);
+
+router.post(
+  "/project/directory",
+  fileUpload(),
+  async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const account: IAccount = req.account;
+    if (!account) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Nicht eingeloggt.") })
+        .end();
+    }
+    const projectName: string = req.body.projectName;
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res
+        .status(400)
+        .json({ message: escapeHTML("Keine Datei empfangen.") })
+        .end();
+    }
+    const paths: string[] = req.body.paths;
+    console.log("[DEBUG]", projectName);
+    const files = req.files.directory;
+    if (Array.isArray(files)) {
+      console.log("[DEBUG]", files.length, "files received.");
+    } else {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Keine Dateien empfangen." })
+        .end();
+    }
+
+    if (!projectName || projectName === "") {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Keinen Projektnamen empfangen." })
+        .end();
+    }
+
+    if (projectName.includes(".")) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Ungültiger Projektname." })
+        .end();
+    }
+
+    if (files.length !== paths.length) {
+      console.error("[UPLOAD ERROR]: ", files.length, "vs.", paths.length);
+      return res
+        .status(400)
+        .json({
+          status: "error",
+          message: "Pfade korrespondieren nicht zu Dateien.",
+        })
+        .end();
+    }
+
+    const projectPath: string = path.join(
+      account.getDirectory(),
+      "projects",
+      projectName
+    );
+
+    if (!fs.existsSync(path.join(account.getDirectory(), "projects"))) {
+      fs.mkdirSync(path.join(account.getDirectory(), "projects"), {
+        recursive: true,
+        mode: 0o0775,
+      });
+    }
+
+    if (fs.existsSync(projectPath)) {
+      return res
+        .status(400)
+        .json({
+          status: "error",
+          message: "Projektname wird bereits verwendet.",
+        })
+        .end();
+    }
+
+    fs.mkdirSync(projectPath, {
+      recursive: true,
+      mode: 0o0775,
+    });
+
+    for (let i = 0; i < files.length; i++) {
+      const target = path.join(projectPath, paths[i]);
+      const directory = path.dirname(target);
+      const basename = path.basename(target);
+      if (basename !== decodeURI(files[i].name)) {
+        console.log("NAME:", basename, decodeURI(files[i].name));
+        continue;
+      }
+      if (!fs.existsSync(directory)) {
+        fs.mkdirSync(directory, {
+          recursive: true,
+          mode: 0o0775,
+        });
+      }
+      files[i].mv(path.join(projectPath, paths[i]), function (err) {
+        if (err) {
+          console.error(err);
+        }
+      });
+    }
+
+    return res.status(200).end();
   }
 );
 
