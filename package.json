@@ -13,7 +13,8 @@
     "static-dirs": "copyfiles \"./static/**/*\" \"./dist/\" && copyfiles -u 3 ./src/frontend/views/* ./dist/frontend/views/ && copyfiles ./config.json ./dist/",
     "build": "tsc && npm run static-dirs",
     "scribble": "ts-node scribble.ts",
-    "car": "npm run build && npm run start"
+    "car": "npm run build && npm run start",
+    "cli": "node ./dist/cli.js"
   },
   "_moduleAliases": {
     "@root": "dist"
