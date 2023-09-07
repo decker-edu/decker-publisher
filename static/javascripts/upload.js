@@ -155,6 +155,51 @@ async function readDirectories(handle, root) {
   }
 }
 
+async function promiseEntries(reader) {
+  return new Promise((resolve, reject) => {
+    reader.readEntries(
+      (entries) => {
+        resolve(entries);
+      },
+      (error) => {
+        reject(error);
+      }
+    );
+  });
+}
+
+async function promiseFile(filehandle) {
+  return new Promise((resolve, reject) => {
+    filehandle.file(
+      (file) => {
+        resolve(file);
+      },
+      (error) => {
+        reject(error);
+      }
+    );
+  });
+}
+
+async function readWebkitDirectories(handle, root) {
+  return new Promise(async (resolve, reject) => {
+    if (handle.isDirectory) {
+      const reader = handle.createReader();
+      const entries = await promiseEntries(reader);
+      for (const entry of entries) {
+        await readWebkitDirectories(entry, root + "/" + handle.name);
+      }
+    } else {
+      const file = await promiseFile(handle);
+      uploadFiles.push({
+        path: root + "/" + handle.name,
+        file: file,
+      });
+    }
+    resolve();
+  });
+}
+
 async function dropHandler(event) {
   enterCounter = 0;
   event.currentTarget.classList.remove("dragover");
@@ -168,27 +213,35 @@ async function dropHandler(event) {
         let handle = undefined;
         if (supportsFileSystemAccessAPI) {
           handle = await item.getAsFileSystemHandle();
+          if (handle) {
+            uploadFiles = [];
+            for await (const [key, value] of handle.entries()) {
+              await readDirectories(value, "");
+            }
+          }
         } else {
           handle = await item.webkitGetAsEntry();
-        }
-        if (handle) {
-          uploadFiles = [];
-          for await (const [key, value] of handle.entries()) {
-            await readDirectories(value, "");
+          if (handle) {
+            uploadFiles = [];
+            const reader = handle.createReader();
+            const entries = await promiseEntries(reader);
+            for (const entry of entries) {
+              await readWebkitDirectories(entry, "");
+            }
           }
-          const area = document.getElementById("upload-area");
-          while (area.firstChild) {
-            area.removeChild(area.lastChild);
-          }
-          const span = document.createElement("span");
-          span.innerText =
-            uploadFiles.length + " Dateien zum hochladen ausgewählt.";
-          area.appendChild(span);
-          document
-            .getElementById("upload-directory-button")
-            .removeAttribute("hidden");
-          document.getElementById("project-config").removeAttribute("hidden");
         }
+        const area = document.getElementById("upload-area");
+        while (area.firstChild) {
+          area.removeChild(area.lastChild);
+        }
+        const span = document.createElement("span");
+        span.innerText =
+          uploadFiles.length + " Dateien zum hochladen ausgewählt.";
+        area.appendChild(span);
+        document
+          .getElementById("upload-directory-button")
+          .removeAttribute("hidden");
+        document.getElementById("project-config").removeAttribute("hidden");
       }
     }
   }
