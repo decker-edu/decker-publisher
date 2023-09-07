@@ -382,6 +382,14 @@ dialog a.button-like:active {
   margin-bottom: 1rem;
 }
 
+.upload-information em {
+  background-color: #cccccc;
+  font-family: monospace;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  font-style: normal;
+}
+
 .dragover {
   background-color: var(--tu-green);
 }
