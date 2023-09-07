@@ -585,6 +585,10 @@ window.addEventListener("load", () => {
     "confirm-download-button"
   );
   confirmDownloadButton.addEventListener("click", download);
+  const setButton = document.getElementById("set-ht-btn");
+  setButton.addEventListener("click", setHtpasswd);
+  const delButton = document.getElementById("del-ht-btn");
+  delButton.addEventListener("click", deleteHtpasswd);
   if (!featureAvailable) {
     displayChromeRequired();
   }

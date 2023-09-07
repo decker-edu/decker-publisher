@@ -48,10 +48,10 @@ block content
           input#access-username(name="access-username" placeholder="Nutzername")
           input#access-password(name="access-password" type="password" placeholder="Passwort")
         div.row-order
-          button.action(type="button" onclick="setHtpasswd()")
+          button.action(id="set-ht-btn" type="button")
             i.fas.fa-edit
             span Zugriffsdaten setzen
-          button.action(type="button" onclick="deleteHtpasswd()")
+          button.action(id="del-ht-btn" type="button")
             i.fas.fa-trash
             span Zugriffsdaten löschen
 
