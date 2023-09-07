@@ -59,6 +59,11 @@ async function post(
   const stream = fs.createReadStream(filepath);
   form.append("file", stream);
   try {
+    console.log(
+      "[amberscript] sending request: ",
+      filepath,
+      config().amberscriptCallbackUrl
+    );
     const response = await fetch(url, { method: "POST", body: form });
     if (response.ok) {
       const json: any = await response.json();
