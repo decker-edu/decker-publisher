@@ -6,7 +6,6 @@ if (
   typeof window.showDirectoryPicker !== "function"
 ) {
   featureAvailable = false;
-  displayChromeRequired();
 }
 
 const locationParts = window.location.href.split("/");
@@ -586,4 +585,7 @@ window.addEventListener("load", () => {
     "confirm-download-button"
   );
   confirmDownloadButton.addEventListener("click", download);
+  if (!featureAvailable) {
+    displayChromeRequired();
+  }
 });
