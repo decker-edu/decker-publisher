@@ -15,7 +15,7 @@ function encryptPassword(password: string, salt: string) {
   return hash;
 }
 
-async function exportFeedbackUsers() {
+export async function exportFeedbackUsers() {
   try {
     const filename = config().feedback_db_file || "users.yaml";
     const all = await database.query("SELECT * FROM feedback_accounts");
