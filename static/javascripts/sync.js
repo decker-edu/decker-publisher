@@ -1,4 +1,4 @@
-import UploadProgress from "./upload-progress.js";
+import UploadProgress from "./progress.js";
 
 let featureAvailable = true;
 if (
@@ -198,18 +198,41 @@ let publicDirHandle;
 
 async function fetchFile(filepath) {
   const info = document.getElementById("progress-message");
+  const progressBar = document.getElementById("file-progress");
+  const progressLabel = document.getElementById("file-progress-label");
+  if (progressBar.hasAttribute("hidden")) {
+    progressBar.removeAttribute("hidden");
+  }
   info.innerText = "Lade herunter: " + filepath;
   try {
     const response = await fetch(
       `/api/project/${username}/${project}/files/${filepath}`
     );
-    if (response && response.ok) {
-      return response.arrayBuffer();
-    } else {
-      const json = await response.json();
-      console.error(response.status, json.message);
-      return null;
+    const reader = response.body.getReader();
+    const contentLength = +response.headers.get("Content-Length");
+
+    progressBar.max = contentLength;
+
+    let received = 0;
+    let chunks = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      chunks.push(value);
+      received += value.length;
+      progressBar.value = received;
+      progressLabel.innerText = `${received} / ${contentLength}`;
     }
+    const concat = new Uint8Array(received);
+    let position = 0;
+    for (const chunk of chunks) {
+      concat.set(chunk, position);
+      position += chunk.length;
+    }
+    const result = concat.buffer;
+    return result;
   } catch (error) {
     console.error(error);
     return null;
@@ -258,8 +281,8 @@ async function chooseDirectory() {
 }
 
 async function pushFile(filepath, file) {
-  const progressBar = document.getElementById("file-upload-progress");
-  const progressLabel = document.getElementById("file-upload-progress-label");
+  const progressBar = document.getElementById("file-progress");
+  const progressLabel = document.getElementById("file-progress-label");
   const data = new FormData();
   data.append("file", file);
   const target = `/api/project/${username}/${project}/files/${filepath}`;
@@ -347,11 +370,24 @@ async function confirmDownload() {
 
 async function download() {
   const dialog = document.getElementById("confirm-download");
+  const downloads = [];
+  for (const file of toDownload) {
+    if (isGeneratedFile(file)) {
+      downloads.push(file);
+    }
+  }
   if (dialog) {
     dialog.close();
   }
+  showProgressArea();
+  const totalBar = document.getElementById("total-progress");
+  const totalLabel = document.getElementById("total-progress-label");
+  let done = 0;
+  totalBar.setAttribute("max", downloads.length);
+  totalBar.setAttribute("value", done);
+  totalLabel.innerText = `${done} / ${downloads.length}`;
   try {
-    for (const entry of toDownload) {
+    for (const entry of downloads) {
       let targetDir = clientRootHandle;
       if (isGeneratedFile(entry.filename)) {
         const buffer = await fetchFile(entry.filepath);
@@ -368,8 +404,10 @@ async function download() {
         await writable.write(buffer);
         await writable.close();
       }
+      done++;
+      totalBar.setAttribute("value", done);
+      totalLabel.innerText = `${done} / ${downloads.length}`;
     }
-    clearProgressArea();
     const area = document.getElementById("progress-area");
     const msg = document.createElement("p");
     msg.innerText = "Downloads abgeschlossen!";
@@ -431,7 +469,6 @@ async function upload() {
 }
 
 async function deleteFile(filepath) {
-  clearProgressArea();
   const area = document.getElementById("progress-area");
   const msg = document.createElement("p");
   msg.innerText = "Lösche Datei: " + filepath;
@@ -443,7 +480,6 @@ async function deleteFile(filepath) {
     }
   );
   if (response && response.ok) {
-    clearProgressArea();
     return;
   } else {
     const status = response.status;
