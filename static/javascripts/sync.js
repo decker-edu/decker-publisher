@@ -413,6 +413,7 @@ async function download() {
     clearElement(document.getElementById("client-table"));
     clearElement(document.getElementById("server-table"));
     await readClientData();
+    await fetchProjectData();
     compareData();
   } catch (error) {
     console.error(error);
