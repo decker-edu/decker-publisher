@@ -64,9 +64,9 @@ function updateProgress(event) {
 }
 
 function endProgress(event) {
-  const div = document.getElementById("upload-area");
-  div.appendChild(document.createTextNode("Datei erfolgreich hochgeladen."));
-  setTimeout(() => window.location.reload(), 2000);
+  //  const div = document.getElementById("upload-area");
+  //  div.appendChild(document.createTextNode("Upload beendet."));
+  //  setTimeout(() => window.location.reload(), 2000);
 }
 
 function upload() {
@@ -76,11 +76,38 @@ function upload() {
   data.append("file", input.files[0]);
   data.append("projectName", projectName.value);
   const xhr = new XMLHttpRequest();
+  xhr.responseType = "json";
   xhr.upload.addEventListener("progress", updateProgress);
   xhr.addEventListener("loadstart", initProgress);
   xhr.addEventListener("loadend", endProgress);
+  xhr.addEventListener("load", (event) => {
+    const json = xhr.response;
+    const status = xhr.status;
+    if (json) {
+      const div = document.getElementById("upload-area");
+      const message = json.message;
+      if (message) {
+        div.appendChild(document.createTextNode(`${status}: ${message}`));
+      } else {
+        div.appendChild(document.createTextNode(`${status}: Upload beendet.`));
+      }
+    }
+    if (status === 200) {
+      setTimeout(() => window.location.reload(), 2000);
+    }
+  });
   xhr.open("POST", "/api/project");
   xhr.send(data);
+}
+
+function setEmptyProjectMessage(message) {
+  const div = document.getElementById("empty-project-message-area");
+  const span = document.createElement("span");
+  span.innerText = message;
+  while (div.lastElementChild) {
+    div.removeChild(div.lastElementChild);
+  }
+  div.appendChild(span);
 }
 
 async function createEmptyProject() {
@@ -97,12 +124,11 @@ async function createEmptyProject() {
     });
     if (response.ok) {
       const json = await response.json();
-      let message = "Anfrage erfolgreich gesendet";
+      let message = "Anfrage erfolgreich gesendet.";
       if (json.message) {
         message = json.message;
       }
-      const div = document.getElementById("insert-area");
-      div.appendChild(document.createTextNode(message));
+      setEmptyProjectMessage(message);
       setTimeout(() => window.location.reload(), 2000);
     } else {
       const json = await response.json();
@@ -110,13 +136,11 @@ async function createEmptyProject() {
       if (json.message) {
         message = json.message;
       }
-      const div = document.getElementById("insert-area");
-      div.appendChild(document.createTextNode(json.message));
+      setEmptyProjectMessage(message);
     }
   } catch (error) {
     console.error(error);
-    const div = document.getElementById("insert-area");
-    div.appendChild(document.createTextNode("Fehler beim Senden der Anfrage."));
+    setEmptyProjectMessage("Fehler beim Senden der Anfrage.");
   }
 }
 

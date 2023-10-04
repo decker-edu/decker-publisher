@@ -469,10 +469,8 @@ async function upload() {
 }
 
 async function deleteFile(filepath) {
-  const area = document.getElementById("progress-area");
-  const msg = document.createElement("p");
+  const msg = document.getElementById("progress-message");
   msg.innerText = "Lösche Datei: " + filepath;
-  area.appendChild(msg);
   const response = await fetch(
     `/api/project/${username}/${project}/files/${filepath}`,
     {
@@ -491,10 +489,8 @@ async function deleteOnlyServer() {
   for (const entry of toDownload) {
     await deleteFile(entry.filepath);
   }
-  const area = document.getElementById("progress-area");
-  const msg = document.createElement("p");
-  msg.innerText = "Dateien gelöscht.";
-  area.appendChild(msg);
+  const msg = document.getElementById("progress-message");
+  msg.innerText = "Nicht vorhandene Daten gelöscht.";
 }
 
 function unfold(tree, list) {
