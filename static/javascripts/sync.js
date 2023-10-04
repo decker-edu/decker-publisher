@@ -371,9 +371,9 @@ async function confirmDownload() {
 async function download() {
   const dialog = document.getElementById("confirm-download");
   const downloads = [];
-  for (const file of toDownload) {
-    if (isGeneratedFile(file)) {
-      downloads.push(file);
+  for (const entry of toDownload) {
+    if (isGeneratedFile(entry.filename)) {
+      downloads.push(entry);
     }
   }
   if (dialog) {
@@ -408,11 +408,10 @@ async function download() {
       totalBar.setAttribute("value", done);
       totalLabel.innerText = `${done} / ${downloads.length}`;
     }
-    const area = document.getElementById("progress-area");
-    const msg = document.createElement("p");
+    const msg = document.getElementById("progress-message");
     msg.innerText = "Downloads abgeschlossen!";
-    area.appendChild(msg);
     clearElement(document.getElementById("client-table"));
+    clearElement(document.getElementById("server-table"));
     await readClientData();
     compareData();
   } catch (error) {
