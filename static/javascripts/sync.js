@@ -64,6 +64,7 @@ async function fetchHtpasswd() {
       `Es ist Zugriff für externe Nutzer über den Nutzernamen '${htuser}' konfiguriert.`
     );
     const btn = document.getElementById("download-access-button");
+    btn.querySelector("span").innerText = "Passwortdatei herunterladen";
     btn.disabled = false;
   } else {
     if (response.status === 404) {
@@ -119,6 +120,9 @@ async function setHtpasswd() {
     body: JSON.stringify({ htuser: htuser, htpass: htpass }),
   });
   if (response.ok) {
+    const dlBtn = document.getElementById("download-access-button");
+    dlBtn.querySelector("span").innerText = "Bitte warten ...";
+    dlBtn.disabled = true;
     setAccessMessage(`Neue Zugriffsdaten mit Nutzer '${htuser}' gesetzt.`);
     setTimeout(fetchHtpasswd, 3000);
     return;
