@@ -34,15 +34,37 @@ function setAccessMessage(message) {
   }
 }
 
+let htcontent = undefined;
+
+function downloadHtaccessContent(event) {
+  if (!htcontent) {
+    console.error("htaccess download triggered without data available");
+    return;
+  }
+  const anchor = document.createElement("a");
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  const blob = new Blob([htcontent], { type: "text/plain" });
+  const url = window.URL.createObjectURL(blob);
+  anchor.href = url;
+  anchor.download = "htaccess.txt";
+  anchor.click();
+  window.URL.revokeObjectURL(url);
+  anchor.remove();
+}
+
 async function fetchHtpasswd() {
   const response = await fetch(`/api/project/${username}/${project}/access`);
   if (response.ok) {
     const json = await response.json();
     const htuser = json.htuser;
+    htcontent = json.content;
     document.getElementById("access-username").value = htuser;
     setAccessMessage(
       `Es ist Zugriff für externe Nutzer über den Nutzernamen '${htuser}' konfiguriert.`
     );
+    const btn = document.getElementById("download-access-button");
+    btn.disabled = false;
   } else {
     if (response.status === 404) {
       setAccessMessage("Es ist kein Zugriff für externe Nutzer konfiguriert.");
@@ -65,6 +87,9 @@ async function deleteHtpasswd() {
   });
   if (response.ok) {
     setAccessMessage("Zugriffsdaten erfolgreich gelöscht.");
+    const dlBtn = document.getElementById("download-access-button");
+    htcontent = undefined;
+    dlBtn.disabled = true;
   } else {
     try {
       const json = await response.json();
@@ -95,6 +120,7 @@ async function setHtpasswd() {
   });
   if (response.ok) {
     setAccessMessage(`Neue Zugriffsdaten mit Nutzer '${htuser}' gesetzt.`);
+    setTimeout(fetchHtpasswd, 3000);
     return;
   } else {
     try {
@@ -588,18 +614,6 @@ function compare(clientList, serverList, handled) {
   }
 }
 
-function markServerFilesAsNew(handled, serverList) {
-  for (const b of serverList) {
-    if (handled.has(b)) continue;
-    if (b.kind === "directory") {
-      //      markServerFilesAsNew(handled, b.children);
-      continue;
-    }
-    toDownload.push(b);
-    b.reference.classList.add("newer");
-  }
-}
-
 window.addEventListener("load", () => {
   if (featureAvailable) {
     fetchProjectData();
@@ -624,4 +638,6 @@ window.addEventListener("load", () => {
   if (!featureAvailable) {
     displayChromeRequired();
   }
+  const dlBtn = document.getElementById("download-access-button");
+  dlBtn.addEventListener("click", downloadHtaccessContent);
 });
