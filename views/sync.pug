@@ -40,6 +40,9 @@ block content
     div.message-area
       p Ihre Präsentation ist aus rechtlichen Gründen nur über das Universitätsnetz der TU Dortmund erreichbar.
       p Sie können Nutzern einen Zugriff außerhalb des Universitätsnetzes durch Angabe eines einheitlichen Logins ermöglichen.
+      p Wenn Sie Ihre Folien mit <code>decker publish</code> hochladen wird die Passwortdatei von <code>rsync</code> gelöscht. 
+        | Sie können die Passwortdatei herunterladen und in Ihrem Projektverzeichnis als <code>.htpasswd</code> hinterlegen, um
+        | den externen Zugang per Nutzername und Passwort weiterhin zu ermöglichen.
     div#access-controls.centered
       form#access-form
         div
