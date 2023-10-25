@@ -263,7 +263,7 @@ router.post(
           if (owner && owner.rows.length > 0) {
             const recepient = owner.rows[0];
             requestMail(
-              recepient,
+              recepient.email,
               escapeHTML(username),
               escapeHTML(mail),
               escapeHTML(note)
