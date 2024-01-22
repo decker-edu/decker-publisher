@@ -780,3 +780,18 @@ li.caret.active::marker {
 #progress-area:empty {
   display: none;
 }
+
+#empty-project-message-area:empty {
+  display: none;
+}
+
+form input {
+  width: 100%;
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+  font-size: 1.25rem;
+}
+
+.address span {
+  display: block;
+}

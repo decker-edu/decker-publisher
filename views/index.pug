@@ -68,6 +68,10 @@ block dialogs
       label(for="request-note") Hinweise zum Antrag
       textarea#request-note(name="requestNote", placeholder="Hinweise zum Antrag")
       div.dialog-buttons
-        button.action(type="button" onclick="asyncRequest()") Absenden
+        button.action(type="button" onclick="postRequest()") Absenden
         button.action(type="button" onclick="closeRequestDialog()") Abbrechen
+  dialog#confirmation-dialog
+    div#confirmation-message.dialog-message
+    div.dialog-buttons
+      button.action(type="button" onclick="closeConfirmationDialog()") Verstanden
 

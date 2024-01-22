@@ -431,7 +431,7 @@ router.get(
       admin = account.roles ? account.roles.includes("admin") : false;
     }
     return res.render("data-protection", {
-      title: "Datenschutzhinweise",
+      title: "Datenschutzerklärung",
       admin: admin,
     });
   }

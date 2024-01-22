@@ -263,7 +263,7 @@ router.post(
           if (owner && owner.rows.length > 0) {
             const recepient = owner.rows[0];
             requestMail(
-              recepient,
+              recepient.email,
               escapeHTML(username),
               escapeHTML(mail),
               escapeHTML(note)
@@ -488,6 +488,7 @@ router.post(
           .end();
       }
       yauzl.open(uploadPath, { lazyEntries: true }, function (err, zipfile) {
+        console.log("[YAUZL] starting extraction.");
         let prefix = path.join(account.getDirectory(), "projects");
         function mkdirp(dir: string, cb: () => void) {
           if (dir.startsWith("public")) {
@@ -536,9 +537,11 @@ router.post(
           }
         });
         zipfile.on("end", function () {
+          console.log("[YAUZL] End of file reached. Closing zipfile.");
           zipfile.close();
         });
         zipfile.on("close", function () {
+          console.log("[YAUZL] Closed zipfile. Deleting zipfile.");
           fs.rmSync(uploadPath);
         });
       });
@@ -576,7 +579,6 @@ router.post(
         .end();
     }
     const paths: string[] = req.body.paths;
-    console.log("[DEBUG]", projectName);
     const files = req.files.directory;
     if (Array.isArray(files)) {
       console.log("[DEBUG]", files.length, "files received.");

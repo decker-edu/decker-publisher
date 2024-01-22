@@ -44,6 +44,7 @@ block dialogs
       fieldset
         legend Bitte geben Sie den Namen für ihr leeres Projektverzeichnis an.
         div.form-content
+          div.inset#empty-project-message-area
           input#empty-project-name-input(type="text" name="projectName")
         div.dialog-buttons
           button#create-empty-button.action(type="button" onclick="createEmptyProject()" title="Erstellen" aria-label="Erstellen")

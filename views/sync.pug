@@ -23,8 +23,8 @@ block content
           label#total-progress-label(for="total-progress") Total
           progress#total-progress(value=50 max=100)
         div.progress-wrapper
-          label#file-upload-progress-label(for="file-upload-progress") Partial
-          progress#file-upload-progress
+          label#file-progress-label(for="file-progress") Partial
+          progress#file-progress
       div.row-order.wmax
         button#upload-button.action(disabled) 
           i.fas.fa-upload
@@ -40,6 +40,9 @@ block content
     div.message-area
       p Ihre Präsentation ist aus rechtlichen Gründen nur über das Universitätsnetz der TU Dortmund erreichbar.
       p Sie können Nutzern einen Zugriff außerhalb des Universitätsnetzes durch Angabe eines einheitlichen Logins ermöglichen.
+      p Wenn Sie Ihre Folien mit <code>decker publish</code> hochladen wird die Passwortdatei von <code>rsync</code> gelöscht. 
+        | Sie können die Passwortdatei herunterladen und in Ihrem Projektverzeichnis als <code>.htpasswd</code> hinterlegen, um
+        | den externen Zugang per Nutzername und Passwort weiterhin zu ermöglichen.
     div#access-controls.centered
       form#access-form
         div
@@ -51,6 +54,9 @@ block content
           button.action(id="set-ht-btn" type="button")
             i.fas.fa-edit
             span Zugriffsdaten setzen
+          button#download-access-button.action(type="button" disabled)
+            i.fas.fa-download
+            span Passwortdatei herunterladen
           button.action(id="del-ht-btn" type="button")
             i.fas.fa-trash
             span Zugriffsdaten löschen

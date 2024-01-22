@@ -35,18 +35,6 @@ block content
                   button.action(onclick="openVideoDialog('"+project.name+"', '"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
                     i.fas.fa-film
                     span= video.filename
-  div#upload-area
-    button.action(onclick="addVideoUpload()" aria-label="Neues Video hochladen")
-      i.fas.fa-cloud-arrow-up
-      span Video hochladen
-    div#insert-area
-  template#video-upload-template
-    label.fileinput#file-upload-placeholder(tabindex="0" onkeydown="passOn(event)")
-      span#file-upload-label Datei auswählen
-      input#file-upload-input(type="file" enctype="multipart/form-data" name="videoFile" onchange="inputChanged()")
-    button#file-upload-button.action(onclick="uploadVideo()" title="Hochladen" aria-label="Hochladen" hidden)
-      i.fas.fa-upload
-      span Upload starten
 block dialogs
   dialog#video-dialog
     div#video-message.dialog-message

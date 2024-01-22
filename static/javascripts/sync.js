@@ -1,4 +1,4 @@
-import UploadProgress from "./upload-progress.js";
+import UploadProgress from "./progress.js";
 
 let featureAvailable = true;
 if (
@@ -34,15 +34,38 @@ function setAccessMessage(message) {
   }
 }
 
+let htcontent = undefined;
+
+function downloadHtaccessContent(event) {
+  if (!htcontent) {
+    console.error("htaccess download triggered without data available");
+    return;
+  }
+  const anchor = document.createElement("a");
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  const blob = new Blob([htcontent], { type: "text/plain" });
+  const url = window.URL.createObjectURL(blob);
+  anchor.href = url;
+  anchor.download = "htaccess.txt";
+  anchor.click();
+  window.URL.revokeObjectURL(url);
+  anchor.remove();
+}
+
 async function fetchHtpasswd() {
   const response = await fetch(`/api/project/${username}/${project}/access`);
   if (response.ok) {
     const json = await response.json();
     const htuser = json.htuser;
+    htcontent = json.content;
     document.getElementById("access-username").value = htuser;
     setAccessMessage(
       `Es ist Zugriff für externe Nutzer über den Nutzernamen '${htuser}' konfiguriert.`
     );
+    const btn = document.getElementById("download-access-button");
+    btn.querySelector("span").innerText = "Passwortdatei herunterladen";
+    btn.disabled = false;
   } else {
     if (response.status === 404) {
       setAccessMessage("Es ist kein Zugriff für externe Nutzer konfiguriert.");
@@ -65,6 +88,9 @@ async function deleteHtpasswd() {
   });
   if (response.ok) {
     setAccessMessage("Zugriffsdaten erfolgreich gelöscht.");
+    const dlBtn = document.getElementById("download-access-button");
+    htcontent = undefined;
+    dlBtn.disabled = true;
   } else {
     try {
       const json = await response.json();
@@ -94,7 +120,11 @@ async function setHtpasswd() {
     body: JSON.stringify({ htuser: htuser, htpass: htpass }),
   });
   if (response.ok) {
+    const dlBtn = document.getElementById("download-access-button");
+    dlBtn.querySelector("span").innerText = "Bitte warten ...";
+    dlBtn.disabled = true;
     setAccessMessage(`Neue Zugriffsdaten mit Nutzer '${htuser}' gesetzt.`);
+    setTimeout(fetchHtpasswd, 3000);
     return;
   } else {
     try {
@@ -198,18 +228,41 @@ let publicDirHandle;
 
 async function fetchFile(filepath) {
   const info = document.getElementById("progress-message");
+  const progressBar = document.getElementById("file-progress");
+  const progressLabel = document.getElementById("file-progress-label");
+  if (progressBar.hasAttribute("hidden")) {
+    progressBar.removeAttribute("hidden");
+  }
   info.innerText = "Lade herunter: " + filepath;
   try {
     const response = await fetch(
       `/api/project/${username}/${project}/files/${filepath}`
     );
-    if (response && response.ok) {
-      return response.arrayBuffer();
-    } else {
-      const json = await response.json();
-      console.error(response.status, json.message);
-      return null;
+    const reader = response.body.getReader();
+    const contentLength = +response.headers.get("Content-Length");
+
+    progressBar.max = contentLength;
+
+    let received = 0;
+    let chunks = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      chunks.push(value);
+      received += value.length;
+      progressBar.value = received;
+      progressLabel.innerText = `${received} / ${contentLength}`;
     }
+    const concat = new Uint8Array(received);
+    let position = 0;
+    for (const chunk of chunks) {
+      concat.set(chunk, position);
+      position += chunk.length;
+    }
+    const result = concat.buffer;
+    return result;
   } catch (error) {
     console.error(error);
     return null;
@@ -258,8 +311,8 @@ async function chooseDirectory() {
 }
 
 async function pushFile(filepath, file) {
-  const progressBar = document.getElementById("file-upload-progress");
-  const progressLabel = document.getElementById("file-upload-progress-label");
+  const progressBar = document.getElementById("file-progress");
+  const progressLabel = document.getElementById("file-progress-label");
   const data = new FormData();
   data.append("file", file);
   const target = `/api/project/${username}/${project}/files/${filepath}`;
@@ -347,11 +400,24 @@ async function confirmDownload() {
 
 async function download() {
   const dialog = document.getElementById("confirm-download");
+  const downloads = [];
+  for (const entry of toDownload) {
+    if (isGeneratedFile(entry.filename)) {
+      downloads.push(entry);
+    }
+  }
   if (dialog) {
     dialog.close();
   }
+  showProgressArea();
+  const totalBar = document.getElementById("total-progress");
+  const totalLabel = document.getElementById("total-progress-label");
+  let done = 0;
+  totalBar.setAttribute("max", downloads.length);
+  totalBar.setAttribute("value", done);
+  totalLabel.innerText = `${done} / ${downloads.length}`;
   try {
-    for (const entry of toDownload) {
+    for (const entry of downloads) {
       let targetDir = clientRootHandle;
       if (isGeneratedFile(entry.filename)) {
         const buffer = await fetchFile(entry.filepath);
@@ -368,14 +434,16 @@ async function download() {
         await writable.write(buffer);
         await writable.close();
       }
+      done++;
+      totalBar.setAttribute("value", done);
+      totalLabel.innerText = `${done} / ${downloads.length}`;
     }
-    clearProgressArea();
-    const area = document.getElementById("progress-area");
-    const msg = document.createElement("p");
+    const msg = document.getElementById("progress-message");
     msg.innerText = "Downloads abgeschlossen!";
-    area.appendChild(msg);
     clearElement(document.getElementById("client-table"));
+    clearElement(document.getElementById("server-table"));
     await readClientData();
+    await fetchProjectData();
     compareData();
   } catch (error) {
     console.error(error);
@@ -431,11 +499,8 @@ async function upload() {
 }
 
 async function deleteFile(filepath) {
-  clearProgressArea();
-  const area = document.getElementById("progress-area");
-  const msg = document.createElement("p");
+  const msg = document.getElementById("progress-message");
   msg.innerText = "Lösche Datei: " + filepath;
-  area.appendChild(msg);
   const response = await fetch(
     `/api/project/${username}/${project}/files/${filepath}`,
     {
@@ -443,7 +508,6 @@ async function deleteFile(filepath) {
     }
   );
   if (response && response.ok) {
-    clearProgressArea();
     return;
   } else {
     const status = response.status;
@@ -455,10 +519,8 @@ async function deleteOnlyServer() {
   for (const entry of toDownload) {
     await deleteFile(entry.filepath);
   }
-  const area = document.getElementById("progress-area");
-  const msg = document.createElement("p");
-  msg.innerText = "Dateien gelöscht.";
-  area.appendChild(msg);
+  const msg = document.getElementById("progress-message");
+  msg.innerText = "Nicht vorhandene Daten gelöscht.";
 }
 
 function unfold(tree, list) {
@@ -541,4 +603,6 @@ window.addEventListener("load", () => {
   if (!featureAvailable) {
     displayChromeRequired();
   }
+  const dlBtn = document.getElementById("download-access-button");
+  dlBtn.addEventListener("click", downloadHtaccessContent);
 });

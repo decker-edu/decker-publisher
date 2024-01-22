@@ -88,7 +88,7 @@ router.get(
       const content = fs.readFileSync(path.join(dir, ".htpasswd"), "utf-8");
       const parts = content.split(":");
       const htuser = parts[0];
-      return res.status(200).json({ htuser: htuser }).end();
+      return res.status(200).json({ htuser: htuser, content: content }).end();
     } else {
       return res
         .status(404)

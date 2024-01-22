@@ -2,36 +2,107 @@ extends layout
 
 block content
   header 
-    h1 Hinweise zum Datenschutz
+    h1 Datenschutzerklärung
   main
     section
-      p 
-        | Es gilt die 
-        a(href="https://tu-dortmund.de/datenschutz") Datenschutzerklärung
-        |  der technischen Universität Dortmund.
+      h2 Allgemeine Vorbemerkungen
+      p Die oben genannte Organisationseinheit und das IT und Medien Centrum (ITMC) der 
+        | Technischen Universität Dortmund nehmen den Schutz von personenbezogenen Daten sehr ernst. 
+        | Wir verarbeiten personenbezogene Daten, die beim Besuch unserer Webseiten erhoben werden, 
+        | unter Beachtung der geltenden datenschutzrechtlichen Bestimmungen. Es gelten insbesondere 
+        | das Datenschutzgesetz NRW (DSG NRW), die Datenschutzgrundverordnung (DSGVO) und das Telemediengesetz.
     section
-      p Folgende Daten werden zusätzlich von diesem Dienst gespeichert:
+      h2 Name und Anschrift des Verantwortlichen
+      p Der Verantwortliche im Sinne der Datenschutz-Grundverordnung und anderer nationaler Datenschutzgesetze der Mitgliedsstaaten sowie sonstiger datenschutzrechtlicher Bestimmungen ist:
+      div.address
+        span <a href="https://hylec.tu-dortmund.de/projekt/kontakt/">Projektleitung des Hybrid Learning Centers</a>
+        span Technische Universität Dortmund
+        span Hybrid Learning Center
+        span Joseph-von-Fraunhofer-Straße 18
+        span 44227 Dortmund
+
+    section
+      h2 Kontaktdaten des Datenschutzbeauftragten
+      p Der Datenschutzbeauftragte des Verantwortlichen ist erreichbar unter:
+      div.address
+        span TU Dortmund
+        span Datenschutzbeauftragter
+        span August-Schmidt-Str. 4
+        span 44227 Dortmund
+        span Telefon: 0231-755 2593
+        span E-Mail: <a href="mailto:datenschutzbeauftragter@tu-dortmund.de">datenschutzbeauftragter@tu-dortmund.de</a>
+    section
+      h2 Umfang der Verarbeitung personenbezogener Daten
+      p Wir verarbeiten personenbezogene Daten unserer Nutzer grundsätzlich nur, soweit dies zur Bereitstellung 
+        | einer funktionsfähigen Website sowie unserer Inhalte und Leistungen erforderlich ist.
+    section
+      h2 Datenlöschung und Speicherdauer
+      p Die personenbezogenen Daten der betroffenen Person werden gelöscht oder gesperrt, sobald der Zweck der Speicherung entfällt. 
+        | Eine Speicherung kann darüber hinaus erfolgen, wenn dies durch den europäischen oder nationalen Gesetzgeber in 
+        | unionsrechtlichen Verordnungen, Gesetzen oder sonstigen Vorschriften, denen der Verantwortliche unterliegt, 
+        | vorgesehen wurde. Eine Sperrung oder Löschung der Daten erfolgt auch dann, wenn eine durch die genannten Normen 
+        | vorgeschriebene Speicherfrist abläuft, es sei denn, dass eine Erforderlichkeit zur weiteren Speicherung der Daten 
+        | für einen Vertragsabschluss oder eine Vertragserfüllung besteht.
+    section
+      h2 Bereitstellung der Website und Erstellung von Logfiles
+      h3 Beschreibung und Umfang der Datenverarbeitung
+      p Bei jedem Aufruf unserer Internetseite erfasst unser System automatisiert Daten und Informationen vom Computersystem des 
+        | aufrufenden Rechners.
+      p Folgende Daten werden hierbei erhoben:
       ul
-        li Benutzerkontoinformationen, um eine Anmeldung zum Dienst zu ermöglichen:
-          ul
-            li Benutzername, E-Mail, Passworthashes
-        li Vom Nutzer angebene Zusatzdaten zum Benutzerkonto:
-          ul
-            li Kryptografieschlüssel zur Authentifizierung
-        li Vom Nutzer hochgeladene Präsentationen.
-      p Folgende Daten werden mit Anderen geteilt:
-      ul
-        li Vom Nutzer hochgeladene Präsentationen.
-          ul
-            li
-              | Dieser Dienst dient explizit dem Teilen von Präsentationen mit Anderen.
-              | Daher sind alle Präsentationen aus dem Universitätsnetz frei einsehbar.
-        li Vom Nutzer hochgeladene Videos.
-          ul
-            li
-              | Auf Anfrage eines Nutzers können Videos an den Dienst von Amberscript gesendet werden, um
-              | Untertitel generieren zu lassen. Bei Anfragen dieser Untertitel werden die Daten des Videos
-              | an Amberscript gesendet. Die Datenschutzhinweise von Amberscript finden Sie 
-              a(href="https://www.amberscript.com/de/datenschutzbestimmungen/") hier
-              | .
+        li Informationen über den Browsertyp und die verwendete Version
+        li Betriebssystem des Nutzers
+        li IP-Adresse des Nutzers
+        li Datum und Uhrzeit des Zugriffs
+      p Für die Anmeldung zu Ihrem Profil verarbeiten wir Ihren Nutzernamen, Ihre Mailadresse, 
+        | das von Ihnen gewählte Passwort sowie den von Ihnen angegebenen SSH-Schlüssel für direkte, abgesicherte Verbindungen 
+        | mit dem Server, sofern Sie uns diesen zur Verfügung stellen.
+      p Die Daten werden ebenfalls in den Logfiles unseres Systems gespeichert. Eine Speicherung dieser Daten zusammen mit anderen 
+        | personenbezogenen Daten des Nutzers findet nicht statt.
+      h3 Zweck und Rechtsgrundlage für die Datenverarbeitung
+      p Die vorübergehende Speicherung der IP-Adresse durch das System ist notwendig, um eine Auslieferung der Website an den Rechner 
+        | des Nutzers zu ermöglichen. Hierfür muss die IP-Adresse des Nutzers für die Dauer der Sitzung gespeichert bleiben. 
+        | (Erforderlichkeit zur Erfüllung der Aufgabe der Hochschule Art. 6 Abs. 1 lit. e DSGVO)
+      p Die Speicherung in Logfiles erfolgt, um die Funktionsfähigkeit der Website sicherzustellen. Zudem dienen uns die Daten zur 
+        | Optimierung der Website und zur Sicherstellung der Sicherheit unserer informationstechnischen Systeme. 
+        | Eine Auswertung der Daten zu Marketingzwecken findet in diesem Zusammenhang nicht statt. 
+        | (Erforderlichkeit zur Erfüllung der Aufgabe der Hochschule Art. 6 Abs. 1 lit. e DSGVO)
+      p Die von Ihnen angebenen Daten nutzen wir um Ihnen die Nutzung der Dienste dieser Plattfom für Decker zu ermöglichen. 
+        | Die Rechtsgrundlage für die Verarbeitung der Daten ist der Art. 6 Abs. 1 b DSGVO.
+      h3 Dauer der Speicherung
+      p Die Verarbeitung findet während der Nutzung bis zum Ende der jeweiligen Sitzung statt. 
+        | Im Falle der Speicherung der Daten in Logfiles ist dies nach spätestens 24 Stunden der Fall. 
+        | Danach sind die IP-Adressen der Nutzer anonymisiert, sodass eine Zuordnung des aufrufenden Clients nicht mehr möglich ist.
+      p Nach der Kündigung bzw. Löschung Ihres Accounts erfolgt die Löschung der Anmeldedaten.
+    section
+      h2 Rechte der betroffenen Person
+      p Werden personenbezogene Daten von Ihnen verarbeitet, sind Sie betroffene Person i.S.d. 
+        | DSGVO und es stehen Ihnen folgende Rechte gegenüber dem Verantwortlichen zu:
+      p Wenn sie ihre Rechte in Anspruch nehmen wollen, wenden Sie sich bitte an den Datenschutzbeauftragten der TU Dortmund.
+      h3 Auskunft (Art 15 DSGVO)
+      p Sie haben das Recht auf Auskunft über Sie betreffende personenbezogene Daten, 
+        | die erhoben, verarbeitet oder ggf. an Dritte übermittelt werden.
+      h3 Widerspruch (Art. 21 DSGVO)
+      p Sie haben das Recht gegen die Verarbeitung Ihrer personenbezogenen Daten Widerspruch 
+        | einzulegen, soweit die Verarbeitung auf der Grundlage von Art. 6 (1) e oder f DSGVO erfolgt.
+      h3 Löschung (Art 17 DSGVO)
+      p Insbesondere nach Ablauf der gesetzlich vorgeschriebenen Aufbewahrungsfristen haben Sie ein Recht auf Löschung Ihrer Daten.
+      h3 Einschränkung der Verarbeitung (Art 18 DSGVO)
+      p In besonderen Fällen haben Sie das Recht auf Einschränkung der Verarbeitung. 
+        | Dies ist dann der Fall, wenn die Datenverarbeitung unrechtmäßig sein sollte, 
+        | Sie die Richtigkeit der erhobenen Daten bestreiten oder ein Widerspruch gegen 
+        | die Verarbeitung eingelegt haben. Ebenso können Sie eine Einschränkung der Verarbeitung 
+        | verlangen, wenn die Daten aufgrund der Zweckerreichung einer Löschpflicht unterliegen, 
+        | Sie sie jedoch zur Geltendmachung von rechtlichen Ansprüchen benötigen. 
+        | Eine Einschränkung der Verarbeitung müssen Sie beantragen.
+      h3 Berichtigung (Art 16 DSGVO)
+      p Sie haben das Recht auf Berichtigung unrichtiger personenbezogener Daten.
+      h3 Recht auf Widerruf der datenschutzrechtlichen Einwilligungserklärung (Art 7 DSGVO)
+      p Sie haben das Recht, Ihre datenschutzrechtliche Einwilligungserklärung jederzeit zu widerrufen. 
+        | Durch den Widerruf der Einwilligung wird die Rechtmäßigkeit der aufgrund der Einwilligung bis 
+        | zum Widerruf erfolgten Verarbeitung nicht berührt.
+      h3 Recht auf Beschwerde bei einer Aufsichtsbehörde
+      p Sie können sich jederzeit mit allen Fragen zum Datenschutz und um sich zu beschweren an eine Datenschutzaufsichtsbehörde wenden.
+        | Zuständig ist in unserem Fall die Landesbeauftragte für Datenschutz und Informationsfreiheit in Nordrhein-Westfalen.
+      p Bitte beachten Sie, dass diese Datenschutzerklärung nicht für alle Teile des Internetauftritts der TU Dortmund gilt.    
 block dialogs
