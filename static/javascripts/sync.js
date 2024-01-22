@@ -517,57 +517,6 @@ function compareLists(clientList, serverList) {
   }
 }
 
-function compare(clientList, serverList, handled) {
-  for (const a of clientList) {
-    let contains = false;
-    for (const b of serverList) {
-      if (a.filename === b.filename && a.kind === b.kind) {
-        contains = true;
-        if (a.kind === "directory") {
-          compare(a.children, b.children, handled);
-          break;
-        }
-        handled.add(b);
-        if (a.checksum === b.checksum) {
-          a.reference.classList.add("same");
-          b.reference.classList.add("same");
-        } else {
-          if (new Date(a.modified).getTime() > new Date(b.modified).getTime()) {
-            toUpload.push(a);
-            a.reference.classList.add("newer");
-            b.reference.classList.add("older");
-          } else {
-            toDownload.push(b);
-            b.reference.classList.add("newer");
-            a.reference.classList.add("older");
-          }
-        }
-        break;
-      }
-    }
-    if (!contains) {
-      if (a.kind === "directory") {
-        compare(a.children, [], handled);
-      } else {
-        toUpload.push(a);
-        a.reference.classList.add("newer");
-      }
-    }
-  }
-}
-
-function markServerFilesAsNew(handled, serverList) {
-  for (const b of serverList) {
-    if (handled.has(b)) continue;
-    if (b.kind === "directory") {
-      //      markServerFilesAsNew(handled, b.children);
-      continue;
-    }
-    toDownload.push(b);
-    b.reference.classList.add("newer");
-  }
-}
-
 window.addEventListener("load", () => {
   if (featureAvailable) {
     fetchProjectData();
