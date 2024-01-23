@@ -64,9 +64,9 @@ function updateProgress(event) {
 }
 
 function endProgress(event) {
-  //  const div = document.getElementById("upload-area");
-  //  div.appendChild(document.createTextNode("Upload beendet."));
-  //  setTimeout(() => window.location.reload(), 2000);
+  const div = document.getElementById("upload-area");
+  div.appendChild(document.createTextNode("Upload beendet."));
+  setTimeout(() => window.location.reload(), 2000);
 }
 
 function upload() {
