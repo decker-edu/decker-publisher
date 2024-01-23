@@ -1,0 +1,120 @@
+dialog {
+  max-width: 60rem;
+}
+
+dialog::backdrop {
+  backdrop-filter: blur(4px);
+}
+
+dialog form {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog form textarea {
+  resize: none;
+  width: 512px;
+  height: 256px;
+}
+
+.dialog-message {
+  font-size: 1.5rem;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+dialog fieldset {
+  min-width: 512px;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: space-around;
+  row-gap: 0.5rem;
+  border: 0;
+  border-top: 2px solid black;
+  margin: 0;
+  padding: 0;
+}
+
+dialog fieldset legend {
+  font-size: 1.5rem;
+  text-align: center;
+  margin-left: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.dialog-input-area {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.25rem;
+  width: 100%;
+}
+
+.dialog-input-area input {
+  font-size: 1.25rem;
+}
+
+.dialog-buttons {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  column-gap: 0.5rem;
+  width: 100%;
+}
+
+.dialog-buttons:has(button:first-child:last-child) {
+  justify-content: space-around;
+}
+
+.dialog-buttons button {
+  min-width: 192px;
+}
+
+dialog a.button-like {
+  background-color: var(--tu-green);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
+
+  text-decoration: none;
+}
+
+dialog a.button-like:hover {
+  background-color: var(--tu-hover);
+}
+
+dialog a.button-like:active {
+  background-color: var(--tu-active);
+}
+
+.tooltip {
+  position: fixed;
+  border-radius: 1rem;
+  border: 1px solid black;
+  transition: opacity 0.5s;
+  background-color: white;
+  font-weight: bold;
+  padding: 1rem;
+  opacity: 1;
+}
+
+.tooltip.fade {
+  opacity: 0;
+}
+
+.wedgeup {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid black;
+}

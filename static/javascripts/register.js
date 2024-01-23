@@ -1,8 +1,28 @@
-let registerPasswordField = document.getElementById("register-password");
-let registerRepeatField = document.getElementById("register-repeat-password");
-let registerButton = document.getElementById("register-button");
-registerPasswordField.addEventListener("change", onPasswordChanged);
-registerRepeatField.addEventListener("change", onPasswordChanged);
+const registerPasswordField = document.getElementById("register-password");
+const registerRepeatField = document.getElementById("register-repeat-password");
+const registerButton = document.getElementById("register-button");
+registerPasswordField.addEventListener("keyup", onPasswordChanged);
+registerRepeatField.addEventListener("keyup", onPasswordChanged);
+
+function togglePasswordVisibility(event) {
+  registerPasswordField.type =
+    registerPasswordField.type === "password" ? "test" : "password";
+  if (registerPasswordField.type === "password") {
+    event.currentTarget.classList.remove("show");
+  } else {
+    event.currentTarget.classList.add("show");
+  }
+}
+
+function toggleRepeatVisibility(event) {
+  registerRepeatField.type =
+    registerRepeatField.type === "password" ? "test" : "password";
+  if (registerRepeatField.type === "password") {
+    event.currentTarget.classList.remove("show");
+  } else {
+    event.currentTarget.classList.add("show");
+  }
+}
 
 function onPasswordChanged() {
   let firstPassword = registerPasswordField.value;
@@ -30,33 +50,35 @@ function displayRegisterMessage(message, type) {
   element.innerText = message;
 }
 
-function asyncRegister() {
+async function postRegister() {
   let username = document.getElementById("register-username").value;
   let password = document.getElementById("register-password").value;
   let email = document.getElementById("register-email").value;
   let token = document.getElementById("register-token").value;
-  fetch("/api/register", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      registerUsername: username,
-      registerPassword: password,
-      registerEmail: email,
-      registerToken: token,
-    }),
-  })
-    .then((response) => {
-      return response.json();
-    })
-    .then((json) => {
-      if (json.status === "success") {
-        displayRegisterMessage(json.message, "success");
-        window.location.replace("/");
-      } else {
-        displayRegisterMessage(json.message, "error");
-      }
+  try {
+    const response = await fetch("/api/register", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        registerUsername: username,
+        registerPassword: password,
+        registerEmail: email,
+        registerToken: token,
+      }),
     });
+    if (response.ok) {
+      const json = await response.json();
+      displayRegisterMessage(json.message, "success");
+      setTimeout(() => window.location.replace("/"), 2000);
+    } else {
+      const json = await response.json();
+      displayRegisterMessage(json.message, "error");
+    }
+  } catch (error) {
+    console.error(error);
+    displayRegisterMessage("Fehler beim Senden der Anfrage.", "error");
+  }
 }

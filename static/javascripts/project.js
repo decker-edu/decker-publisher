@@ -9,6 +9,7 @@ function displayDeleteMessage(message, type) {
   let element = document.getElementById("delete-message");
   element.classList.remove("message-error");
   element.classList.remove("message-success");
+  element.classList.remove("message-info");
   if (type && type === "success") {
     element.classList.add("message-success");
   } else if (type && type === "error") {
@@ -17,33 +18,36 @@ function displayDeleteMessage(message, type) {
   element.innerText = message;
 }
 
-function deleteSelectedProject() {
+async function deleteSelectedProject() {
   if (!projectToDelete) {
     return;
   }
   let deletePasswordField = document.getElementById("delete-pass");
   let password = deletePasswordField.value;
-  fetch("/api/project", {
-    method: "DELETE",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      name: projectToDelete,
-      password: password,
-    }),
-  })
-    .then((response) => response.json())
-    .then((json) => {
-      if (json.status && json.status === "error") {
-        displayDeleteMessage(json.message, "error");
-      }
-      if (json.status && json.status === "success") {
-        displayDeleteMessage(json.message, "success");
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-      }
+  try {
+    const response = await fetch("/api/project", {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: projectToDelete,
+        password: password,
+      }),
     });
+    if (response.ok) {
+      const json = await response.json();
+      displayDeleteMessage(json.message, "success");
+      setTimeout(() => {
+        location.reload();
+      }, 2000);
+    } else {
+      const json = await response.json();
+      displayDeleteMessage(json.message, "error");
+    }
+  } catch (error) {
+    console.error(error);
+    displayDeleteMessage("Fehler beim Senden der Anfrage.");
+  }
 }

@@ -41,16 +41,21 @@ function downloadHtaccessContent(event) {
     console.error("htaccess download triggered without data available");
     return;
   }
-  const anchor = document.createElement("a");
-  anchor.style.display = "none";
-  document.body.appendChild(anchor);
-  const blob = new Blob([htcontent], { type: "text/plain" });
-  const url = window.URL.createObjectURL(blob);
-  anchor.href = url;
-  anchor.download = "htaccess.txt";
-  anchor.click();
-  window.URL.revokeObjectURL(url);
-  anchor.remove();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(htcontent);
+    displayTooltip(event.currentTarget, "Daten in die Zwischenablage kopiert");
+  } else {
+    const anchor = document.createElement("a");
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    const blob = new Blob([htcontent], { type: "text/plain" });
+    const url = window.URL.createObjectURL(blob);
+    anchor.href = url;
+    anchor.download = "htaccess.txt";
+    anchor.click();
+    window.URL.revokeObjectURL(url);
+    anchor.remove();
+  }
 }
 
 async function fetchHtpasswd() {
@@ -64,7 +69,9 @@ async function fetchHtpasswd() {
       `Es ist Zugriff für externe Nutzer über den Nutzernamen '${htuser}' konfiguriert.`
     );
     const btn = document.getElementById("download-access-button");
-    btn.querySelector("span").innerText = "Passwortdatei herunterladen";
+    btn.querySelector("span").innerText = navigator.clipboard
+      ? "Passwortdatei in die Zwischenablage kopieren"
+      : "Passwortdatei herunterladen";
     btn.disabled = false;
   } else {
     if (response.status === 404) {
@@ -365,9 +372,11 @@ let toDownload;
 
 function isGeneratedFile(filename) {
   const regex =
-    /.+(-recording.webm|-recording.mp4|-recording.vtt|-recording.mp4.list|-annot.json|-recording-[0-9]+.webm|-times.json)$/;
+    /.+(-recording\.webm|-recording\.mp4|\.vtt|-recording\.mp4\.list|-annot\.json|-recording-[0-9]+\.webm|-times\.json)$/;
   return regex.test(filename);
 }
+
+window.check = isGeneratedFile;
 
 async function confirmDownload() {
   const dialog = document.getElementById("confirm-download");
@@ -605,4 +614,8 @@ window.addEventListener("load", () => {
   }
   const dlBtn = document.getElementById("download-access-button");
   dlBtn.addEventListener("click", downloadHtaccessContent);
+  if (navigator.clipboard) {
+    dlBtn.querySelector("span").innerText =
+      "Passwortdatei in die Zwischenablage kopieren";
+  }
 });

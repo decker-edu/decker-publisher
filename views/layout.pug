@@ -15,6 +15,7 @@ html
     script(defer src="/javascripts/mouse.js")
     script(defer src="/javascripts/login.js")
     script(defer src="/javascripts/request.js")
+    script(defer src="/javascripts/dialog.js")
     block scripts
 
   body
@@ -33,11 +34,11 @@ html
               i.fas.fa-toolbox
               span Administration
           if account
-            button.navigation(onclick="openUserDialog()")
+            button.navigation(onclick="openDialog('user-dialog')")
               i.fas.fa-user
               span#navigation-username= account.username
           else
-            button.navigation(onclick="openLoginDialog()")
+            button.navigation(onclick="openDialog('login-dialog')")
               i.fas.fa-sign-in-alt
               span Login
       div#content-container
@@ -51,11 +52,17 @@ html
       dialog#user-dialog
         form#user-form
           fieldset#user-fieldset
-            legend Benutzermenu
-            span Eingeloggt als #{account.username}
+            legend Benutzereinstellungen
+            div.user-card
+              i.fas.fa-user.user-icon
+              div.user-info
+                span.user-name=account.username
             div#user-message.dialog-message
             div#user-inputs.dialog-input-area
             div.dialog-buttons
+              button.action(type="button" onclick="closeDialog('user-dialog')")
+                i.fas.fa-ban
+                span Schließen
               a.action(href="/profile")
                 i.fas.fa-wrench
                 span Profileinstellungen
@@ -74,6 +81,6 @@ html
               label(for="login-pass") Passwort
               input#login-pass(type="password", required, pattern=".{8,}", name="login-pass", placeholder="Passwort")
             div.dialog-buttons
-              button.action(type="button" onclick="closeLoginDialog()") Abbrechen
-              a.action(href="/password-recovery") Passwort vergessen
               button#login-button.action(type="submit" name="login-button") Login
+              a.action(href="/password-recovery") Passwort vergessen
+              button.action(type="button" onclick="closeDialog('login-dialog')") Abbrechen

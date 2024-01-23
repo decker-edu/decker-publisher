@@ -1,0 +1,62 @@
+.password-container {
+  display: grid;
+  grid-template-areas: 'overlap';
+  grid-template-columns: 1fr;
+  justify-items: end;
+}
+
+.password-container input {
+  grid-area: overlap;
+  align-self: stretch;
+  justify-self: stretch;
+}
+
+.password-container button.reveal-password {
+  position: relative;
+  color: rgba(0, 0, 0, 0.5);
+  grid-area: overlap;
+  border: none;
+  background-color: transparent;
+  width: 28px;
+  height: 28px; 
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  border-radius: 50%;
+}
+
+.password-container button.reveal-password:hover {
+  animation: none;
+}
+
+.password-container button.reveal-password:hover {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.password-container button.reveal-password:active {
+  color: rgba(192,192,192,1);
+}
+
+.password-container button.reveal-password i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+}
+
+.password-container button.reveal-password i.fa-eye {
+  opacity: 0;
+}
+
+.password-container button.reveal-password.show i.fa-eye {
+  opacity: 1;
+}
+
+.password-container button.reveal-password i.fa-eye-slash {
+  opacity: 1;
+}
+
+.password-container button.reveal-password.show i.fa-eye-slash {
+  opacity: 0;
+}
+

@@ -4,7 +4,6 @@ block scripts
     script(defer src="/javascripts/upload.js")
     script(defer src="/javascripts/video.js")
     script(defer src="/javascripts/project.js")
-    script(defer src="/javascripts/dialog.js")
 
 block content
   header 
@@ -40,15 +39,15 @@ block content
         span Neues leeres Projekt erzeugen
 block dialogs
   dialog#create-empty-project-dialog
-    form#create-empty-project-form
+    form#create-empty-project-form(onsubmit="return false;")
       fieldset
-        legend Bitte geben Sie den Namen für ihr leeres Projektverzeichnis an.
+        legend Leeres Projekt anlegen
         div.form-content
           div.inset#empty-project-message-area
-          input#empty-project-name-input(type="text" name="projectName")
+          input#empty-project-name-input(type="text" name="projectName" placeholder="Projektname" onkeyup="if(event.key === 'Enter') createEmptyProject();")
         div.dialog-buttons
           button#create-empty-button.action(type="button" onclick="createEmptyProject()" title="Erstellen" aria-label="Erstellen")
-            i.fas.fa-upload
+            i.fas.fa-plus
             span Projekt erstellen
           button.action(type="button" onclick="closeDialog(\"create-empty-project-dialog\")" title="Abbrechen" aria-label="Abbrechen")
             i.fas.fa-ban
@@ -86,17 +85,17 @@ block dialogs
   dialog#delete-dialog
     form#delete-form(onsubmit="return false;")
       fieldset#delete-fieldset
-        legend Projekt löschen?
-          div#delete-message.dialog-message
-            span Dies entfernt alle sich hier befindlichen Inhalte des Projektes, inklusive aller generierten Untertitel.
-          div#delete-inputs.dialog-input-area
-            label(for="delete-pass") Mit Passwort bestätigen
-            input#delete-pass(type="password", name="delete-pass", placeholder="Passwort")
-          div#delete-buttons.dialog-buttons
-            button.action(type="button" onclick="deleteSelectedProject()")
-              i.fas.fa-trash
-              span Löschen
-            button.action(type="button" onclick="closeDialog('delete-dialog')")
-              i.fas.fa-ban
-              span Dialog schließen
+        legend Möchten Sie das Projekt wirklich löschen?
+        div#delete-message.dialog-message.message-info
+          span Dies entfernt alle Inhalte des Projektes, inklusive aller generierten Daten.
+        div#delete-inputs.form-grid
+          label(for="delete-pass") Mit Passwort bestätigen:
+          input#delete-pass(type="password", name="delete-pass", placeholder="Passwort")
+        div#delete-buttons.dialog-buttons
+          button.action(type="button" onclick="deleteSelectedProject()")
+            i.fas.fa-trash
+            span Löschen
+          button.action(type="button" onclick="closeDialog('delete-dialog')")
+            i.fas.fa-ban
+            span Dialog schließen
               

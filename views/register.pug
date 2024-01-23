@@ -32,8 +32,16 @@ block content
         label.hidden(for="register-token") Token
         input#register-token.hidden(type="text", name="registerToken", value= token, disabled)
         label(for="register-password") Passwort
-        input#register-password(type="password", required, pattern=".{8,}", name="registerPassword", placeholder="Passwort")
+        div.password-container
+          input#register-password(type="password", required, pattern=".{8,}", name="registerPassword", placeholder="Passwort")
+          button.reveal-password(type="button", onclick="togglePasswordVisibility(event)", aria-label="Passwort anzeigen")
+            i.fas.fa-eye
+            i.fas.fa-eye-slash
         label(for="register-repeat-password") Passwort wiederholen
-        input#register-repeat-password(type="password", required, pattern=".{8,}", name="registerRepeatPassword", placeholder="Passwort wiederholen")
-      button#register-button.action(type="button" onclick="asyncRegister()") Registrieren 
+        div.password-container
+          input#register-repeat-password(type="password", required, pattern=".{8,}", name="registerRepeatPassword", placeholder="Passwort wiederholen")
+          button.reveal-password(type="button", onclick="toggleRepeatVisibility(event)", aria-label="Passwort anzeigen")
+            i.fas.fa-eye
+            i.fas.fa-eye-slash
+      button#register-button.action(type="button" onclick="postRegister()") Registrieren 
 block dialogs

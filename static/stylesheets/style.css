@@ -1,3 +1,6 @@
+@import url(./dialogs.css);
+@import url(./inputs.css);
+
 @font-face {
   font-family: Akkurat;
   src: url(/fonts/AkkuratLLWeb-Regular.woff2);
@@ -91,10 +94,6 @@ footer a:hover {
   background-color: var(--tu-green);
 }
 
-dialog {
-  max-width: 60rem;
-}
-
 main form {
   width: 40rem;
   padding: 1rem;
@@ -124,6 +123,7 @@ main form {
 
   display: flex;
   flex-direction: row;
+  align-items: center;
   justify-content: center;
   gap: 1rem;
 }
@@ -140,6 +140,10 @@ main form {
   background-color: var(--tu-active);
 }
 
+button {
+  font-size: 1em;
+}
+
 button[disabled] {
   background-color: #808080;
   color: #404040;
@@ -152,28 +156,6 @@ button[disabled]:hover {
   cursor: default;
 }
 
-dialog::backdrop {
-  backdrop-filter: blur(4px);
-}
-
-dialog form {
-  display: flex;
-  flex-direction: column;
-}
-
-dialog form textarea {
-  resize: none;
-  width: 512px;
-  height: 256px;
-}
-
-.dialog-message {
-  font-size: 1.5rem;
-  text-align: center;
-  margin-left: auto;
-  margin-right: auto;
-}
-
 code {
   padding-left: 0.2rem;
   padding-right: 0.2rem;
@@ -182,15 +164,15 @@ code {
 }
 
 .message-error {
-  color: crimson;
+  color: #eb3b5a;
 }
 
 .message-success {
-  color: limegreen;
+  color: #20bf6b;
 }
 
 .message-info {
-  color: orange;
+  color: #3867d6
 }
 
 .form-content {
@@ -223,47 +205,6 @@ code {
 
 #upload-area {
   border: 2px dashed black;
-}
-
-dialog fieldset {
-  min-width: 512px;
-  display: flex;
-  flex-direction: column;
-  align-content: center;
-  justify-content: space-around;
-  row-gap: 0.5rem;
-  border: none;
-  margin: 0;
-  padding: 0;
-}
-
-dialog fieldset legend {
-  font-size: 1.5rem;
-  text-align: center;
-}
-
-.dialog-input-area {
-  display: flex;
-  flex-direction: column;
-  row-gap: 0.25rem;
-  width: 100%;
-}
-
-.dialog-input-area input {
-  font-size: 1.25rem;
-}
-
-.dialog-buttons {
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  column-gap: 0.5rem;
-  width: 100%;
-}
-
-.dialog-buttons button {
-  min-width: 192px;
 }
 
 .hidden {
@@ -305,26 +246,6 @@ dialog fieldset legend {
 .navigation i.fas {
   line-height: 3rem;
   vertical-align: middle;
-}
-
-dialog a.button-like {
-  background-color: var(--tu-green);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.5rem;
-  font-weight: bold;
-  cursor: pointer;
-
-  text-decoration: none;
-}
-
-dialog a.button-like:hover {
-  background-color: var(--tu-hover);
-}
-
-dialog a.button-like:active {
-  background-color: var(--tu-active);
 }
 
 .video-button {
@@ -781,6 +702,10 @@ li.caret.active::marker {
   display: none;
 }
 
+#empty-project-message-area {
+  margin-bottom: 0.5rem;
+}
+
 #empty-project-message-area:empty {
   display: none;
 }
@@ -794,4 +719,29 @@ form input {
 
 .address span {
   display: block;
+}
+
+.user-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: start;
+  gap: 1rem;
+  margin-left: 0.5rem;
+}
+
+.user-card .user-icon {
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  background-color: #808080;
+  color: #ffffff;
+  text-align: center;
+  line-height: 48px;
+  font-size: 1.8rem;
+}
+
+.user-card .user-info .user-name {
+  font-size: 1.5rem;
+  font-weight: bold;
 }

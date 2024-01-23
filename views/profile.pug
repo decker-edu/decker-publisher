@@ -1,7 +1,6 @@
 extends layout
 
 block scripts 
-    script(defer src="/javascripts/dialog.js")
     script(defer src="/javascripts/profile.js")
 
 block content
@@ -124,4 +123,4 @@ block dialogs
         span Konto löschen
       button.action(type="button" onclick="closeDialog(\"delete-account\")")
         i.fas.fa-ban
-        span Dialog schließen
+        span Verstanden
