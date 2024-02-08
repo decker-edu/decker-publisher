@@ -435,7 +435,16 @@ router.delete(
     }
     const confirmed = await account.checkPassword(passwordConfirmation);
     if (account.roles.includes("admin") || confirmed) {
-      //TODO Delete Account
+      const username = req.params.username;
+      const toDelete = await Account.fromDatabase(username);
+      if (toDelete) {
+        //        await toDelete.delete();
+      } else {
+        return res
+          .status(404)
+          .json({ message: escapeHTML("Keinen solchen Account gefunden.") })
+          .end();
+      }
       return res
         .status(404)
         .json({ message: escapeHTML("Nicht vollständig implementiert.") })

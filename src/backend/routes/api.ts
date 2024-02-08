@@ -101,7 +101,7 @@ interface UsernameVerification {
 
 function verifyUsername(username: string): UsernameVerification {
   let length = username.length;
-  let onlyletter = username.match(/[a-z]([a-z]|[0-9])+/gi);
+  let onlyletter = username.match(/^[a-z]([a-z]|[0-9])+$/gi);
   return {
     length: length >= 4,
     format: onlyletter ? onlyletter.length > 0 : false,

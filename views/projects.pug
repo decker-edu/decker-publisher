@@ -71,16 +71,16 @@ block dialogs
               in einer #[code .zip] Datei und wählen dieses Archiv aus. 
               Das Archiv sollte auf oberster Ebene nur den Ordner #[code public] beinhalten. 
               Alternativ können Sie auch einfach den #[code public] Ordner per Drag &amp; Drop in die obere Box ziehen.
+          div#project-config(hidden)
+            label(for="project-name-input") Projektname: 
+            input#project-name-input(type="text" name="projectName")
           div.dialog-buttons
-            div#project-config(hidden)
-              label(for="project-name-input") Projektname: 
-              input#project-name-input(type="text" name="projectName")
-              button#upload-directory-button.action(type="button" onclick="uploadDirectory()" title="Ordner Hochladen" aria-label="Ordner Hochladen" hidden)
-                i.fas.fa-upload
-                span Ordner hochladen
-              button#file-upload-button.action(type="button" onclick="upload()" title="Hochladen" aria-label="Hochladen" hidden)
-                i.fas.fa-upload
-                span Upload starten
+            button#upload-directory-button.action(type="button" onclick="uploadDirectory()" title="Ordner Hochladen" aria-label="Ordner Hochladen" hidden)
+              i.fas.fa-upload
+              span Ordner hochladen
+            button#file-upload-button.action(type="button" onclick="upload()" title="Hochladen" aria-label="Hochladen" hidden)
+              i.fas.fa-upload
+              span Upload starten
             
   dialog#delete-dialog
     form#delete-form(onsubmit="return false;")

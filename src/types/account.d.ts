@@ -13,6 +13,7 @@ declare interface IAccount {
   assignRole(role: IRole): Promise<void>;
   getDirectory(): string;
   getProjects(): IProject[];
+  delete(): Promise<void>;
 }
 
 declare interface IRole {

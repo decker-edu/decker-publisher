@@ -343,4 +343,13 @@ export class Account implements IAccount {
     }
     return projects;
   }
+
+  async delete() {
+    const request = await database.query("DELETE FROM accounts WHERE id=$1", [
+      this.id,
+    ]);
+    if (request.rowCount != 1) {
+      throw new Error("DELETE had not the intended effect!");
+    }
+  }
 }
