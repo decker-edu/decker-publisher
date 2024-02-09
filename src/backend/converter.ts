@@ -134,12 +134,12 @@ async function extractMeta(
     }
     emitter.emit("info", { message: "Generiere Decker Projektdateien." });
     let deckerSource = "---\n";
-    deckerSource += `title: ${
+    deckerSource += `title: '${
       pdfInfo.pdfTitle ? pdfInfo.pdfTitle : "Unknown Presentation Title"
-    }\n`;
-    deckerSource += `author: ${
+    }'\n`;
+    deckerSource += `author: '${
       pdfInfo.author ? pdfInfo.author : "Unknown Author"
-    }\n`;
+    }'\n`;
     deckerSource += `reveal:\n  width: ${pdfInfo.width}\n  height: ${pdfInfo.height}\n`;
     deckerSource += "---\n\n";
     for (let page = 1; page <= pdfInfo.pages; page++) {
