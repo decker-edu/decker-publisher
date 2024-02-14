@@ -20,27 +20,39 @@ function inputChanged() {
   }
 }
 
+function projectNameChanged(event) {
+  const nameInput = document.getElementById("project-name-input");
+  const uploadButton = document.getElementById("upload-directory-button");
+  if (nameInput.value !== "") {
+    uploadButton.removeAttribute("disabled");
+  } else {
+    uploadButton.setAttribute("disabled", true);
+  }
+}
+
+function setUploadMessage(message) {
+  const element = document.getElementById("upload-message");
+  element.innerText = message;
+}
+
+function handleError(event) {
+  console.error(event);
+}
+
 function passOn(event) {
   const input = document.getElementById("file-upload-input");
   if (event.key === "Enter" || event.key === " ") input.click();
 }
 
-function clearInsertArea() {
-  const div = document.getElementById("upload-area");
-  while (div.firstChild) {
-    div.removeChild(div.lastChild);
-  }
-}
-
 function initProgress(event) {
-  clearInsertArea();
-  const div = document.getElementById("upload-area");
-  const bar = document.createElement("progress");
-  bar.id = "upload-progress";
+  const dropArea = document.getElementById("drop-area");
+  dropArea.hidden = true;
+  const progressArea = document.getElementById("progress-area");
+  progressArea.hidden = false;
+  setUploadMessage("");
+  const bar = document.getElementById("upload-progress");
   bar.value = 0;
   bar.max = 100;
-  bar.innerText = "Upload gestartet.";
-  div.appendChild(bar);
   updateProgress(event);
 }
 
@@ -64,32 +76,66 @@ function updateProgress(event) {
 }
 
 function endProgress(event) {
-  const div = document.getElementById("upload-area");
-  div.appendChild(document.createTextNode("Upload beendet."));
-  setTimeout(() => window.location.reload(), 2000);
+  const progressArea = document.getElementById("progress-area");
+  progressArea.hidden = true;
+  const xhr = event.srcElement;
+  if (xhr) {
+    const status = xhr.status;
+    if (status !== 200) {
+      try {
+        const json =
+          xhr.responseType === "json" ? xhr.response : JSON.parse(xhr.response);
+        if (json && json.message) {
+          setUploadMessage(`${status}: ${json.message}`);
+        } else {
+          setUploadMessage("Ein unbekannter Fehler ist aufgetreten.");
+        }
+      } catch (error) {
+        console.error(error);
+        setUploadMessage("Fehler beim Bearbeiten der Antwort.");
+      }
+    } else {
+      setUploadMessage("Upload erfolgreich.");
+      setTimeout(() => window.location.reload(), 2000);
+    }
+  } else {
+    setTimeout(() => window.location.reload(), 2000);
+  }
 }
 
 function upload() {
+  const nameInput = document.getElementById("project-name-input");
+  if (nameInput.value.length < 4) {
+    setUploadMessage(
+      "Bitte verwenden Sie einen Projektnamen, der mindestens vier Zeichen lang ist."
+    );
+    return;
+  }
+  if (!/^([a-z]([a-z]|[0-9])+)(-([a-z]|[0-9])+)*$/.test(nameInput.value)) {
+    setUploadMessage(
+      "Bitte verwenden Sie ausschließlich Kombinationen aus Kleinbuchstaben, Ziffern und einzelnen Bindestrichien als Projektnamen."
+    );
+    return;
+  }
   const input = document.querySelector("#file-upload-input");
-  const projectName = document.querySelector("#project-name-input");
   const data = new FormData();
   data.append("file", input.files[0]);
-  data.append("projectName", projectName.value);
+  data.append("projectName", nameInput.value);
   const xhr = new XMLHttpRequest();
   xhr.responseType = "json";
   xhr.upload.addEventListener("progress", updateProgress);
   xhr.addEventListener("loadstart", initProgress);
   xhr.addEventListener("loadend", endProgress);
   xhr.addEventListener("load", (event) => {
-    const json = xhr.response;
+    const json =
+      xhr.responseType === "json" ? xhr.response : JSON.parse(xhr.response);
     const status = xhr.status;
     if (json) {
-      const div = document.getElementById("upload-area");
       const message = json.message;
       if (message) {
-        div.appendChild(document.createTextNode(`${status}: ${message}`));
+        setUploadMessage(`${status}: ${message}`);
       } else {
-        div.appendChild(document.createTextNode(`${status}: Upload beendet.`));
+        setUploadMessage(`${status}: Upload beendet.`);
       }
     }
     if (status === 200) {
@@ -254,14 +300,11 @@ async function dropHandler(event) {
             }
           }
         }
-        const area = document.getElementById("upload-area");
-        while (area.firstChild) {
-          area.removeChild(area.lastChild);
-        }
-        const span = document.createElement("span");
-        span.innerText =
+        const dropArea = document.getElementById("drop-area");
+        dropArea.hidden = true;
+        const uploadMessage = document.getElementById("upload-message");
+        uploadMessage.innerText =
           uploadFiles.length + " Dateien zum hochladen ausgewählt.";
-        area.appendChild(span);
         document
           .getElementById("upload-directory-button")
           .removeAttribute("hidden");
@@ -272,14 +315,30 @@ async function dropHandler(event) {
 }
 
 function uploadDirectory() {
+  const nameInput = document.getElementById("project-name-input");
+  if (nameInput.value.length < 4) {
+    setUploadMessage(
+      "Bitte verwenden Sie einen Projektnamen, der mindestens vier Zeichen lang ist."
+    );
+    return;
+  }
+  if (!/^([a-z]([a-z]|[0-9])+)(-([a-z]|[0-9])+)*$/.test(nameInput.value)) {
+    setUploadMessage(
+      "Bitte verwenden Sie ausschließlich Kombinationen aus Kleinbuchstaben, Ziffern und einzelnen Bindestrichien als Projektnamen."
+    );
+    return;
+  }
   const data = new FormData();
   for (const file of uploadFiles) {
     data.append("directory", file.file, encodeURIComponent(file.file.name));
     data.append("paths", file.path);
   }
-  const nameInput = document.getElementById("project-name-input");
   data.append("projectName", nameInput.value);
   const xhr = new XMLHttpRequest();
+  xhr.responseType = "json";
+  xhr.addEventListener("error", (event) => {
+    console.error("[INLINE]", xhr.response);
+  });
   xhr.upload.addEventListener("progress", updateProgress);
   xhr.addEventListener("loadstart", initProgress);
   xhr.addEventListener("loadend", endProgress);

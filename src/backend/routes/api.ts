@@ -123,6 +123,12 @@ function verifyEmail(mail: string, allowedOrigins: string[]) {
   return { format: format, origin: origin };
 }
 
+function validateProjectName(name: string) {
+  const onlyletter = name.match(/^([a-z]([a-z]|[0-9])+)(-([a-z]|[0-9])+)*$/);
+  const length = name.length >= 4;
+  return [onlyletter, length];
+}
+
 router.use("/feedback", feedback);
 router.use("/user", userAPI);
 router.use("/project", projectAPI);
@@ -413,6 +419,23 @@ router.post(
         .end();
     }
     const projectName: string = req.body.projectName;
+    const [onlyletter, length] = validateProjectName(projectName);
+    if (!onlyletter) {
+      console.log("[UPLOAD DIRECTORY] ", projectName, " is invalid.");
+      return res.status(400).json({
+        message: escapeHTML(
+          "Bitte verwenden Sie ausschließlich Kombinationen aus Kleinbuchstaben, Ziffern und einzelnen Bindestrichien als Projektnamen."
+        ),
+      });
+    }
+    if (!length) {
+      return res.status(400).json({
+        message: escapeHTML(
+          "Bitte verwenden Sie einen Projektnamen, der mindestens vier Zeichen lang ist."
+        ),
+      });
+    }
+
     if (!req.files || Object.keys(req.files).length === 0) {
       return res
         .status(400)
@@ -436,15 +459,12 @@ router.post(
     if (!projectName || projectName === "") {
       return res
         .status(400)
-        .json({ status: "error", message: "Keinen Projektnamen empfangen." })
+        .json({ message: "Keinen Projektnamen empfangen." })
         .end();
     }
 
     if (projectName.includes(".")) {
-      return res
-        .status(400)
-        .json({ status: "error", message: "Ungültiger Projektname." })
-        .end();
+      return res.status(400).json({ message: "Ungültiger Projektname." }).end();
     }
     const uploadPath = path.resolve(
       path.join(account.getDirectory(), "uploads", file.name)
@@ -466,7 +486,6 @@ router.post(
       return res
         .status(400)
         .json({
-          status: "error",
           message: "Projektname wird bereits verwendet.",
         })
         .end();
@@ -572,6 +591,22 @@ router.post(
         .end();
     }
     const projectName: string = req.body.projectName;
+    const [onlyletter, length] = validateProjectName(projectName);
+    if (!onlyletter) {
+      console.log("[UPLOAD DIRECTORY] ", projectName, " is invalid.");
+      return res.status(400).json({
+        message: escapeHTML(
+          "Bitte verwenden Sie ausschließlich Kombinationen aus Kleinbuchstaben, Ziffern und einzelnen Bindestrichien als Projektnamen."
+        ),
+      });
+    }
+    if (!length) {
+      return res.status(400).json({
+        message: escapeHTML(
+          "Bitte verwenden Sie einen Projektnamen, der mindestens vier Zeichen lang ist."
+        ),
+      });
+    }
     if (!req.files || Object.keys(req.files).length === 0) {
       return res
         .status(400)

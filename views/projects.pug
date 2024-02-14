@@ -58,11 +58,17 @@ block dialogs
         legend Projekt hochladen
         div.form-content
           div#upload-area
-            i.fas.fa-cloud-arrow-up
-            span Drag &amp; Drop
-            label.fileinput#file-upload-placeholder(tabindex="0" onkeydown="passOn(event)")
-              span#file-upload-label Datei auswählen
-              input#file-upload-input(type="file" enctype="multipart/form-data" name="projectFile" onchange="inputChanged()")
+            div#drop-area
+              i.fas.fa-cloud-arrow-up
+              span Drag &amp; Drop
+              span oder
+              label.fileinput#file-upload-placeholder(tabindex="0" onkeydown="passOn(event)")
+                span#file-upload-label Datei auswählen
+                input#file-upload-input(type="file" enctype="multipart/form-data" name="projectFile" onchange="inputChanged()")
+            div#progress-area(hidden)
+              progress#upload-progress
+            div#upload-message-area
+              span#upload-message
           div.info-box
             div.info-icon
               i.fas.fa-circle-info
@@ -73,14 +79,17 @@ block dialogs
               Alternativ können Sie auch einfach den #[code public] Ordner per Drag &amp; Drop in die obere Box ziehen.
           div#project-config(hidden)
             label(for="project-name-input") Projektname: 
-            input#project-name-input(type="text" name="projectName")
+            input#project-name-input(type="text" name="projectName" onkeyup="projectNameChanged(event)")
           div.dialog-buttons
-            button#upload-directory-button.action(type="button" onclick="uploadDirectory()" title="Ordner Hochladen" aria-label="Ordner Hochladen" hidden)
+            button#upload-directory-button.action(type="button" onclick="uploadDirectory()" title="Ordner Hochladen" aria-label="Ordner Hochladen" hidden disabled)
               i.fas.fa-upload
               span Ordner hochladen
             button#file-upload-button.action(type="button" onclick="upload()" title="Hochladen" aria-label="Hochladen" hidden)
               i.fas.fa-upload
               span Upload starten
+            button#close-upload-dialog-button.action(type="button" onclick="closeDialog('upload-project-dialog')" title="Dialog Schließen" aria-label="Dialog Schließen")
+              i.fas.fa-ban
+              span Dialog Schließen
             
   dialog#delete-dialog
     form#delete-form(onsubmit="return false;")

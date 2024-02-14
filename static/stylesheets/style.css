@@ -172,7 +172,7 @@ code {
 }
 
 .message-info {
-  color: #3867d6
+  color: #3867d6;
 }
 
 .form-content {
@@ -203,8 +203,8 @@ code {
   margin-right: 1rem;
 }
 
-#upload-area {
-  border: 2px dashed black;
+*[hidden] {
+  display: none !important;
 }
 
 .hidden {
@@ -289,10 +289,16 @@ code {
   flex-direction: column;
   box-sizing: border-box;
   gap: 1rem;
+  border: 2px dashed black;
   width: 100%;
   padding: 2rem;
   text-align: center;
   font-size: 2rem;
+}
+
+#drop-area {
+  display: flex;
+  flex-direction: column;
 }
 
 .info-box {
