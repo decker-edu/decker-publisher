@@ -14,6 +14,7 @@ const router = express.Router();
 
 import userRouter from "./user";
 import { requireLogin, retrieveKeys } from "@root/util";
+import getConfig from "@root/config";
 
 router.use("/user", userRouter);
 
@@ -571,6 +572,75 @@ router.get(
   }
 );
 
+async function runWhisper(mp4: string, lang: string) {
+  const basename = path.basename(mp4, ".mp4");
+  const dirname = path.dirname(mp4);
+  const whisperProgram = getConfig().whisperProgram;
+  const whisperModel = getConfig().whisperModel;
+  if (!whisperProgram || !whisperModel) {
+    return console.log(
+      "[WHISPER] No whisper program or model configured. Skipping."
+    );
+  }
+  const wav = basename + "-tmp.wav";
+  const langvtt = basename + "-recording-" + lang + ".vtt";
+  const envtt = basename + "-recording-en.vtt";
+  const ffmpegConvertCommand = `ffmpeg -y -i ${mp4} -acodec pcm_s16le -ac 1 -ar 16000 -af speechnorm ${wav}`;
+  const originalCommand = `${whisperProgram} --file ${wav} -m ${whisperModel} --language ${lang} -bs 5 -mc 0 --output-vtt --output-file ${langvtt}`;
+  const translateCommand = `${whisperProgram} --file ${wav} -m ${whisperModel} --language ${lang} --translate en -bs 5 -mc 0 --output-vtt --output-file ${envtt}`;
+
+  console.log(`[WHISPER] converting ${mp4} to ${wav}`);
+
+  child_process.exec(
+    ffmpegConvertCommand,
+    { cwd: dirname },
+    (error, stdout, stderr) => {
+      if (error) {
+        return console.error(error);
+      }
+      if (stdout) {
+        console.log(stdout);
+      }
+      if (stderr) {
+        console.error(stderr);
+      }
+      console.log("[WHISPER EXEC] Preliminary Conversion Complete");
+      child_process.exec(
+        originalCommand,
+        { cwd: dirname },
+        (error, stdout, stderr) => {
+          if (error) {
+            return console.error(error);
+          }
+          if (stdout) {
+            console.log(stdout);
+          }
+          if (stderr) {
+            console.error(stderr);
+          }
+          console.log("[WHISPER EXEC] Original Transcription Complete");
+          child_process.exec(
+            translateCommand,
+            { cwd: dirname },
+            (error, stdout, stderr) => {
+              if (error) {
+                return console.error(error);
+              }
+              if (stdout) {
+                console.log(stdout);
+              }
+              if (stderr) {
+                console.error(stderr);
+              }
+              console.log("[WHISPER EXEC] Translation Transcription Complete");
+            }
+          );
+        }
+      );
+    }
+  );
+}
+
 async function runFFMPEG(directory: string, deckname: string) {
   getAllRecordings(directory, deckname)
     .then((recordings) => {
@@ -599,19 +669,18 @@ async function runFFMPEG(directory: string, deckname: string) {
             console.log(stdout);
           }
           if (stderr) {
-            console.log(stderr);
+            console.error(stderr);
           }
           console.log("[PUT VIDEO] ffmpeg finished");
-          fs.rename(
-            path.join(directory, deckname + "-recording-tmp.mp4"),
-            path.join(directory, deckname + "-recording.mp4"),
-            (err) => {
-              if (err) {
-                console.error(err);
-              }
-              console.log("[PUT VIDEO] moved file");
+          const tmp = path.join(directory, deckname + "-recording-tmp.mp4");
+          const real = path.join(directory, deckname + "-recording.mp4");
+          fs.rename(tmp, real, (err) => {
+            if (err) {
+              console.error(err);
             }
-          );
+            console.log("[PUT VIDEO] moved file");
+            runWhisper(real, "de");
+          });
         }
       );
     })

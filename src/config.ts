@@ -23,6 +23,8 @@ interface Config {
     mail_program: string;
   };
   hostname: string;
+  whisperProgram: string;
+  whisperModel: string;
 }
 
 let config: Config | undefined = undefined;
