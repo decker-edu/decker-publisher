@@ -717,17 +717,25 @@ router.post(
         .end();
     }
     const projectName: string = req.body.projectName;
+    const [onlyletter, length] = validateProjectName(projectName);
+    if (!onlyletter) {
+      return res.status(400).json({
+        message: escapeHTML(
+          "Bitte verwenden Sie ausschließlich Kombinationen aus Kleinbuchstaben, Ziffern und einzelnen Bindestrichien als Projektnamen."
+        ),
+      });
+    }
+    if (!length) {
+      return res.status(400).json({
+        message: escapeHTML(
+          "Bitte verwenden Sie einen Projektnamen, der mindestens vier Zeichen lang ist."
+        ),
+      });
+    }
     if (!projectName || projectName === "") {
       return res
         .status(400)
-        .json({ status: "error", message: "Keinen Projektnamen empfangen." })
-        .end();
-    }
-
-    if (projectName.includes(".")) {
-      return res
-        .status(400)
-        .json({ status: "error", message: "Ungültiger Projektname." })
+        .json({ message: "Keinen Projektnamen empfangen." })
         .end();
     }
     const projectPath: string = path.join(

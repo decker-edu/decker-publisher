@@ -3,6 +3,8 @@ const supportsFileSystemAccessAPI =
 const supportsWebkitGetAsEntry =
   "webkitGetAsEntry" in DataTransferItem.prototype;
 
+let uploadType = undefined;
+
 function inputChanged() {
   const input = document.getElementById("file-upload-input");
   if (input.value) {
@@ -10,19 +12,19 @@ function inputChanged() {
     if (filename) {
       const label = document.getElementById("file-upload-label");
       label.innerText = filename;
-      const button = document.getElementById("file-upload-button");
-      button.removeAttribute("hidden");
       const configDiv = document.getElementById("project-config");
       configDiv.removeAttribute("hidden");
       const nameInput = document.getElementById("project-name-input");
       nameInput.value = filename.split(".")[0];
+      uploadType = "zip";
+      projectNameChanged(null);
     }
   }
 }
 
 function projectNameChanged(event) {
   const nameInput = document.getElementById("project-name-input");
-  const uploadButton = document.getElementById("upload-directory-button");
+  const uploadButton = document.getElementById("upload-button");
   if (nameInput.value !== "") {
     uploadButton.removeAttribute("disabled");
   } else {
@@ -103,7 +105,7 @@ function endProgress(event) {
   }
 }
 
-function upload() {
+function uploadZip() {
   const nameInput = document.getElementById("project-name-input");
   if (nameInput.value.length < 4) {
     setUploadMessage(
@@ -146,6 +148,17 @@ function upload() {
   xhr.send(data);
 }
 
+function upload() {
+  if (uploadType === "dir") {
+    uploadDirectory();
+    return;
+  }
+  if (uploadType === "zip") {
+    uploadZip();
+    return;
+  }
+}
+
 function setEmptyProjectMessage(message) {
   const div = document.getElementById("empty-project-message-area");
   const span = document.createElement("span");
@@ -158,6 +171,20 @@ function setEmptyProjectMessage(message) {
 
 async function createEmptyProject() {
   const projectNameInput = document.querySelector("#empty-project-name-input");
+  if (projectNameInput.value.length < 4) {
+    setEmptyProjectMessage(
+      "Bitte verwenden Sie einen Projektnamen, der mindestens vier Zeichen lang ist."
+    );
+    return;
+  }
+  if (
+    !/^([a-z]([a-z]|[0-9])+)(-([a-z]|[0-9])+)*$/.test(projectNameInput.value)
+  ) {
+    setEmptyProjectMessage(
+      "Bitte verwenden Sie ausschließlich Kombinationen aus Kleinbuchstaben, Ziffern und einzelnen Bindestrichien als Projektnamen."
+    );
+    return;
+  }
   try {
     const response = await fetch("/api/project/empty", {
       method: "POST",
@@ -305,10 +332,8 @@ async function dropHandler(event) {
         const uploadMessage = document.getElementById("upload-message");
         uploadMessage.innerText =
           uploadFiles.length + " Dateien zum hochladen ausgewählt.";
-        document
-          .getElementById("upload-directory-button")
-          .removeAttribute("hidden");
         document.getElementById("project-config").removeAttribute("hidden");
+        uploadType = "dir";
       }
     }
   }
