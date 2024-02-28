@@ -1021,17 +1021,17 @@ router.post(
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const account = req.account;
     if (!account) {
-      res
+      return res
         .status(403)
         .json({
-          message: "Sie haben keine Berechtigung dies zu tun.",
+          message: escapeHTML("Sie haben keine Berechtigung dies zu tun."),
         })
         .end();
     }
     if (!req.files || Object.keys(req.files).length === 0) {
       return res
         .status(400)
-        .json({ status: "error", message: "Keine Datei empfangen." })
+        .json({ message: escapeHTML("Keine Datei empfangen.") })
         .end();
     }
     if (Array.isArray(req.files.file)) {
@@ -1061,6 +1061,14 @@ router.post(
 
     if (!fs.existsSync(path.dirname(uploadPath))) {
       fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
+    }
+
+    if (fs.existsSync(uploadPath)) {
+      return res.status(409).json({
+        message: escapeHTML(
+          "Eine Datei mit diesem Namen wird bereits konvertiert."
+        ),
+      });
     }
 
     file.mv(uploadPath, function (err) {
