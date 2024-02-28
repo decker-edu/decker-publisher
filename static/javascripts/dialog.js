@@ -41,10 +41,13 @@ window.displayTooltip = function (element, text) {
   message.classList.add("tooltip-text");
   message.innerText = text;
   tooltip.appendChild(message);
-  const box = element.getBoundingClientRect();
-  tooltip.style.top = `${Math.floor(box.bottom) + 8}px`;
-  tooltip.style.left = `${Math.floor(box.left)}px`;
   document.body.appendChild(tooltip);
+  const box = element.getBoundingClientRect();
+  const tbox = tooltip.getBoundingClientRect();
+  tooltip.style.top = `${Math.floor(box.bottom) + 8}px`;
+  tooltip.style.left = `${Math.floor(
+    box.left - tbox.width / 2 + box.width / 2
+  )}px`;
   setTimeout(() => {
     tooltip.classList.add("fade");
     tooltip.addEventListener("transitionend", () => {
