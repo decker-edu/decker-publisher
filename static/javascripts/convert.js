@@ -51,7 +51,7 @@ function addToServerLog(text) {
 async function upload() {
   cleanLocalLog();
   cleanServerLog();
-  const input = document.querySelector("#file-upload-input");
+  const input = document.getElementById("file-upload-input");
   const data = new FormData();
   data.append("file", input.files[0]);
   const request = new Request("/api/convert", {
@@ -59,6 +59,9 @@ async function upload() {
     body: data,
   });
   try {
+    addToLocalLog("Lade Datei hoch ...");
+    const button = document.getElementById("file-upload-button");
+    button.disabled = true;
     const response = await fetch(request);
     if (response && response.ok) {
       const json = await response.json();
@@ -98,6 +101,8 @@ function connect() {
     download();
     source.close();
     addToLocalLog("Verbindung zum Server getrennt.");
+    const button = document.getElementById("file-upload-button");
+    button.disabled = false;
   });
   source.addEventListener("error", (event) => {
     if (event.data) {
@@ -111,6 +116,8 @@ function connect() {
     }
     source.close();
     addToLocalLog("Verbindung zum Server getrennt.");
+    const button = document.getElementById("file-upload-button");
+    button.disabled = false;
   });
   let cog = document.getElementById("waitingcog");
   if (cog) {
