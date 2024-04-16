@@ -4,6 +4,8 @@ import { Account } from "./backend/account";
 
 import { exportFeedbackUsers } from "./backend/legacy.feedback";
 import { AccountRequest } from "./backend/request";
+import { requestMail } from "./backend/mailer";
+import getConfig from "./config";
 
 type Operation = {
   fn: (...args: string[]) => Promise<void>;
@@ -171,6 +173,10 @@ async function createRequest(username: string, email: string, reason: string) {
         randomToken,
         reason
       );
+      if (request) {
+        const owner = getConfig().setup_admin.email;
+        requestMail(owner, username, email, reason);
+      }
     } else {
       console.error(`Username ${username} is not available.`);
     }
