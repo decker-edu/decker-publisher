@@ -18,6 +18,7 @@ function encryptPassword(password: string, salt: string) {
 export async function exportFeedbackUsers() {
   try {
     const filename = config().feedback_db_file || "users.yaml";
+    const hostname = config().hostname;
     const all = await database.query("SELECT * FROM feedback_accounts");
     if (all.rows.length > 0) {
       let contents = "users:\n";
@@ -26,6 +27,10 @@ export async function exportFeedbackUsers() {
         contents += "    hash: " + data.hash + "\n";
         contents += "    decks:\n";
         contents += '      - "' + data.username + '"\n';
+        if (hostname) {
+          contents +=
+            '      - "' + hostname + "/decks/" + data.username + '"\n';
+        }
         contents += "    salt: " + data.salt + "\n";
         contents += "    login: " + data.username + "\n";
         contents += "    email: " + data.email + "\n";
