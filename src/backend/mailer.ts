@@ -92,18 +92,11 @@ export function requestMail(
     config().mail_config.mail_program &&
     config().mail_config.mail_program !== ""
   ) {
-    console.log("[MAIL] trying to send mail to:", recepient);
     try {
       const process = child_process.spawn(
         `${config().mail_config.mail_program}`,
         ["-t"]
       );
-      process.stdout.on("data", (data) => {
-        console.log(data);
-      });
-      process.stderr.on("data", (data) => {
-        console.error(data);
-      });
       process.stdin.write("From: " + config().mail_config.mail_from + "\n");
       process.stdin.write("MIME-Version: 1.0\n");
       process.stdin.write("Content-Type: text/html\n");
