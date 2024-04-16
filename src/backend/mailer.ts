@@ -94,10 +94,7 @@ export function requestMail(
   ) {
     console.log("[MAIL] trying to send mail to:", recepient);
     try {
-      const process = child_process.spawn(
-        `${config().mail_config.mail_program}`,
-        ["-t"]
-      );
+      const process = child_process.spawn(`msmtp`, ["-t"]);
       process.stdout.on("data", (data) => {
         console.log(data);
       });
