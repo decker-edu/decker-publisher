@@ -92,6 +92,7 @@ export function requestMail(
     config().mail_config.mail_program &&
     config().mail_config.mail_program !== ""
   ) {
+    console.log("[MAIL] trying to send mail to:", recepient);
     try {
       const process = child_process.spawn(
         `${config().mail_config.mail_program}`,
