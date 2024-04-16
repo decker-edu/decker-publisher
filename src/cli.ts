@@ -3,6 +3,7 @@ import database from "./backend/database";
 import { Account } from "./backend/account";
 
 import { exportFeedbackUsers } from "./backend/legacy.feedback";
+import { AccountRequest } from "./backend/request";
 
 type Operation = {
   fn: (...args: string[]) => Promise<void>;
@@ -33,6 +34,7 @@ registerOperation("--delete-feedback", { fn: deleteFeedbackUser, argn: 1 });
 registerOperation("--delete-account", { fn: deleteAccount, argn: 1 });
 registerOperation("--delete-request", { fn: deleteRequest, argn: 1 });
 registerOperation("--create-account", { fn: createAccount, argn: 3 });
+registerOperation("--create-request", { fn: createRequest, argn: 3 });
 
 main();
 
@@ -141,6 +143,37 @@ async function createAccount(
 ) {
   try {
     Account.register(username, email, password);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function makeRandomString(length: number, characters?: string): string {
+  let result = "";
+  let options = characters
+    ? characters
+    : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let amount = options.length;
+  for (let i = 0; i < length; i++) {
+    result += options.charAt(Math.floor(Math.random() * amount));
+  }
+  return result;
+}
+
+async function createRequest(username: string, email: string, reason: string) {
+  try {
+    const available = await AccountRequest.isAvailable(username);
+    if (available) {
+      const randomToken: string = makeRandomString(64);
+      const request = await AccountRequest.reserve(
+        username,
+        email,
+        randomToken,
+        reason
+      );
+    } else {
+      console.error(`Username ${username} is not available.`);
+    }
   } catch (error) {
     console.error(error);
   }
