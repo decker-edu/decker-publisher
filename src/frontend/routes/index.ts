@@ -42,11 +42,13 @@ router.get(
     res: express.Response,
     next: express.NextFunction
   ) {
+    const account = req.account;
     const admin = req.account.roles
       ? req.account.roles.includes("admin")
       : false;
     return res.render("home", {
       title: "Decker: Persönlicher Bereich",
+      username: account.username,
       admin: admin,
     });
   }
@@ -398,6 +400,29 @@ router.get(
 );
 
 router.get(
+  "/:username/videos",
+  async function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    const username = req.params.username;
+    let admin = false;
+    const account = req.account;
+    if (account && account.username === username) {
+      const projects = account.getProjects();
+      return res.render("subtitles", {
+        title: "Videoübersicht",
+        admin: admin,
+        projects: projects,
+      });
+    } else {
+      return res.redirect("/");
+    }
+  }
+);
+
+/* router.get(
   "/amberscript/videos",
   async function (
     req: express.Request,
@@ -417,7 +442,7 @@ router.get(
       return res.redirect("/");
     }
   }
-);
+); */
 
 router.get(
   "/data-protection",

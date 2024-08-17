@@ -56,7 +56,7 @@ function openVideoDialog(project, filepath) {
           filenameField.innerText = filepath;
         }
         if (lengthField) {
-          lengthField.innerText = json.data.length;
+          lengthField.innerText = json.data.length + "s";
         }
         if (subtitleField) {
           if (json.data.vtt) {

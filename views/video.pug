@@ -2,7 +2,8 @@ extends layout
 
 block scripts 
   script(src="/javascripts/video.js")
-  script(src="/javascripts/amber.js")
+  //--
+    script(src="/javascripts/amber.js")
 
 block styles
   link(rel="stylesheet", href="/stylesheets/video.css")
@@ -26,7 +27,7 @@ block content
 
   div#video-controls
     div.row-order
-      button.action(onclick="openAmberDialog('"+video.project+"', '"+video.path+"')") 
+      //-- button.action(onclick="openAmberDialog('"+video.project+"', '"+video.path+"')") 
         i.fas.fa-closed-captioning
         span Untertitel generieren
       button.action(onclick="activateVTTEditor()")
@@ -37,7 +38,7 @@ block content
         span Untertitel speichern
 
 block dialogs
-  dialog#amber-dialog
+  //-- dialog#amber-dialog
     div#amber-message.dialog-message
     div.video-data
       label(for="video-filename") Dateiname
