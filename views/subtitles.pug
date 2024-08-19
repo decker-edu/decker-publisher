@@ -1,0 +1,52 @@
+extends layout
+
+block scripts 
+    script(defer src="/javascripts/upload-video.js")
+    script(defer src="/javascripts/video.js")
+
+block content
+  h1 Ihre Videodateien
+  div#explanation
+    p Sie können hier Videos aus ihren Projekten untersuchen, um für diese Untertitel erzeugen zu lassen.
+  div#table-area
+    table 
+      thead
+        tr
+          th Projekt
+          th Aufzeichnungen
+          th Videos
+      tbody#video-table-body
+        each project in projects
+          tr
+            td
+              a.action(href="/decks/" + account.username + "/" + project.name + "/" target="_blank")
+                i.fas.fa-external-link
+                span= project.name
+            td
+              div.video-list
+                each video in project.recordings
+                  button.action(onclick="openVideoDialog('"+project.name+"', '"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
+                    i.fas.fa-film
+                    span= video.filename
+            td
+              div.video-list
+                each video in project.videos
+                  button.action(onclick="openVideoDialog('"+project.name+"', '"+video.filepath+"')" aria-label="Video "+video.filename+" untersuchen")
+                    i.fas.fa-film
+                    span= video.filename
+block dialogs
+  dialog#video-dialog
+    div#video-message.dialog-message
+    div.video-data
+      label(for="video-filename") Dateiname
+      div#video-filename
+      label(for="video-length") Video-Länge
+      div#video-length
+      label(for="video-subtitles") Untertitel
+      div#video-hasvtt
+      button.action(onclick="navigateToVideo()")
+        i.fas.fa-film
+        span Video bearbeiten
+      button.action(onclick="closeVideoDialog()")
+        i.fas.fa-ban
+        span Dialog schließen
