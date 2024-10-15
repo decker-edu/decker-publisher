@@ -18,7 +18,7 @@ function getUserDirectory() {
 router.get(
   "/:username/:project",
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    return res.redirect(req.url + "/index.html");
+    return res.redirect(req.originalUrl + "/index.html");
   }
 );
 
