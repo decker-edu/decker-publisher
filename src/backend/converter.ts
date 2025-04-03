@@ -26,6 +26,54 @@ function expandItems(items: any[], result: any[]) {
   }
 }
 
+async function runInkscape(
+  filepath: string,
+  pagesDirectory: string,
+  filename: string
+) {
+  const split: Promise<[string, string]> = new Promise((resolve, reject) => {
+    const pagepath = path.join(pagesDirectory, `${filename}-page-%03d.pdf`);
+    child_process.exec(
+      `pdfseparate ${filepath} ${pagepath}`,
+      (error, stdout, stderr) => {
+        if (error) {
+          return reject(error);
+        }
+        return resolve([stdout, stderr]);
+      }
+    );
+  });
+  const [stdout, stderr] = await split;
+  if (stdout) {
+    console.log(stdout);
+  }
+  if (stderr) {
+    console.error(stderr);
+  }
+  const pages = fs.readdirSync(pagesDirectory);
+  const promises = [];
+  for (const page of pages) {
+    const promise = new Promise((resolve, reject) => {
+      console.log(page);
+      const basename = path.basename(page, path.extname(page));
+      const pdfpath = path.join(pagesDirectory, page);
+      const svgpath = path.join(pagesDirectory, basename + ".svg");
+      console.log("svg: ", svgpath);
+      child_process.exec(
+        `inkscape ${pdfpath} --export-type=svg --export-filename='${svgpath}'`,
+        (error, stdout, stderr) => {
+          if (error) {
+            reject(error);
+          }
+          resolve([stdout, stderr]);
+        }
+      );
+    });
+    promises.push(promise);
+  }
+  return Promise.all(promises);
+}
+
 async function runPDF2SVG(
   filepath: string,
   pagesDirectory: string,

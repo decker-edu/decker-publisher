@@ -6,25 +6,26 @@ block scripts
 block content
   h1 Administration
   h2 Benutzerkonten
-  table
-    thead 
-      tr
-        th Nummer
-        th Benutzername
-        th E-Mail
-        th Aktionen
-    tbody
-      each account in accounts
+  section.admin
+    table
+      thead 
         tr
-          td
-            span= account.id
-          td
-            span= account.username
-          td
-            span= account.email
-          td.actions
-            button.action(onclick="deleteAccount('"+account.username+"')")
-              i.fas.fa-trash
-              span Entfernen
+          th Nummer
+          th Benutzername
+          th E-Mail
+          th Aktionen
+      tbody
+        each account in accounts
+          tr
+            td
+              span= account.id
+            td
+              span= account.username
+            td
+              span= account.email
+            td.actions
+              button.action(onclick="deleteAccount('"+account.username+"')")
+                i.fas.fa-trash
+                span Entfernen
 
 block dialogs

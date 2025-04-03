@@ -6,39 +6,40 @@ block scripts
 block content
   h1 Administration
   h2 Kontoanfragen
-  if requests
-    table
-      thead 
-        tr
-          th Nummer
-          th Benutzername
-          th E-Mail
-          th Notiz
-          th Token
-          th Datum
-          th Aktionen
-      tbody
-        each request in requests
+  section.admin
+    if requests
+      table
+        thead 
           tr
-            td
-              text= request.id
-            td
-              text= request.username
-            td
-              text= request.email
-            td.note-column
-              text= request.note
-            td.token-column 
-              text= request.token
-            td
-              text= request.created
-            td.actions
-              button.action(onclick="openMailDialog('"+request.id+", "+request.username+", "+request.email+"')")
-                i.fas.fa-mail
-                span Anfrage ablehnen
-              button.action(onclick="openMailDialog('"+request.id+", "+request.username+", "+request.email+"')")
-                i.fas.fa-mail
-                span E-Mail generieren
-  else
-    span Keine Anfragen vorhanden
+            th Nummer
+            th Benutzername
+            th E-Mail
+            th Notiz
+            th(style="width: 100%") Token
+            th Datum
+            th Aktionen
+        tbody
+          each request in requests
+            tr
+              td
+                text= request.id
+              td
+                text= request.username
+              td
+                text= request.email
+              td.note-column
+                text= request.note
+              td.token-column 
+                text= request.token
+              td
+                text= request.created
+              td.actions
+                button.action(onclick="openMailDialog('"+request.id+", "+request.username+", "+request.email+"')")
+                  i.fas.fa-mail
+                  span Anfrage ablehnen
+                button.action(onclick="openMailDialog('"+request.id+", "+request.username+", "+request.email+"')")
+                  i.fas.fa-mail
+                  span E-Mail generieren
+    else
+      span Keine Anfragen vorhanden
 block dialogs
