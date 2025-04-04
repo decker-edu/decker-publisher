@@ -1,0 +1,57 @@
+- hosts: "localhost"
+
+  pre_tasks:
+    - name: "Load users"
+      # Alternativ: slupr mit variable in lopp: (foobar.content | b64decode | from_json)
+      ansible.builtin.include_vars:
+        file: "/home/decker/decker-ansible/users.json"
+        name: "filecontent"
+  tasks:
+    - name: "Add decker usergroup"
+      ansible.builtin.group:
+        name: "decker-users"
+        state: "present"
+
+    - name: "Adding users"
+      ansible.builtin.user:
+        name: "decker-{{ item }}"
+        shell: "/bin/rbash"
+        groups: "decker-users"
+      loop: "{{ filecontent.users }}"
+
+    - name: "Add project directories"
+      ansible.builtin.file:
+        name: "/srv/decker/userfiles/{{ item }}/projects/"
+        owner: "decker-{{ item }}"
+        group: "www-data"
+        mode: "u=rwx,g=rwx,o=rx"
+        state: "directory"
+      loop: "{{ filecontent.users }}"
+
+    - name: "Modify user directories"
+      ansible.builtin.file:
+        name: "/srv/decker/userfiles/{{ item }}/"
+        owner: "decker-{{ item }}"
+        group: "www-data"
+        mode: "u=rwx,g=rwx,o=rx"
+        state: "touch"
+      loop: "{{ filecontent.users }}"
+
+    - name: "Modify project directories"
+      ansible.builtin.file:
+        name: "/srv/decker/userfiles/{{ item }}/projects/"
+        owner: "decker-{{ item }}"
+        group: "www-data"
+        mode: "u=rwx,g=rwx,o=rx"
+        state: "touch"
+      loop: "{{ filecontent.users }}"
+
+    - name: "Add symlinks to project directories in user directory"
+      ansible.builtin.file:
+        src: "/srv/decker/userfiles/{{ item }}/projects/"
+        dest: "/home/decker-{{ item }}/decks"
+        owner: "decker-{{ item }}"
+        group: "decker-{{ item }}"
+        follow: no
+        state: link
+      loop: "{{ filecontent.users }}"

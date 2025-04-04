@@ -325,6 +325,13 @@ router.put(
   }
 );
 
+/* Checks if the string starts with ssh- and does not contain any newline characters */
+function validateKey(key: string) {
+  if (!key.startsWith("ssh-")) return false;
+  if (key.includes("\n")) return false;
+  return true;
+}
+
 router.post(
   "/:username/sshkey",
   requireBody("passwordConfirmation"),
@@ -350,6 +357,12 @@ router.post(
     }
     const passwordConfirmation = req.body.passwordConfirmation;
     const newKey = req.body.newKey;
+    if (!validateKey(newKey)) {
+      return res
+        .status(403)
+        .json({ message: escapeHTML("Schlüssel ist falsch formatiert.") })
+        .end();
+    }
     const confirmed = await account.checkPassword(passwordConfirmation);
     if (confirmed) {
       try {
