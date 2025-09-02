@@ -81,6 +81,7 @@ async function logout() {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        "x-csrf-token": getCSRFToken(),
       },
     });
     if (response.ok) {

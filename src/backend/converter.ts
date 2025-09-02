@@ -4,7 +4,10 @@ import child_process from "child_process";
 
 import yazl from "yazl";
 
-import { getDocument as getPDFDocument, PDFDocumentProxy } from "pdfjs-dist";
+import {
+  getDocument as getPDFDocument,
+  PDFDocumentProxy,
+} from "pdfjs-dist/legacy/build/pdf.mjs";
 import { EventEmitter } from "stream";
 
 declare type pdfInformation = {

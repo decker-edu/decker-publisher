@@ -11,16 +11,9 @@ import fs from "fs";
 import path from "path";
 
 import Project from "../../project";
+import { isSet, csrf } from "../../../util";
 import { getChecksums } from "../api";
 import fileUpload from "express-fileupload";
-
-function isSet(value: any): boolean {
-  if (!value || value === "") {
-    return false;
-  } else {
-    return true;
-  }
-}
 
 function requireBody(name: string) {
   return function (

@@ -1,7 +1,3 @@
-function chargeAmberscript(username) {
-  alert("Not yet implemented");
-}
-
 function deleteAccount(username) {
   alert("Not yet implemented");
 }

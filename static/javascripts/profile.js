@@ -70,6 +70,7 @@ async function changePassword(username) {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        "x-csrf-token": getCSRFToken(),
       },
       body: JSON.stringify({
         oldPassword: oldInput.value,
@@ -121,6 +122,7 @@ async function changeEmail(username) {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        "x-csrf-token": getCSRFToken(),
       },
       body: JSON.stringify({
         passwordConfirmation: passwordInput.value,
@@ -172,6 +174,7 @@ async function addKey(username) {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        "x-csrf-token": getCSRFToken(),
       },
       body: JSON.stringify({
         passwordConfirmation: passwordInput.value,
@@ -192,7 +195,7 @@ async function addKey(username) {
     }, 1000);
   } else {
     try {
-      const json = response.json();
+      const json = await response.json();
       if (json.message) {
         displayMessage(json.message);
       } else {
@@ -214,66 +217,77 @@ function displayRemovalMessage(message) {
   }
 }
 
-function removeKey(username) {
+async function removeKey(username) {
   const textarea = document.getElementById("remove-ssh-key-textarea");
   const passwordInput = document.getElementById("remove-ssh-key-confirmation");
-  fetch(`/api/user/${username}/sshkey`, {
+  const response = await fetch(`/api/user/${username}/sshkey`, {
     method: "DELETE",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
+      "x-csrf-token": getCSRFToken(),
     },
     body: JSON.stringify({
       passwordConfirmation: passwordInput.value,
       delKey: textarea.value,
     }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        displayRemovalMessage("Schlüssel gelöscht.");
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+  });
+  try {
+    if (response.ok) {
+      displayRemovalMessage("Schlüssel gelöscht.");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      const json = await response.json();
+      if (json && json.message) {
+        displayRemovalMessage(`${response.status}: ${json.message}`);
       } else {
-        response.json().then((json) => {
-          displayRemovalMessage(`${response.status}: ${json.message}`);
-        });
+        displayRemovalMessage(
+          `${response.status}: Es wurde keine Fehlermeldung übermittelt.`
+        );
       }
-    })
-    .catch((error) => {
-      displayRemovalMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
-      console.error(error);
-    });
+    }
+  } catch (error) {
+    displayRemovalMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
+    console.error(error);
+  }
 }
 
-function deleteAccount(username) {
+async function deleteAccount(username) {
   const passwordInput = document.getElementById("delete-account-confirmation");
-  fetch(`/api/user/${username}`, {
+  const response = await fetch(`/api/user/${username}`, {
     method: "DELETE",
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
+      "x-csrf-token": getCSRFToken(),
     },
     body: JSON.stringify({
       passwordConfirmation: passwordInput.value,
     }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        response.json().then((json) => {
-          displayMessage(json.message);
-          setTimeout(() => {
-            window.location.replace("/");
-          }, 1000);
-        });
-      } else {
-        response.json().then((json) => {
-          displayMessage(`${response.status}: ${json.message}`);
-        });
+  });
+  try {
+    if (response.ok) {
+      const json = await response.json();
+      if (json && json.message) {
+        displayMessage(json.message);
+        setTimeout(() => {
+          window.location.replace("/");
+        }, 1000);
       }
-    })
-    .catch((error) => {
-      displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
-      console.error(error);
-    });
+    } else {
+      const json = await response.json();
+      if (json && json.message) {
+        displayMessage(`${response.status}: ${json.message}`);
+      } else {
+        displayMessage(
+          `${response.status}: Es wurde keine Fehlermeldung übermittelt.`
+        );
+      }
+    }
+  } catch (error) {
+    displayMessage(`Ein unerwarteter Fehler ist aufgetreten.`);
+    console.error(error);
+  }
 }

@@ -30,6 +30,7 @@ async function deleteSelectedProject() {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        "x-csrf-token": getCSRFToken(),
       },
       body: JSON.stringify({
         name: projectToDelete,
@@ -44,7 +45,9 @@ async function deleteSelectedProject() {
       }, 2000);
     } else {
       const json = await response.json();
-      displayDeleteMessage(json.message, "error");
+      if (json && json.message) {
+        displayDeleteMessage(json.message, "error");
+      }
     }
   } catch (error) {
     console.error(error);

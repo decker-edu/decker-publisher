@@ -22,7 +22,7 @@ import { AccountRequest } from "../request";
 import { Converter } from "../converter";
 import { recoveryMail, requestMail } from "../mailer";
 
-import { getAllFiles } from "../../util";
+import { csrf, createCSRFToken, getAllFiles } from "../../util";
 
 import userAPI from "./api/user";
 import projectAPI from "./api/project";
@@ -158,6 +158,7 @@ router.post(
   ) {
     if (req.account) {
       req.session.userId = req.account.id;
+      req.session.CSRFToken = createCSRFToken();
       return res
         .status(200)
         .json({
@@ -177,6 +178,7 @@ router.post(
 
 router.post(
   "/logout",
+  csrf(),
   function (
     req: express.Request,
     res: express.Response,
@@ -405,6 +407,7 @@ router.post(
 /* POST upload */
 router.post(
   "/project",
+  csrf(),
   fileUpload(),
   async (
     req: express.Request,
@@ -577,6 +580,7 @@ router.post(
 
 router.post(
   "/project/directory",
+  csrf(),
   fileUpload(),
   async (
     req: express.Request,
@@ -704,6 +708,7 @@ router.post(
 
 router.post(
   "/project/empty",
+  csrf(),
   async (
     req: express.Request,
     res: express.Response,
@@ -770,6 +775,7 @@ router.post(
 
 router.post(
   "/video",
+  csrf(),
   fileUpload(),
   async (
     req: express.Request,
@@ -1017,6 +1023,7 @@ router.get(
 
 router.post(
   "/convert",
+  csrf(),
   fileUpload(),
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const account = req.account;

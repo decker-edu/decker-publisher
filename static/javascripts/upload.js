@@ -145,6 +145,7 @@ function uploadZip() {
     }
   });
   xhr.open("POST", "/api/project");
+  xhr.setRequestHeader("x-csrf-token", getCSRFToken());
   xhr.send(data);
 }
 
@@ -190,6 +191,7 @@ async function createEmptyProject() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-csrf-token": getCSRFToken(),
       },
       body: JSON.stringify({
         projectName: projectNameInput.value,
@@ -368,6 +370,7 @@ function uploadDirectory() {
   xhr.addEventListener("loadstart", initProgress);
   xhr.addEventListener("loadend", endProgress);
   xhr.open("POST", "/api/project/directory");
+  xhr.setRequestHeader("x-csrf-token", getCSRFToken());
   xhr.send(data);
 }
 

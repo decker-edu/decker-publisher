@@ -10,7 +10,7 @@ import path from "path";
 import database from "../../database";
 
 import { Account } from "../../account";
-import { getAllFiles } from "@root/util";
+import { csrf, getAllFiles } from "@root/util";
 
 function verifyEmail(mail: string, allowedOrigins: string[]) {
   let format = validator.validate(mail);
@@ -133,6 +133,7 @@ router.get(
 
 router.post(
   "/reset-password",
+  csrf(),
   requireBody("email"),
   requireBody("newPassword"),
   requireBody("token"),
@@ -196,6 +197,7 @@ router.post(
 
 router.put(
   "/:username/password",
+  csrf(),
   requireBody("oldPassword"),
   requireBody("newPassword"),
   async (
@@ -263,6 +265,7 @@ router.put(
 
 router.put(
   "/:username/email",
+  csrf(),
   requireBody("passwordConfirmation"),
   requireBody("newEmail"),
   async (
@@ -334,6 +337,7 @@ function validateKey(key: string) {
 
 router.post(
   "/:username/sshkey",
+  csrf(),
   requireBody("passwordConfirmation"),
   requireBody("newKey"),
   async (
@@ -387,6 +391,7 @@ router.post(
 
 router.delete(
   "/:username/sshkey",
+  csrf(),
   requireBody("passwordConfirmation"),
   requireBody("delKey"),
   async (
@@ -433,6 +438,7 @@ router.delete(
 
 router.delete(
   "/:username",
+  csrf(),
   async (
     req: express.Request,
     res: express.Response,

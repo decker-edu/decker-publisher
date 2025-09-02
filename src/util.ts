@@ -2,6 +2,15 @@ import express from "express";
 
 import fs from "fs";
 import path from "path";
+import { createHash } from "crypto";
+
+export function isSet(value: any): boolean {
+  if (!value || value === "") {
+    return false;
+  } else {
+    return true;
+  }
+}
 
 export function requireLogin(
   req: express.Request,
@@ -13,6 +22,33 @@ export function requireLogin(
   } else {
     next();
   }
+}
+
+function forbidden(res: express.Response, message: string) {
+  return res.status(403).json({ message: message }).end();
+}
+
+export function csrf() {
+  return function (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    const csrf = req.headers["x-csrf-token"];
+    if (isSet(csrf)) {
+      const token = req.session.CSRFToken;
+      if (csrf !== token) {
+        return forbidden(res, "Invalid CSRF Token");
+      }
+      next();
+    } else {
+      return forbidden(res, "Invalid CSRF Token");
+    }
+  };
+}
+
+export function createCSRFToken(): string {
+  return createHash("sha1").update(randomString(32)).digest("base64");
 }
 
 export async function retrieveKeys(

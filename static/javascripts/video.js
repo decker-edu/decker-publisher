@@ -112,6 +112,9 @@ async function saveSubtitles(username, project, filename) {
     const response = await fetch(
       `/api/project/${username}/${project}/files/${filename}`,
       {
+        headers: {
+          "x-csrf-token": getCSRFToken(),
+        },
         method: "POST",
         cache: "no-cache",
         body: formData,

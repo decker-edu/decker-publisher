@@ -56,6 +56,9 @@ async function upload() {
   data.append("file", input.files[0]);
   const request = new Request("/api/convert", {
     method: "POST",
+    headers: {
+      "x-csrf-token": getCSRFToken(),
+    },
     body: data,
   });
   try {

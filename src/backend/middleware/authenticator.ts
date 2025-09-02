@@ -1,17 +1,26 @@
 import express from "express";
 import { Account } from "../account";
+import { createCSRFToken } from "@root/util";
 
 export default async function (
   request: express.Request,
   response: express.Response,
   next: express.NextFunction
 ) {
+  if (request.session) {
+    /* fix old sessions having no CSRFToken */
+    if (!request.session.CSRFToken || request.session.CSRFToken === "") {
+      request.session.CSRFToken = createCSRFToken();
+    }
+    response.locals.csrf = request.session.CSRFToken;
+  }
   if (request.session && request.session.userId) {
     const userId: number = request.session.userId;
     try {
       const account = await Account.fromDatabase(userId);
       request.account = account;
       response.locals.account = account;
+      response.locals.csrf = request.session.CSRFToken;
     } catch (error) {
       request.account = undefined;
       response.locals.account = undefined;
@@ -37,6 +46,7 @@ export default async function (
         if (verified) {
           request.account = account;
           response.locals.account = account;
+          response.locals.csrf = request.session.CSRFToken;
         } else {
           request.account = undefined;
           response.locals.account = undefined;

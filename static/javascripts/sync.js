@@ -91,6 +91,9 @@ async function fetchHtpasswd() {
 
 async function deleteHtpasswd() {
   const response = await fetch(`/api/project/${username}/${project}/access`, {
+    headers: {
+      "x-csrf-token": getCSRFToken(),
+    },
     method: "DELETE",
   });
   if (response.ok) {
@@ -123,6 +126,7 @@ async function setHtpasswd() {
     cache: "no-cache",
     headers: {
       "Content-Type": "application/json",
+      "x-csrf-token": getCSRFToken(),
     },
     body: JSON.stringify({ htuser: htuser, htpass: htpass }),
   });
@@ -513,6 +517,9 @@ async function deleteFile(filepath) {
   const response = await fetch(
     `/api/project/${username}/${project}/files/${filepath}`,
     {
+      headers: {
+        "x-csrf-token": getCSRFToken(),
+      },
       method: "DELETE",
     }
   );

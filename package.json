@@ -38,7 +38,7 @@
     "morgan": "~1.10.0",
     "node-fetch": "^2.6.9",
     "node-rake": "^1.0.1",
-    "pdfjs-dist": "^3.3.122",
+    "pdfjs-dist": "^5.4.54",
     "pg": "^8.9.0",
     "pug": "^3.0.2",
     "showdown": "^2.1.0",
