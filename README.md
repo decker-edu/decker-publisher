@@ -46,6 +46,52 @@ subtitles of the resulting slides. Accordingly, `whsiper.cpp` needs to be compil
 device of this service and the corresponding paths to its executable and model to use needs
 to be specified.
 
+## CLI
+
+Manual interaction with the database can be done via the CLI.
+
+You can call the CLI from within the project directory using `npm run cli --` followed by the command and the arguments:
+
+### Create a new user request
+
+To create a new user request that does not match the mail address equirements, use:
+
+`npm run cli -- --create-request '<username>' '<mail>' '<reason>'`
+
+### Create a new account
+
+To directly create a new account, use:
+
+`npm run cli -- --create-account '<username>' '<mail>' '<password>'`
+
+### Delete account
+
+To directly delete an account and all associated data, use:
+
+`npm run cli -- --delete-account <id>`
+
+### Delete account request
+
+To delete an account request, use:
+
+`npm run cli -- --delete-request <id>`
+
+### List data
+
+To get a list of data for debugging use:
+
+```
+npm run cli -- --list-feedback
+npm run cli -- --list-accounts
+npm run cli -- --list-requests
+```
+
+### Force feedback user file
+
+To export the userfile required by the decker feedback backend, use:
+
+`npm run cli -- --export-feedback`
+
 ## Configure and Setup
 
 Copy the `config.json.skel` file to `config.json` and enter the required fields.
